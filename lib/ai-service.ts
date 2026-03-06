@@ -6,7 +6,7 @@ import { generateText } from 'ai'
 // Simulates a DB fetch of provider config. 
 // For now, defaults to OpenAI or Google based on env vars available.
 // Retorna o objeto do modelo configurado para o tenant
-export async function getAIProvider(tenantId?: string) {
+export async function getAIProvider(_tenantId?: string) {
     if (process.env.OPENAI_API_KEY) {
         const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
         return openai('gpt-4o')

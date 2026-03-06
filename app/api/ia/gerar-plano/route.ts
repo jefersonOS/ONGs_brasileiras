@@ -27,7 +27,7 @@ const PlanoSchema = z.object({
 
 export async function POST(req: Request) {
     try {
-        const { ideiaCentral, projetoId } = await req.json()
+        const { ideiaCentral } = await req.json()
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
 

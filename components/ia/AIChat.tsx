@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Sparkles, X, Send, Bot, Loader2, Check, Edit2, AlertCircle, Plus } from 'lucide-react'
+import { Sparkles, X, Send, Check, Plus } from 'lucide-react'
 import { clsx } from 'clsx'
 import { useChat } from 'ai/react'
 import type { Message } from 'ai'
@@ -22,7 +22,7 @@ function AIActionCard({ action, onConfirm, onCancel }: { action: any, onConfirm:
             if (res.ok) setStatus('success')
             else setStatus('error')
             onConfirm()
-        } catch (e) {
+        } catch {
             setStatus('error')
         }
     }
@@ -72,7 +72,7 @@ export function AIChat() {
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const supabase = createClient()
 
-    const { messages, input, setInput, handleInputChange, handleSubmit, isLoading, append } = useChat({
+    const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
         api: '/api/ia/chat',
         body: { paginaAtual: pathname },
         onError: (error: Error) => console.error('Chat Error:', error)
@@ -98,7 +98,7 @@ export function AIChat() {
         try {
             const jsonMatch = content.match(/\{[\s\S]*"acao":\s*true[\s\S]*\}/)
             if (jsonMatch) return JSON.parse(jsonMatch[0])
-        } catch (e) { return null }
+        } catch { return null }
         return null
     }
 
