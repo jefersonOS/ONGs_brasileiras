@@ -5,19 +5,49 @@ import { generateText } from 'ai'
 
 // Simulates a DB fetch of provider config. 
 // For now, defaults to OpenAI or Google based on env vars available.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// Retorna o objeto do modelo configurado para o tenant
 export async function getAIProvider(tenantId?: string) {
     if (process.env.OPENAI_API_KEY) {
-        return createOpenAI({ apiKey: process.env.OPENAI_API_KEY })('gpt-4o')
+        const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
+        return openai('gpt-4o')
     }
     if (process.env.GOOGLE_AI_API_KEY) {
-        return createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_AI_API_KEY })('gemini-1.5-pro-latest')
+        const google = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_AI_API_KEY })
+        return google('gemini-1.5-pro-latest')
     }
     if (process.env.ANTHROPIC_API_KEY) {
-        return createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })('claude-3-5-sonnet-20240620')
+        const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+        return anthropic('claude-3-5-sonnet-20240620')
     }
     throw new Error("Nenhum provedor de IA configurado no ambiente.")
 }
+
+/**
+ * Registra uma ação da IA no log de auditoria global
+ */
+export async function logAIAudit(supabase: any, {
+    tenantId,
+    entidade,
+    acao,
+    dadosDepois,
+    modelo = 'gpt-4o'
+}: {
+    tenantId: string,
+    entidade: string,
+    acao: string,
+    dadosDepois: any,
+    modelo?: string
+}) {
+    return await supabase.from('audit_logs').insert({
+        tenant_id: tenantId,
+        acao,
+        entidade,
+        dados_depois: dadosDepois,
+        gerado_por_ia: true,
+        modelo_ia: modelo
+    })
+}
+
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function buildSystemPrompt(tenantId?: string, userId?: string, paginaAtual?: string) {

@@ -48,8 +48,63 @@ export default async function DashboardPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Atividades e Patrimônio */}
+                {/* Atividades e Patrimônio + Progresso Visual */}
                 <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                                <CheckCircle className="w-5 h-5 text-[#2D9E6B]" />
+                                Eficiência Operacional
+                            </h3>
+                            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Mês Atual</span>
+                        </div>
+
+                        <div className="flex flex-col md:flex-row items-center gap-8">
+                            {/* SVG Progress Circle */}
+                            <div className="relative w-32 h-32 flex-shrink-0">
+                                <svg className="w-full h-full" viewBox="0 0 36 36">
+                                    <path
+                                        className="text-gray-100"
+                                        stroke="currentColor"
+                                        strokeWidth="3.8"
+                                        fill="none"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    />
+                                    <path
+                                        className="text-[#2D9E6B] transition-all duration-1000 ease-out"
+                                        strokeDasharray="75, 100"
+                                        strokeLinecap="round"
+                                        stroke="currentColor"
+                                        strokeWidth="3.8"
+                                        fill="none"
+                                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                    />
+                                </svg>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span className="text-2xl font-bold text-gray-800">75%</span>
+                                    <span className="text-[10px] text-gray-400 font-medium">Meta</span>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+                                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tight">Planos Aprovados</p>
+                                    <p className="text-xl font-bold text-[#1A3C4A]">{aprovados || 0}</p>
+                                    <div className="w-full h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                                        <div className="h-full bg-[#2D9E6B]" style={{ width: '80%' }}></div>
+                                    </div>
+                                </div>
+                                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <p className="text-[10px] text-gray-500 uppercase font-bold tracking-tight">Presença Atividades</p>
+                                    <p className="text-xl font-bold text-[#1A3C4A]">88%</p>
+                                    <div className="w-full h-1 bg-gray-200 rounded-full mt-2 overflow-hidden">
+                                        <div className="h-full bg-[#2E6B7A]" style={{ width: '88%' }}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <MetricCard title="Atividades Ativas" value={atividadesAtivas || 0} icon={CalendarDays} />
                         <MetricCard title="Itens de Patrimônio Ativos" value={itensPatrimonio || 0} icon={Box} />

@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { LogOut, Bell } from 'lucide-react'
 
 export function Header() {
@@ -13,11 +13,32 @@ export function Header() {
         router.push('/login')
     }
 
+    const pathname = usePathname()
+
+    const getPageTitle = (path: string) => {
+        const map: Record<string, string> = {
+            '/dashboard': 'Painel de Controle',
+            '/backoffice': 'Gestão Global (Backoffice)',
+            '/projetos': 'Centro de Projetos',
+            '/planos-trabalho': 'Planos de Trabalho',
+            '/prestacoes-contas': 'Prestações de Contas',
+            '/atividades': 'Eventos e Atividades',
+            '/cursos': 'Gestão de Cursos e Turmas',
+            '/patrimonio': 'Controle de Patrimônio',
+            '/logs-auditoria': 'Auditoria e Segurança',
+            '/configuracoes': 'Configurações da ONG'
+        }
+        // Match base routes
+        const base = Object.keys(map).find(route => path.startsWith(route))
+        return base ? map[base] : 'Sistema Interno'
+    }
+
     return (
         <header className="h-[60px] bg-white border-b border-gray-200 fixed top-0 right-0 left-[220px] flex items-center justify-between px-8 z-10">
             <div className="flex items-center gap-4">
-                {/* Placeholder for Breadcrumb */}
-                <span className="text-sm font-medium text-gray-500">Sistema Interno</span>
+                <span className="text-sm font-semibold text-[#1A3C4A]">
+                    {getPageTitle(pathname)}
+                </span>
             </div>
 
             <div className="flex items-center gap-6">
