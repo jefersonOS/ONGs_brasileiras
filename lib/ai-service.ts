@@ -1,12 +1,12 @@
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { streamText, generateText, CoreMessage } from 'ai'
-import { createClient } from '@/lib/supabase/server'
+import { generateText } from 'ai'
 
 // Simulates a DB fetch of provider config. 
 // For now, defaults to OpenAI or Google based on env vars available.
-export async function getAIProvider(tenantId: string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function getAIProvider(tenantId?: string) {
     if (process.env.OPENAI_API_KEY) {
         return createOpenAI({ apiKey: process.env.OPENAI_API_KEY })('gpt-4o')
     }
@@ -19,7 +19,8 @@ export async function getAIProvider(tenantId: string) {
     throw new Error("Nenhum provedor de IA configurado no ambiente.")
 }
 
-export async function buildSystemPrompt(tenantId: string, userId: string, paginaAtual: string) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function buildSystemPrompt(tenantId?: string, userId?: string, paginaAtual?: string) {
     return `Você é um assistente especializado em gestão de ONGs brasileiras. 
   Seu objetivo é ajudar a criar documentos formais, planos de trabalho e métricas sólidas. 
   Responda sempre em um tom profissional, orientando-se pelo Marco Regulatório das Organizações da Sociedade Civil (MROSC).`
@@ -44,13 +45,13 @@ Devolva APENAS um objeto JSON válido, contendo as seguintes chaves exatas (e ne
     const { text } = await generateText({
         model,
         system: systemPrompt,
-        prompt: идеяCentral
+        prompt: ideiaCentral
     })
 
     try {
         const limpo = text.replace(/```json/g, '').replace(/```/g, '').trim()
         return JSON.parse(limpo)
-    } catch (error) {
+    } catch {
         console.error("Failed to parse JSON from AI", text)
         throw new Error('A resposta da IA não foi um JSON válido.')
     }

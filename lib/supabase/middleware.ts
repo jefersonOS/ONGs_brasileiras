@@ -15,7 +15,7 @@ export async function updateSession(request: NextRequest) {
                     return request.cookies.getAll()
                 },
                 setAll(cookiesToSet) {
-                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                    cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
                     supabaseResponse = NextResponse.next({
                         request,
                     })
@@ -38,10 +38,6 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/atividades') ||
         request.nextUrl.pathname.startsWith('/cursos') ||
         request.nextUrl.pathname.startsWith('/patrimonio')
-
-    const isPublicPortalRoute = request.nextUrl.pathname.startsWith('/minha-area') ||
-        request.nextUrl.pathname === '/' ||
-        request.nextUrl.pathname.startsWith('/validar')
 
     if (!user && isInternalRoute) {
         url.pathname = '/login'

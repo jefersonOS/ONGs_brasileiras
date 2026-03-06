@@ -6,6 +6,16 @@ import { Plus } from 'lucide-react'
 export default async function PlanosTrabalhoPage() {
     const supabase = createClient()
 
+    interface PlanoTrabalho extends Record<string, unknown> {
+        id: string
+        titulo: string
+        projeto_id?: string
+        projetos?: { nome: string }
+        status: string
+        orcamento_estimado: number
+        created_at: string
+    }
+
     // In Next.js App Router we fetch data server-side
     const { data: planos } = await supabase
         .from('planos_trabalho')
@@ -15,7 +25,7 @@ export default async function PlanosTrabalhoPage() {
     `)
         .order('created_at', { ascending: false })
 
-    const columns: Column<any>[] = [
+    const columns: Column<PlanoTrabalho>[] = [
         { title: 'Título', key: 'titulo', render: (row) => <span className="font-medium">{row.titulo}</span> },
         { title: 'Projeto', key: 'projeto_id', render: (row) => <span className="text-gray-600">{row.projetos?.nome || '-'}</span> },
         {

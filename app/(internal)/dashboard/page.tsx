@@ -5,8 +5,7 @@ import Link from 'next/link'
 
 export default async function DashboardPage() {
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    const tenantId = user?.user_metadata?.tenant_id
+    await supabase.auth.getUser()
 
     // If no tenant_id, just default to fetch own or tenant based on RLS (Since RLS handles visibility)
     // Let's rely on RLS doing its job.

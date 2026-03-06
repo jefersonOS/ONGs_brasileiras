@@ -45,6 +45,7 @@ export function Sidebar() {
                 setUserName(data.user.user_metadata?.nome || data.user.email)
             }
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     return (

@@ -5,11 +5,20 @@ import { Plus } from 'lucide-react'
 
 export default async function ProjetosPage() {
     const supabase = createClient()
+
+    interface Projeto extends Record<string, unknown> {
+        id: string
+        nome: string
+        descricao: string
+        status: string
+        created_at: string
+    }
+
     const { data: projetos } = await supabase.from('projetos')
         .select('*')
         .order('created_at', { ascending: false })
 
-    const columns: Column<any>[] = [
+    const columns: Column<Projeto>[] = [
         { title: 'Nome', key: 'nome', render: (row) => <span className="font-medium">{row.nome}</span> },
         { title: 'Descrição', key: 'descricao', render: (row) => <span className="text-gray-500 truncate max-w-sm block">{row.descricao || '-'}</span> },
         {

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 import { LogOut, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -11,12 +12,13 @@ export default function PortalLayout({
 }: {
     children: React.ReactNode
 }) {
-    const [user, setUser] = useState<any>(null)
+    const [user, setUser] = useState<SupabaseUser | null>(null)
     const supabase = createClient()
     const router = useRouter()
 
     useEffect(() => {
         supabase.auth.getUser().then(({ data }) => setUser(data.user))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const handleLogout = async () => {

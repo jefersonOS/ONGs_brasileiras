@@ -22,8 +22,8 @@ export async function POST(req: Request) {
         const planoGerado = await gerarPlanoTrabalho(ideiaCentral, tenantId)
 
         return NextResponse.json(planoGerado)
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error on gerar-plano", error)
-        return NextResponse.json({ error: error.message || 'Erro ao gerar o plano de trabalho' }, { status: 500 })
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Erro ao gerar o plano de trabalho' }, { status: 500 })
     }
 }

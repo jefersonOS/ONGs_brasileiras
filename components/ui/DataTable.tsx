@@ -19,7 +19,7 @@ interface DataTableProps<T> {
     emptyMessage?: string
 }
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends { id?: string | number } & Record<string, unknown>>({
     data,
     columns,
     searchable = false,
@@ -91,7 +91,7 @@ export function DataTable<T extends Record<string, any>>({
                                 >
                                     {columns.map((col, cIdx) => (
                                         <td key={String(col.key) + cIdx} className="px-6 py-4 whitespace-nowrap text-gray-700">
-                                            {col.render ? col.render(item) : item[col.key as keyof T]}
+                                            {col.render ? col.render(item) : (item[col.key as keyof T] as React.ReactNode)}
                                         </td>
                                     ))}
                                 </tr>

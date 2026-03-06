@@ -10,7 +10,7 @@ export default function NovoPlanoTrabalhoPage() {
     const supabase = createClient()
 
     // Data States
-    const [projetos, setProjetos] = useState<any[]>([])
+    const [projetos, setProjetos] = useState<{ id: string; nome: string }[]>([])
 
     // Form States
     const [projetoId, setProjetoId] = useState('')
@@ -37,6 +37,7 @@ export default function NovoPlanoTrabalhoPage() {
         supabase.from('projetos').select('id, nome').eq('status', 'ativo').then(({ data }) => {
             if (data) setProjetos(data)
         })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     const handleCreate = async (e: React.FormEvent, isDraft: boolean) => {
@@ -92,8 +93,8 @@ export default function NovoPlanoTrabalhoPage() {
             setOrcamento(data.orcamento_estimado || '')
 
             setShowAIModal(false)
-        } catch (err: any) {
-            alert("Erro ao gerar com IA: " + err.message)
+        } catch (err: unknown) {
+            alert("Erro ao gerar com IA: " + (err instanceof Error ? err.message : String(err)))
         } finally {
             setGenerating(false)
         }
