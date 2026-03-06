@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Eye } from 'lucide-react'
+import { ExportButtons, LabelButton } from '@/components/patrimonio/ExportButtons'
 
 export default async function PatrimonioPage() {
     const supabase = createClient()
@@ -15,6 +16,7 @@ export default async function PatrimonioPage() {
         estado_conservacao: string
         localizacao: string
         status: string
+        qrcode_url: string
     }
 
     const { data: bens } = await supabase
@@ -42,6 +44,18 @@ export default async function PatrimonioPage() {
                     </span>
                 )
             }
+        },
+        {
+            title: 'Ações',
+            key: 'id',
+            render: (row) => (
+                <div className="flex items-center gap-3">
+                    <Link href={`/patrimonio/gestao/${row.tombamento}`} className="text-[#2D9E6B] hover:text-green-700 p-1 hover:bg-teal-50 rounded transition-colors" title="Ver Detalhes">
+                        <Eye className="w-4 h-4" />
+                    </Link>
+                    <LabelButton bem={row} />
+                </div>
+            )
         }
     ]
 
@@ -52,9 +66,12 @@ export default async function PatrimonioPage() {
                     <h1 className="text-2xl font-bold text-[#1A3C4A]">Patrimônio</h1>
                     <p className="text-gray-500 mt-1">Gerencie os bens, controle o tombamento e a depreciação do patrimônio da ONG.</p>
                 </div>
-                <Link href="/patrimonio/novo" className="bg-[#2D9E6B] hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors shadow-sm">
-                    <Plus className="w-4 h-4" /> Cadastrar Bem
-                </Link>
+                <div className="flex gap-3">
+                    <ExportButtons bens={bens || []} ongNome="Minha ONG" />
+                    <Link href="/patrimonio/novo" className="bg-[#2D9E6B] hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors shadow-sm">
+                        <Plus className="w-4 h-4" /> Cadastrar Bem
+                    </Link>
+                </div>
             </div>
 
             <DataTable

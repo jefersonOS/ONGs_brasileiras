@@ -70,6 +70,17 @@ export default function NovoBemPage() {
             return
         }
 
+        // Generate actual QR Code via API
+        try {
+            await fetch('/api/patrimonio/qrcode', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tombamento, tenantId: user?.user_metadata?.tenant_id })
+            })
+        } catch (e) {
+            console.error('QR Generation failed:', e)
+        }
+
         router.push('/patrimonio')
         router.refresh()
     }
