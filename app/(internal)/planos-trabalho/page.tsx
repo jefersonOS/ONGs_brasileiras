@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
-import { Plus } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
 
 export default async function PlanosTrabalhoPage() {
     const supabase = createClient()
@@ -54,9 +54,14 @@ export default async function PlanosTrabalhoPage() {
                     <h1 className="text-2xl font-bold text-[#1A3C4A]">Planos de Trabalho</h1>
                     <p className="text-gray-500 mt-1">Gerencie os planos, metas e cronogramas dos projetos.</p>
                 </div>
-                <Link href="/planos-trabalho/novo" className="bg-[#2D9E6B] hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors shadow-sm">
-                    <Plus className="w-4 h-4" /> Novo Plano
-                </Link>
+                <div className="flex items-center gap-2">
+                    <Link href="/planos-trabalho/novo?ai=true" className="bg-[#1A3C4A] hover:bg-[#2E6B7A] text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors shadow-sm text-sm">
+                        <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Gerar com IA
+                    </Link>
+                    <Link href="/planos-trabalho/novo" className="bg-[#2D9E6B] hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center gap-2 transition-colors shadow-sm text-sm">
+                        <Plus className="w-4 h-4" /> Novo Plano
+                    </Link>
+                </div>
             </div>
 
             <DataTable

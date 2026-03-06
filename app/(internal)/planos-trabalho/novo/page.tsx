@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, Plus, Trash2, X } from 'lucide-react'
 
 export default function NovoPlanoTrabalhoPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
     const supabase = createClient()
 
     // Data States
@@ -27,16 +28,25 @@ export default function NovoPlanoTrabalhoPage() {
     // UI States
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [isAIGenerated, setIsAIGenerated] = useState(false)
 
     // AI Modal States
     const [showAIModal, setShowAIModal] = useState(false)
     const [ideiaCentral, setIdeiaCentral] = useState('')
     const [generating, setGenerating] = useState(false)
 
+    // Refine Field States
+    const [refiningField, setRefiningField] = useState<{ name: string; value: string; setter: (v: string) => void } | null>(null)
+    const [isRefining, setIsRefining] = useState(false)
+
     useEffect(() => {
         supabase.from('projetos').select('id, nome').eq('status', 'ativo').then(({ data }) => {
             if (data) setProjetos(data)
         })
+
+        if (searchParams.get('ai') === 'true') {
+            setShowAIModal(true)
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -59,7 +69,7 @@ export default function NovoPlanoTrabalhoPage() {
             cronograma,
             orcamento_estimado: Number(orcamento) || 0,
             status: isDraft ? 'rascunho' : 'enviado',
-            gerado_por_ia: false // Could be set to true if used AI to scaffold
+            gerado_por_ia: isAIGenerated
         })
 
         if (insertError) {
@@ -88,10 +98,15 @@ export default function NovoPlanoTrabalhoPage() {
             setDescricao(data.descricao || '')
             setObjetivos(data.objetivos || '')
             setJustificativa(data.justificativa || '')
-            if (data.metas && Array.isArray(data.metas)) setMetas(data.metas)
-            if (data.cronograma && Array.isArray(data.cronograma)) setCronograma(data.cronograma)
+            if (data.metas && Array.isArray(data.metas)) {
+                setMetas(data.metas.map((m: any) => ({ nome: m.indicador || 'Meta', descricao: m.descricao })))
+            }
+            if (data.cronograma && Array.isArray(data.cronograma)) {
+                setCronograma(data.cronograma.map((c: any) => ({ mes: c.inicio || '1', atividade: c.atividades || c.fase })))
+            }
             setOrcamento(data.orcamento_estimado || '')
 
+            setIsAIGenerated(true)
             setShowAIModal(false)
         } catch (err: unknown) {
             alert("Erro ao gerar com IA: " + (err instanceof Error ? err.message : String(err)))
@@ -99,6 +114,41 @@ export default function NovoPlanoTrabalhoPage() {
             setGenerating(false)
         }
     }
+
+    const handleRefineField = async () => {
+        if (!refiningField) return
+        setIsRefining(true)
+        try {
+            const res = await fetch('/api/ia/refinar-campo', {
+                method: 'POST',
+                body: JSON.stringify({
+                    campo: refiningField.name,
+                    valorAtual: refiningField.value,
+                    contexto: ideiaCentral || titulo
+                })
+            })
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+
+            refiningField.setter(data.refinado)
+            setRefiningField(null)
+        } catch (err: any) {
+            alert("Erro ao refinar: " + err.message)
+        } finally {
+            setIsRefining(false)
+        }
+    }
+
+    const RefineButton = ({ fieldName, value, setter }: { fieldName: string, value: string, setter: (v: string) => void }) => (
+        <button
+            type="button"
+            onClick={() => setRefiningField({ name: fieldName, value, setter })}
+            className="p-1 text-gray-400 hover:text-[#2D9E6B] transition-colors"
+            title="Refinar com IA"
+        >
+            <Sparkles className="w-3.5 h-3.5" />
+        </button>
+    )
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-12">
@@ -109,11 +159,18 @@ export default function NovoPlanoTrabalhoPage() {
                 </div>
                 <button
                     onClick={() => setShowAIModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors shadow-sm"
                 >
                     <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Gerar com IA
                 </button>
             </div>
+
+            {isAIGenerated && (
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-center gap-3 text-amber-800 animate-pulse">
+                    <Sparkles className="w-5 h-5 text-amber-600" />
+                    <p className="text-sm font-medium">Plano gerado pela IA — revise todos os campos antes de enviar para análise.</p>
+                </div>
+            )}
 
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 {error && <div className="p-3 mb-6 bg-red-100 text-red-600 rounded-md text-sm">{error}</div>}
@@ -121,7 +178,10 @@ export default function NovoPlanoTrabalhoPage() {
                 <form className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+                            <div className="flex items-center justify-between mb-1">
+                                <label className="block text-sm font-medium text-gray-700">Título *</label>
+                                <RefineButton fieldName="Título" value={titulo} setter={setTitulo} />
+                            </div>
                             <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]" />
                         </div>
                         <div>
@@ -136,15 +196,24 @@ export default function NovoPlanoTrabalhoPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                                    <RefineButton fieldName="Descrição" value={descricao} setter={setDescricao} />
+                                </div>
                                 <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Objetivos</label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-sm font-medium text-gray-700">Objetivos</label>
+                                    <RefineButton fieldName="Objetivos" value={objetivos} setter={setObjetivos} />
+                                </div>
                                 <textarea value={objetivos} onChange={e => setObjetivos(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Justificativa</label>
+                                <div className="flex items-center justify-between mb-1">
+                                    <label className="block text-sm font-medium text-gray-700">Justificativa</label>
+                                    <RefineButton fieldName="Justificativa" value={justificativa} setter={setJustificativa} />
+                                </div>
                                 <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
                             </div>
                             <div>
@@ -204,35 +273,78 @@ export default function NovoPlanoTrabalhoPage() {
                 </form>
             </div>
 
-            {/* Modal IA */}
+            {/* Modal IA Gerar Plano */}
             {showAIModal && (
-                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden">
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
                         <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#F5F7F8]">
                             <h3 className="font-semibold text-[#1A3C4A] flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Assistente de Escrita
+                                <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Gerador de Planos IA
                             </h3>
-                            <button onClick={() => setShowAIModal(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                            <button onClick={() => setShowAIModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors"><X className="w-5 h-5" /></button>
                         </div>
                         <div className="p-6 space-y-4">
-                            <p className="text-sm text-gray-600">Descreva a ideia central do plano de trabalho em uma ou duas frases. A IA irá estruturar todo o documento para você (justificativa, metas, cronograma).</p>
+                            <p className="text-sm text-gray-600">Descreva em uma frase o objetivo principal do projeto. A IA estruturará título, justificativa, metas e cronograma automaticamente.</p>
                             <textarea
                                 autoFocus
                                 rows={3}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B] text-sm"
-                                placeholder="Ex: Oficinas de inclusão digital para 50 jovens da periferia durante 6 meses..."
+                                placeholder="Ex: Projeto de reforço escolar e informática para crianças carentes..."
                                 value={ideiaCentral}
                                 onChange={e => setIdeiaCentral(e.target.value)}
                             ></textarea>
+
+                            {generating && (
+                                <div className="flex flex-col items-center justify-center py-4 space-y-3 animate-pulse">
+                                    <div className="w-8 h-8 border-4 border-[#2D9E6B] border-t-transparent rounded-full animate-spin"></div>
+                                    <p className="text-[#2D9E6B] font-medium text-sm">A IA está escrevendo seu plano...</p>
+                                </div>
+                            )}
                         </div>
                         <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
                             <button onClick={() => setShowAIModal(false)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md bg-white">Cancelar</button>
                             <button
                                 onClick={handleAI}
                                 disabled={generating || !ideiaCentral.trim()}
-                                className="px-4 py-2 text-sm bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] flex items-center gap-2 disabled:opacity-50"
+                                className="px-4 py-2 text-sm bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] flex items-center gap-2 disabled:opacity-50 shadow-sm"
                             >
-                                {generating ? 'Gerando...' : 'Gerar Plano Completo'}
+                                <Sparkles className="w-4 h-4" /> {generating ? 'Gerando...' : 'Gerar Plano Completo'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Refinar Campo */}
+            {refiningField && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#F5F7F8]">
+                            <h3 className="font-semibold text-[#1A3C4A] flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Refinar {refiningField.name}
+                            </h3>
+                            <button onClick={() => setRefiningField(null)} className="text-gray-400 hover:text-gray-600 transition-colors"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-6">
+                            <p className="text-sm text-gray-600 mb-4">A IA irá reescrever este campo para torná-lo mais profissional e adequado às normas.</p>
+                            <div className="p-3 bg-gray-50 rounded border border-gray-100 text-xs text-gray-500 italic mb-4 max-h-32 overflow-y-auto">
+                                "{refiningField.value || '(vazio)'}"
+                            </div>
+                            {isRefining && (
+                                <div className="flex items-center gap-2 text-[#2D9E6B] font-medium text-xs mb-4">
+                                    <div className="w-3 h-3 border-2 border-[#2D9E6B] border-t-transparent rounded-full animate-spin"></div>
+                                    Reescrevendo...
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+                            <button onClick={() => setRefiningField(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-md bg-white">Cancelar</button>
+                            <button
+                                onClick={handleRefineField}
+                                disabled={isRefining}
+                                className="px-4 py-2 text-sm bg-[#2D9E6B] text-white rounded-md hover:bg-green-600 flex items-center gap-2 disabled:opacity-50 shadow-sm"
+                            >
+                                <Sparkles className="w-4 h-4" /> {isRefining ? 'Reescrevendo...' : 'Reescrever Campo'}
                             </button>
                         </div>
                     </div>
