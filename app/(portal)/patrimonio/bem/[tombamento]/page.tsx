@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { MapPin, Tag, ShieldCheck, AlertTriangle, Clock } from 'lucide-react'
+import { clsx } from 'clsx'
 import { OcorrenciaForm } from '@/components/patrimonio/OcorrenciaForm'
 
 export default async function PublicBemPage({ params }: { params: { tombamento: string } }) {
@@ -51,7 +52,7 @@ export default async function PublicBemPage({ params }: { params: { tombamento: 
                         "w-12 h-12 rounded-2xl flex items-center justify-center",
                         bem.estado_conservacao === 'otimo' || bem.estado_conservacao === 'bom' ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
                     )}>
-                        <ShieldCheck className="w-6 h-6" />
+                        {bem.qrcode_url && <img src={bem.qrcode_url} alt="QR Code" className="w-full h-full object-contain" />}
                     </div>
                 </div>
 

@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2, Calendar, Users } from 'lucide-react'
+import { Plus, Trash2, Calendar, Users, FileText } from 'lucide-react'
+import Link from 'next/link'
 
 export default function TurmasPage({ params }: { params: { id: string } }) {
     const cursoId = params.id
@@ -14,8 +15,8 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
     // Formulário Nova Turma
     const [mostrarForm, setMostrarForm] = useState(false)
     const [vagas, setVagas] = useState(30)
-    const [encontros, setEncontros] = useState<{ data: string, hora_inicio: string, hora_fim: string }[]>([
-        { data: '', hora_inicio: '', hora_fim: '' }
+    const [encontros, setEncontros] = useState<{ data: string, hora_inicio: string, hora_fim: string, local: string }[]>([
+        { data: '', hora_inicio: '', hora_fim: '', local: '' }
     ])
 
     const [loading, setLoading] = useState(false)
@@ -49,7 +50,7 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
         if (!error) {
             setMostrarForm(false)
             setVagas(30)
-            setEncontros([{ data: '', hora_inicio: '', hora_fim: '' }])
+            setEncontros([{ data: '', hora_inicio: '', hora_fim: '', local: '' }])
             fetchAll()
         }
         setLoading(false)
@@ -92,11 +93,12 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                                 <span>das</span>
                                 <input type="time" required value={enc.hora_inicio} onChange={e => { const ne = [...encontros]; ne[i].hora_inicio = e.target.value; setEncontros(ne) }} className="w-full md:w-32 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
                                 <span>às</span>
-                                <input type="time" required value={enc.hora_fim} onChange={e => { const ne = [...encontros]; ne[i].hora_fim = e.target.value; setEncontros(ne) }} className="w-full md:w-32 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
+                                <input type="time" required value={enc.hora_fim} onChange={e => { const ne = [...encontros]; ne[i].hora_fim = e.target.value; setEncontros(ne) }} className="w-full md:w-28 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
+                                <input type="text" placeholder="Local" value={enc.local} onChange={e => { const ne = [...encontros]; ne[i].local = e.target.value; setEncontros(ne) }} className="w-full md:flex-1 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
                                 <button type="button" onClick={() => setEncontros(encontros.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
                             </div>
                         ))}
-                        <button type="button" onClick={() => setEncontros([...encontros, { data: '', hora_inicio: '', hora_fim: '' }])} className="text-sm font-medium text-[#2E6B7A] hover:underline flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Encontro</button>
+                        <button type="button" onClick={() => setEncontros([...encontros, { data: '', hora_inicio: '', hora_fim: '', local: '' }])} className="text-sm font-medium text-[#2E6B7A] hover:underline flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Encontro</button>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
@@ -142,6 +144,18 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                                 <option value="em_andamento">Em Andamento</option>
                                 <option value="encerrada">Encerrada</option>
                             </select>
+                            <Link
+                                href={`/cursos/${cursoId}/turmas/${turma.id}/presenca`}
+                                className="whitespace-nowrap bg-white border border-gray-300 px-3 py-1.5 rounded text-xs font-bold text-[#1A3C4A] hover:bg-gray-50 flex items-center gap-1"
+                            >
+                                <Users className="w-3 h-3" /> Presença
+                            </Link>
+                            <Link
+                                href={`/cursos/${cursoId}/turmas/${turma.id}/certificados`}
+                                className="whitespace-nowrap bg-[#1A3C4A] text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-slate-800 flex items-center gap-1"
+                            >
+                                <FileText className="w-3 h-3" /> Certificados
+                            </Link>
                         </div>
                     </div>
                 ))}
