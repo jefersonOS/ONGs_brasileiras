@@ -6,6 +6,17 @@ import { ExportButtons, LabelButton } from '@/components/patrimonio/ExportButton
 
 export default async function PatrimonioPage() {
     const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+        return (
+            <div className="p-8 text-center bg-red-50 text-red-600 rounded-lg">
+                Sessão expirada. Por favor, faça login novamente.
+            </div>
+        )
+    }
+
+    const tenantId = user.user_metadata?.tenant_id
 
     interface Bem extends Record<string, unknown> {
         id: string
@@ -19,10 +30,20 @@ export default async function PatrimonioPage() {
         qrcode_url: string
     }
 
-    const { data: bens } = await supabase
+    const { data: bens, error } = await supabase
         .from('patrimonio_bens')
         .select('*')
+        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
+
+    if (error) {
+        return (
+            <div className="p-8 text-center bg-orange-50 text-orange-700 rounded-lg">
+                <h2 className="font-bold text-lg mb-2">Erro ao carregar bens do patrimônio</h2>
+                <p className="text-sm">{error.message}</p>
+            </div>
+        )
+    }
 
     const columns: Column<Bem>[] = [
         { title: 'Tombamento', key: 'tombamento', render: (row) => <span className="font-medium text-[#2E6B7A]">{row.tombamento}</span> },
