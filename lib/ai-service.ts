@@ -73,7 +73,7 @@ Devolva APENAS um objeto JSON válido, contendo as seguintes chaves exatas (e ne
 }`
 
     const { text } = await generateText({
-        model,
+        model: model as any,
         system: systemPrompt,
         prompt: ideiaCentral
     })
