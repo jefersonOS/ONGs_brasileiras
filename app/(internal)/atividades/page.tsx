@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
-import { Plus, Users } from 'lucide-react'
+import { Plus, Users, FileText } from 'lucide-react'
 
 export default async function AtividadesPage() {
     const supabase = createClient()
@@ -47,9 +47,14 @@ export default async function AtividadesPage() {
             title: 'Ações',
             key: 'id',
             render: (row) => (
-                <Link href={`/atividades/presencas/${row.id}`} className="text-[#2D9E6B] hover:underline flex items-center gap-1 text-sm font-medium">
-                    <Users className="w-4 h-4" /> Presenças
-                </Link>
+                <div className="flex items-center gap-4">
+                    <Link href={`/atividades/presencas/${row.id}`} className="text-[#2D9E6B] hover:underline flex items-center gap-1 text-sm font-medium">
+                        <Users className="w-4 h-4" /> Presenças
+                    </Link>
+                    <Link href={`/atividades/${row.id}/comprovantes`} className="text-[#1A3C4A] hover:underline flex items-center gap-1 text-sm font-medium">
+                        <FileText className="w-4 h-4" /> Comprovantes
+                    </Link>
+                </div>
             )
         }
     ]

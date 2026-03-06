@@ -25,6 +25,7 @@ export default function NovaAtividadePage() {
     const [exigeInscricao, setExigeInscricao] = useState(true)
     const [emiteComprovante, setEmiteComprovante] = useState(false)
     const [presencaMinima, setPresencaMinima] = useState(75)
+    const [isItinerante, setIsItinerante] = useState(false)
 
     // Dynamic arrays
     const [datas, setDatas] = useState<{ data: string, hora_inicio: string, hora_fim: string }[]>([
@@ -96,6 +97,7 @@ export default function NovaAtividadePage() {
             exige_inscricao: exigeInscricao,
             emite_comprovante: emiteComprovante,
             presenca_minima: presencaMinima,
+            is_itinerante: isItinerante,
             publico_alvo: publicoAlvo,
             faixa_etaria: faixaEtaria,
             status
@@ -163,6 +165,19 @@ export default function NovaAtividadePage() {
                 {/* Dinâmica de Aulas e Locais */}
                 <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Datas e Locais</h3>
+
+                    <div className="space-y-4 shadow-sm p-4 bg-teal-50/30 rounded-lg border border-teal-100/50 mb-6">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <div className={`w-10 h-5 rounded-full transition-colors relative ${isItinerante ? 'bg-[#2D9E6B]' : 'bg-gray-300'}`}>
+                                <input type="checkbox" checked={isItinerante} onChange={e => setIsItinerante(e.target.checked)} className="sr-only" />
+                                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${isItinerante ? 'left-6' : 'left-1'}`}></div>
+                            </div>
+                            <div>
+                                <span className="text-sm font-bold text-[#1A3C4A]">Atividade Itinerante</span>
+                                <p className="text-[10px] text-gray-500">Esta atividade ocorre em diferentes locais e datas.</p>
+                            </div>
+                        </label>
+                    </div>
 
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-700">Encontros Planejados</label>
