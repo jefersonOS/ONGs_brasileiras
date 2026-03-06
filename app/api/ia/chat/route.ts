@@ -1,7 +1,6 @@
-import { streamText, tool } from 'ai'
+import { streamText } from 'ai'
 import { createClient } from '@/lib/supabase/server'
-import { z } from 'zod'
-import { getAIProvider, logAIAudit } from '@/lib/ai-service'
+import { getAIProvider } from '@/lib/ai-service'
 
 export const maxDuration = 30
 
@@ -74,7 +73,7 @@ export async function POST(req: Request) {
     }
 
     // Provedor dinâmico
-    const model = await getAIProvider(tenantId)
+    const model = await getAIProvider()
 
     const result = streamText({
         model: model as any,
@@ -96,7 +95,7 @@ Exemplo de dados para criar_atividade: { titulo, tipo, vagas, data }.
 
 Mantenha o tom de um consultoria especializada em MROSC.`,
         messages,
-        async onFinish({ text, toolCalls }) {
+        async onFinish({ text }) {
             if (conversaId) {
                 await supabase.from('ia_mensagens').insert({
                     conversa_id: conversaId,

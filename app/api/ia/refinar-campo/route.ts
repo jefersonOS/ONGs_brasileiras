@@ -11,9 +11,8 @@ export async function POST(req: Request) {
         const { data: { user } } = await supabase.auth.getUser()
 
         if (!user) return new Response('Unauthorized', { status: 401 })
-        const tenantId = user.user_metadata?.tenant_id
 
-        const model = await getAIProvider(tenantId)
+        const model = await getAIProvider()
 
         const { text } = await generateText({
             model: model as any,

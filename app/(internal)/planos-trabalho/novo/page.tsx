@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, Plus, Trash2, X } from 'lucide-react'
 
-export default function NovoPlanoTrabalhoPage() {
+function NovoPlanoForm() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const supabase = createClient()
@@ -328,7 +328,7 @@ export default function NovoPlanoTrabalhoPage() {
                         <div className="p-6">
                             <p className="text-sm text-gray-600 mb-4">A IA irá reescrever este campo para torná-lo mais profissional e adequado às normas.</p>
                             <div className="p-3 bg-gray-50 rounded border border-gray-100 text-xs text-gray-500 italic mb-4 max-h-32 overflow-y-auto">
-                                "{refiningField.value || '(vazio)'}"
+                                &quot;{refiningField.value || '(vazio)'}&quot;
                             </div>
                             {isRefining && (
                                 <div className="flex items-center gap-2 text-[#2D9E6B] font-medium text-xs mb-4">
@@ -351,5 +351,17 @@ export default function NovoPlanoTrabalhoPage() {
                 </div>
             )}
         </div>
+    )
+}
+
+export default function NovoPlanoTrabalhoPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin w-8 h-8 border-4 border-[#2D9E6B] border-t-transparent rounded-full"></div>
+            </div>
+        }>
+            <NovoPlanoForm />
+        </Suspense>
     )
 }

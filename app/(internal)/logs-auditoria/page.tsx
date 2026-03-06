@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Search, Filter, History, User, Bot, Clock, ChevronDown, CheckCircle2 } from 'lucide-react'
+import { Search, History, User, Bot, Clock, ChevronDown } from 'lucide-react'
 
 export default function LogsAuditoriaPage() {
     const supabase = createClient()

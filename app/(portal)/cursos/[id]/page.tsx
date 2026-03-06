@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { GraduationCap, Clock, MonitorPlay, Users, Calendar, ArrowLeft } from 'lucide-react'
+import { Clock, MonitorPlay, Users, Calendar, ArrowLeft } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 export default async function CursoPublicoPage({ params }: { params: { id: string } }) {

@@ -6,7 +6,7 @@ import { generateText } from 'ai'
 // Simulates a DB fetch of provider config. 
 // For now, defaults to OpenAI or Google based on env vars available.
 // Retorna o objeto do modelo configurado para o tenant
-export async function getAIProvider(_tenantId?: string) {
+export async function getAIProvider() {
     if (process.env.OPENAI_API_KEY) {
         const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
         return openai('gpt-4o')
@@ -49,15 +49,14 @@ export async function logAIAudit(supabase: any, {
 }
 
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function buildSystemPrompt(tenantId?: string, userId?: string, paginaAtual?: string) {
+export async function buildSystemPrompt() {
     return `Você é um assistente especializado em gestão de ONGs brasileiras. 
   Seu objetivo é ajudar a criar documentos formais, planos de trabalho e métricas sólidas. 
   Responda sempre em um tom profissional, orientando-se pelo Marco Regulatório das Organizações da Sociedade Civil (MROSC).`
 }
 
-export async function gerarPlanoTrabalho(ideiaCentral: string, tenantId: string) {
-    const model = await getAIProvider(tenantId)
+export async function gerarPlanoTrabalho(ideiaCentral: string) {
+    const model = await getAIProvider()
 
     const systemPrompt = `Você é um especialista em elaboração de projetos sociais para ONGs.
 Construa um plano de trabalho completo baseado estritamente na seguinte ideia central fornecida. 
