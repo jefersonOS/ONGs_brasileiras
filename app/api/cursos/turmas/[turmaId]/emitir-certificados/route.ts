@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { PDFService } from '@/lib/pdf-service'
+import { WhatsAppService } from '@/lib/whatsapp-service'
 
 export async function POST(req: Request, { params }: { params: { turmaId: string } }) {
     try {
@@ -67,7 +68,22 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
                 status: 'valido'
             }).select().single()
 
-            if (!certError) results.push(cert)
+            if (!certError) {
+                results.push(cert)
+
+                // Enviar WhatsApp
+                if (inscricao.users.whatsapp) {
+                    await WhatsAppService.enviar(
+                        tenantId,
+                        inscricao.users.whatsapp,
+                        'certificado_disponivel',
+                        {
+                            curso: turma.curso.titulo,
+                            link: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://nexori.com'}/validar/${codigo}`
+                        }
+                    )
+                }
+            }
         }
 
         return Response.json({ success: true, count: results.length })

@@ -71,16 +71,24 @@ export default function InscricaoPage({ params }: { params: { tipo: string, id: 
             return
         }
 
-        const { error } = await supabase.from('inscricoes').insert({
-            entidade_tipo: tipo,
-            entidade_id: id,
-            turma_id: turmaId || null,
-            cidadao_id: user.id,
-            status: 'confirmada' // Regras complexas de lista de espera simplificadas pro MVP
+        const { data: { user: currentUser } } = await supabase.auth.getUser()
+
+        const res = await fetch('/api/inscricao/confirmar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                tipo,
+                id,
+                turmaId: turmaId || null,
+                cidadaoId: user.id,
+                tenantId: currentUser?.user_metadata?.tenant_id
+            })
         })
 
-        if (error) {
-            setErrorMessage(error.message)
+        const result = await res.json()
+
+        if (!result.success) {
+            setErrorMessage(result.error)
             setStatusInscricao('erro')
         } else {
             setStatusInscricao('sucesso')
