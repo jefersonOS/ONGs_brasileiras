@@ -1,13 +1,12 @@
+```
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Check, X, Users, Calendar, ArrowLeft, Save, Printer } from 'lucide-react'
+import { Check, X, Calendar, Clock, Users, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { clsx } from 'clsx'
 
-export default function CoursePresencePage({ params }: { params: { id: string, turmaId: string } }) {
     const { id: cursoId, turmaId } = params
     const supabase = createClient()
 
@@ -23,7 +22,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
         const { data: presencasExistentes } = await supabase
             .from('presencas')
             .select('inscricao_id, presente')
-            .eq('encontro_id', `meeting_${index}`)
+            .eq('encontro_id', `meeting_${ index } `)
         // Nota: encontro_id é text, usamos meeting_INDEX para diferenciar encontros da mesma turma
 
         const newPresencas: Record<string, boolean> = {}
@@ -78,12 +77,12 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
             const { data: { user } } = await supabase.auth.getUser()
 
             // 1. Deletar presenças antigas deste encontro
-            await supabase.from('presencas').delete().eq('encontro_id', `meeting_${encontroIndex}`)
+            await supabase.from('presencas').delete().eq('encontro_id', `meeting_${ encontroIndex } `)
 
             // 2. Inserir novas
             const payload = Object.entries(presencas).map(([inscricaoId, presente]) => ({
                 inscricao_id: inscricaoId,
-                encontro_id: `meeting_${encontroIndex}`,
+                encontro_id: `meeting_${ encontroIndex } `,
                 presente,
                 registrado_por: user?.id
             }))
@@ -113,7 +112,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <Link href={`/cursos/turmas/${cursoId}`} className="text-xs font-black uppercase text-[#2D9E6B] hover:underline flex items-center gap-1 mb-2">
+                    <Link href={`/ cursos / turmas / ${ cursoId } `} className="text-xs font-black uppercase text-[#2D9E6B] hover:underline flex items-center gap-1 mb-2">
                         <ArrowLeft className="w-3 h-3" /> Voltar para Turmas
                     </Link>
                     <h1 className="text-2xl font-black text-[#1A3C4A]">{curso?.titulo}</h1>
@@ -160,7 +159,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                         <div>
                             <p className="text-[10px] font-black uppercase text-gray-400">Dados do Encontro Ativo</p>
                             <h3 className="font-bold text-[#1A3C4A]">
-                                {encontroAtual ? `${new Date(encontroAtual.data).toLocaleDateString()} • ${encontroAtual.hora_inicio} às ${encontroAtual.hora_fim}` : 'Data não definida'}
+                                {encontroAtual ? `${ new Date(encontroAtual.data).toLocaleDateString() } • ${ encontroAtual.hora_inicio } às ${ encontroAtual.hora_fim } ` : 'Data não definida'}
                             </h3>
                             <p className="text-xs text-gray-500 mt-0.5">{encontroAtual?.local || 'Local não definido'}</p>
                         </div>

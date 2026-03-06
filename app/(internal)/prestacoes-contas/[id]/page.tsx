@@ -1,20 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-    FileText, ArrowLeft, CheckCircle2, XCircle,
+    FileText, ArrowLeft,
     MessageSquare, DollarSign, Download, Calendar,
     User, ArrowUpRight, ArrowDownRight, Clock
 } from 'lucide-react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 
-import { useRouter } from 'next/navigation'
 
 export default function DetalhePrestacaoPage({ params }: { params: { id: string } }) {
     const supabase = createClient()
-    const router = useRouter()
     const { id } = params
 
     const [loading, setLoading] = useState(true)
@@ -22,7 +19,7 @@ export default function DetalhePrestacaoPage({ params }: { params: { id: string 
     const [prestacao, setPrestacao] = useState<any>(null)
     const [parecerText, setParecerText] = useState('')
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         const { data } = await supabase
             .from('prestacoes_contas')
             .select('*, planos_trabalho(titulo), users(nome), prestacoes_itens(*), prestacoes_pareceres(*, users(nome))')
@@ -35,11 +32,11 @@ export default function DetalhePrestacaoPage({ params }: { params: { id: string 
             data.prestacoes_pareceres.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         }
         setLoading(false)
-    }
+    }, [id, supabase])
 
     useEffect(() => {
         fetchData()
-    }, [id])
+    }, [fetchData])
 
     const handleReview = async (newStatus: string) => {
         setSaving(true)
@@ -210,7 +207,7 @@ export default function DetalhePrestacaoPage({ params }: { params: { id: string 
                                         <p className="text-[10px] font-black uppercase text-gray-400">{p.users?.nome}</p>
                                         <p className="text-[8px] text-gray-400 tracking-widest">{new Date(p.created_at).toLocaleDateString()}</p>
                                     </div>
-                                    <p className="text-xs text-gray-600 font-medium italic">"{p.texto}"</p>
+                                    <p className="text-xs text-gray-600 font-medium italic">&quot;{p.texto}&quot;</p>
                                 </div>
                             ))}
                             {(!prestacao.prestacoes_pareceres || prestacao.prestacoes_pareceres.length === 0) && (

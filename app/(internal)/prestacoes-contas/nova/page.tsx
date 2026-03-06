@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { FileText, Plus, Trash2, Save, Send, Upload, DollarSign, Calculator, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
+import { Plus, Trash2, Send, Upload, DollarSign, Calculator, ArrowLeft, Loader2, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 

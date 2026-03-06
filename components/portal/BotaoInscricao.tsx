@@ -25,7 +25,6 @@ export function BotaoInscricao({
     isLogged
 }: BotaoInscricaoProps) {
     const [loading, setLoading] = useState(false)
-    const router = useRouter()
 
     const handleCancel = async () => {
         if (!confirm('Tem certeza que deseja cancelar sua participação?')) return
