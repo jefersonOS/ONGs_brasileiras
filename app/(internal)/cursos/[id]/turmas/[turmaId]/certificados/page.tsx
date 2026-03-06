@@ -54,7 +54,7 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
             setLoading(false)
         }
         fetchData()
-    }, [cursoId, turmaId])
+    }, [cursoId, turmaId, supabase])
 
     const handleIssueBatch = async () => {
         const aptosSemCertificado = participantes.filter(p => p.apto && !p.certificado)

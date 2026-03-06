@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Users, Building2, ShieldCheck, ChevronRight, Search, LayoutDashboard } from 'lucide-react'
-import Link from 'next/link'
+import { Users, Building2, ShieldCheck, Search, LayoutDashboard } from 'lucide-react'
 
 export default async function BackofficePage() {
     const supabase = createClient()

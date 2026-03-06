@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { CalendarDays, MapPin, Users, ArrowLeft, Info, CheckCircle } from 'lucide-react'
+import { CalendarDays, MapPin, Users, ArrowLeft, Info } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { BotaoInscricao } from '@/components/portal/BotaoInscricao'
 

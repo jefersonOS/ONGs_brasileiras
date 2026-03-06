@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getTenant } from '@/lib/tenant-server'
 import { redirect } from 'next/navigation'
-import { GraduationCap, CalendarDays, FileText, User, Download, MapPin } from 'lucide-react'
+import { GraduationCap, CalendarDays, FileText, User, Download } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function MinhaAreaPage() {

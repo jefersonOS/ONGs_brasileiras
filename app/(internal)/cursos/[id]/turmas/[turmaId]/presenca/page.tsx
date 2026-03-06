@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Check, X, Users, Calendar, ArrowLeft, Save, Printer } from 'lucide-react'
 import Link from 'next/link'
@@ -10,7 +10,6 @@ import { clsx } from 'clsx'
 export default function CoursePresencePage({ params }: { params: { id: string, turmaId: string } }) {
     const { id: cursoId, turmaId } = params
     const supabase = createClient()
-    const router = useRouter()
 
     const [curso, setCurso] = useState<any>(null)
     const [turma, setTurma] = useState<any>(null)
@@ -19,6 +18,20 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
     const [presencas, setPresencas] = useState<Record<string, boolean>>({})
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+
+    const fetchPresencas = useCallback(async (index: number) => {
+        const { data: presencasExistentes } = await supabase
+            .from('presencas')
+            .select('inscricao_id, presente')
+            .eq('encontro_id', `meeting_${index}`)
+        // Nota: encontro_id é text, usamos meeting_INDEX para diferenciar encontros da mesma turma
+
+        const newPresencas: Record<string, boolean> = {}
+        presencasExistentes?.forEach(p => {
+            newPresencas[p.inscricao_id] = p.presente
+        })
+        setPresencas(newPresencas)
+    }, [supabase])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -45,21 +58,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
         }
 
         fetchData()
-    }, [cursoId, turmaId])
-
-    const fetchPresencas = async (index: number) => {
-        const { data: presencasExistentes } = await supabase
-            .from('presencas')
-            .select('inscricao_id, presente')
-            .eq('encontro_id', `meeting_${index}`)
-        // Nota: encontro_id é text, usamos meeting_INDEX para diferenciar encontros da mesma turma
-
-        const newPresencas: Record<string, boolean> = {}
-        presencasExistentes?.forEach(p => {
-            newPresencas[p.inscricao_id] = p.presente
-        })
-        setPresencas(newPresencas)
-    }
+    }, [cursoId, turmaId, supabase, fetchPresencas])
 
     const handleSwitchMeeting = async (index: number) => {
         setEncontroIndex(index)

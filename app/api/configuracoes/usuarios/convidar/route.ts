@@ -4,7 +4,6 @@ import { sendEmail } from '@/lib/resend'
 export async function POST(req: Request) {
     try {
         const { email, role, tenantId, tenantNome } = await req.json()
-        const supabase = createClient()
 
         // 1. Gerar link de convite (simulado com deep link para o portal)
         // Em um cenário real, salvaríamos no banco um token de convite

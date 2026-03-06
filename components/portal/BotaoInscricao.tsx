@@ -36,13 +36,11 @@ export function BotaoInscricao({
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ inscricaoId })
             })
-            if (res.ok) {
-                router.refresh()
-            } else {
-                alert('Erro ao cancelar inscrição.')
-            }
-        } catch (err) {
-            alert('Falha na conexão.')
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Erro ao processar')
+            window.location.reload()
+        } catch {
+            alert('Falha ao processar solicitação.')
         } finally {
             setLoading(false)
         }

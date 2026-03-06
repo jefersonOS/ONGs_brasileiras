@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
     Save, Building, Palette, Sparkles, MessageSquare,
-    FileText, Users, Smartphone, Wifi, Upload, Eye,
+    FileText, Users, Upload, Eye,
     CheckCircle, AlertCircle, Loader2
 } from 'lucide-react'
 
@@ -62,7 +62,7 @@ export default function ConfiguracoesPage() {
         assinatura_url: ''
     })
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return setLoading(false)
@@ -116,11 +116,11 @@ export default function ConfiguracoesPage() {
             })
         }
         setLoading(false)
-    }
+    }, [supabase])
 
     useEffect(() => {
         fetchData()
-    }, [])
+    }, [fetchData])
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault()
