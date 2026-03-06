@@ -1,17 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Plus, Trash2, Calendar, Users } from 'lucide-react'
 
 export default function TurmasPage({ params }: { params: { id: string } }) {
     const cursoId = params.id
-    const router = useRouter()
     const supabase = createClient()
 
-    const [curso, setCurso] = useState<any>(null)
-    const [turmas, setTurmas] = useState<any[]>([])
+    const [curso, setCurso] = useState<{ titulo: string } | null>(null)
+    const [turmas, setTurmas] = useState<{ id: string, status: string, vagas: number, encontros: any[] }[]>([])
 
     // Formulário Nova Turma
     const [mostrarForm, setMostrarForm] = useState(false)
@@ -126,7 +124,7 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                                 <div>
                                     <span className="font-medium text-gray-800">{turma.encontros?.length || 0} Encontros</span>
                                     <ul className="mt-1 space-y-1 text-xs">
-                                        {turma.encontros?.slice(0, 3).map((e: any, i: number) => (
+                                        {turma.encontros?.slice(0, 3).map((e: { data: string, hora_inicio: string, hora_fim: string }, i: number) => (
                                             <li key={i}>{new Date(e.data).toLocaleDateString()} ({e.hora_inicio} - {e.hora_fim})</li>
                                         ))}
                                         {turma.encontros?.length > 3 && <li>...</li>}
