@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { MapPin, Tag, ShieldCheck, AlertTriangle, Clock } from 'lucide-react'
+import { MapPin, Tag, ShieldCheck, AlertTriangle, Clock, QrCode } from 'lucide-react'
 import { clsx } from 'clsx'
+import Image from 'next/image'
 import { OcorrenciaForm } from '@/components/patrimonio/OcorrenciaForm'
 
 export default async function PublicBemPage({ params }: { params: { tombamento: string } }) {
@@ -71,8 +72,17 @@ export default async function PublicBemPage({ params }: { params: { tombamento: 
                                 </div>
                             </div>
                             <div className="flex items-start gap-3">
-                                <div className="p-2 bg-gray-50 rounded-lg text-gray-400">
-                                    <Clock className="w-4 h-4" />
+                                <div className="relative w-full aspect-square bg-white p-2 rounded-2xl shadow-inner border border-gray-100 flex items-center justify-center">
+                                    {bem.qrcode_url ? (
+                                        <Image
+                                            src={bem.qrcode_url}
+                                            alt="QR Code do Bem"
+                                            fill
+                                            className="object-contain p-2"
+                                        />
+                                    ) : (
+                                        <QrCode className="w-20 h-20 text-gray-200" />
+                                    )}
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold text-gray-400 uppercase">Responsável</p>

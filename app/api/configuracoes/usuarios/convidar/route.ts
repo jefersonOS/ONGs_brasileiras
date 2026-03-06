@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/resend'
 
 export async function POST(req: Request) {

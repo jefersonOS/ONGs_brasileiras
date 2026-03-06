@@ -49,7 +49,7 @@ export const AssetLabel = ({ bem }: { bem: any }) => {
             <Page size={[150, 100]} style={styles.page}>
                 <View style={styles.container}>
                     <View style={styles.qrSection}>
-                        {bem.qrcode_url && <Image src={bem.qrcode_url} alt="QR Code de identificação do bem" />}
+                        {bem.qrcode_url && <Image src={bem.qrcode_url} />}
                     </View>
                     <View style={styles.infoSection}>
                         <Text style={styles.tombamento}>{bem.tombamento}</Text>
