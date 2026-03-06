@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 

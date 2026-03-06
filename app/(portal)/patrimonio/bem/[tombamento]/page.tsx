@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { MapPin, Tag, ShieldCheck, AlertTriangle, Clock, QrCode } from 'lucide-react'
+import { MapPin, Tag, ShieldCheck, AlertTriangle, QrCode } from 'lucide-react'
 import { clsx } from 'clsx'
 import Image from 'next/image'
 import { OcorrenciaForm } from '@/components/patrimonio/OcorrenciaForm'

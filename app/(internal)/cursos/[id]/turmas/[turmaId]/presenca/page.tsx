@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Check, X, Calendar, Clock, Users, ArrowLeft, Save, Printer } from 'lucide-react'
+import { Check, X, Calendar, Users, ArrowLeft, Save, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 

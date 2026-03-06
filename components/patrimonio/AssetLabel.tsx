@@ -49,6 +49,7 @@ export const AssetLabel = ({ bem }: { bem: any }) => {
             <Page size={[150, 100]} style={styles.page}>
                 <View style={styles.container}>
                     <View style={styles.qrSection}>
+                        {/* eslint-disable-next-line jsx-a11y/alt-text */}
                         {bem.qrcode_url && <Image src={bem.qrcode_url} />}
                     </View>
                     <View style={styles.infoSection}>

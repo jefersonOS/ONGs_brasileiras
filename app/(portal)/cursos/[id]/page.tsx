@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import { Calendar, Clock, Users, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { BotaoInscricao } from '@/components/portal/BotaoInscricao'
 
@@ -57,7 +58,13 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
 
                         {curso.thumbnail_url && (
                             <div className="hidden md:block w-72 h-44 rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl">
-                                <img src={curso.thumbnail_url} alt={curso.titulo} className="w-full h-full object-cover" />
+                                <Image
+                                    src={curso.thumbnail_url}
+                                    alt={curso.titulo}
+                                    width={288}
+                                    height={176}
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
                         )}
                     </div>
