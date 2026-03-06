@@ -303,17 +303,16 @@ ALTER TABLE ia_acoes_pendentes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE whatsapp_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE audit_logs ENABLE ROW LEVEL SECURITY;
 
--- POLÍTICAS SIMPLES DE EXEMPLO PARA RLS (As políticas finais de produção geralmente são mais granulares)
+-- POLÍTICAS SIMPLES DE EXEMPLO PARA RLS
+-- Usamos coalesce com uuid_nil() ou similar para evitar erros se metadata não existir
 CREATE POLICY "Usuários veem membros do próprio tenant" ON users
-  FOR SELECT USING (tenant_id = (SELECT tenant_id FROM users WHERE id = auth.uid()));
+  FOR SELECT USING (tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
 
 CREATE POLICY "Tenants visíveis para seus usuários" ON tenants
-  FOR SELECT USING (id = (SELECT tenant_id FROM users WHERE id = auth.uid()));
+  FOR SELECT USING (id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
 
--- Exemplo: Projetos do mesmo tenant
 CREATE POLICY "Projetos do tenant" ON projetos
-  FOR ALL USING (tenant_id = (SELECT tenant_id FROM users WHERE id = auth.uid()));
+  FOR ALL USING (tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
 
--- Exemplo: Planos do mesmo tenant
 CREATE POLICY "Planos do tenant" ON planos_trabalho
-  FOR ALL USING (tenant_id = (SELECT tenant_id FROM users WHERE id = auth.uid()));
+  FOR ALL USING (tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
