@@ -1,66 +1,49 @@
-'use client'
+import { getTenant } from '@/lib/tenant-server'
+import { PortalHeader } from '@/components/portal/PortalHeader'
+import { AIChat } from '@/components/ia/AIChat'
 
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
-import { LogOut, User } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-
-export default function PortalLayout({
+export default async function PortalLayout({
     children,
 }: {
     children: React.ReactNode
 }) {
-    const [user, setUser] = useState<SupabaseUser | null>(null)
-    const supabase = createClient()
-    const router = useRouter()
+    const tenant = await getTenant()
+    const config = tenant?.config_portal || {}
 
-    useEffect(() => {
-        supabase.auth.getUser().then(({ data }) => setUser(data.user))
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
-
-    const handleLogout = async () => {
-        await supabase.auth.signOut()
-        setUser(null)
-        router.push('/')
-    }
+    // Injeção de cores dinâmicas via CSS Variables
+    const primaryColor = config.cor_primaria || '#1A3C4A'
+    const secondaryColor = config.cor_secundaria || '#2D9E6B'
 
     return (
         <div className="min-h-screen flex flex-col bg-[#F5F7F8]">
-            <header className="h-[60px] bg-[#1A3C4A] text-white flex items-center justify-between px-6 lg:px-12 sticky top-0 z-50">
-                <Link href="/" className="font-bold text-xl flex items-center gap-2">
-                    Nexori <span className="text-sm font-normal text-gray-300 hidden sm:inline-block">Portal do Cidadão</span>
-                </Link>
+            {/* CSS Variables Dinâmicas */}
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                :root {
+                    --primary: ${primaryColor};
+                    --secondary: ${secondaryColor};
+                }
+            `}} />
 
-                <nav className="flex items-center gap-4">
-                    <Link href="/" className="text-sm text-gray-300 hover:text-white transition-colors">Início</Link>
-                    {user ? (
-                        <div className="flex items-center gap-4 ml-4 pl-4 border-l border-[#2E6B7A]">
-                            <Link href="/minha-area" className="flex items-center gap-2 text-sm text-white hover:text-[#2D9E6B] transition-colors">
-                                <User className="w-4 h-4" /> Minha Área
-                            </Link>
-                            <button onClick={handleLogout} className="text-gray-300 hover:text-red-400">
-                                <LogOut className="w-4 h-4" />
-                            </button>
-                        </div>
-                    ) : (
-                        <div className="flex items-center gap-3 ml-4 pl-4 border-l border-[#2E6B7A]">
-                            <Link href="/login" className="text-sm text-gray-300 hover:text-white transition-colors">Entrar</Link>
-                            <Link href="/register" className="text-sm bg-[#2D9E6B] text-white px-3 py-1.5 rounded-md hover:bg-green-600 transition-colors">Cadastro</Link>
-                        </div>
-                    )}
-                </nav>
-            </header>
+            <PortalHeader tenantName={tenant?.nome || 'Nexori'} />
 
             <main className="flex-1">
                 {children}
             </main>
 
-            <footer className="bg-white border-t border-gray-200 py-6 text-center text-sm text-gray-500">
-                &copy; {new Date().getFullYear()} Nexori SaaS. Todos os direitos reservados.
+            <footer className="bg-white border-t border-gray-100 py-12 px-6">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+                    <div className="text-center md:text-left">
+                        <p className="font-black text-[#1A3C4A] text-xl">{tenant?.nome || 'Nexori'}</p>
+                        <p className="text-gray-400 text-sm mt-1">Conectando você ao futuro da nossa comunidade.</p>
+                    </div>
+                    <div className="text-center md:text-right">
+                        <p className="text-xs text-gray-300 font-bold uppercase tracking-widest">&copy; {new Date().getFullYear()} Nexori SaaS</p>
+                    </div>
+                </div>
             </footer>
+
+            <AIChat />
         </div>
     )
 }

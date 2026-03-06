@@ -56,7 +56,29 @@ export async function POST(req: Request) {
                     data,
                     local
                 }
-            )
+            ).catch(err => console.error('WhatsApp Error:', err))
+        }
+
+        // 4. Enviar E-mail via Resend
+        if (inscricao.users?.email) {
+            const { sendEmail } = await import('@/lib/resend')
+            await sendEmail({
+                to: inscricao.users.email,
+                subject: `Inscrição Confirmada: ${titulo}`,
+                html: `
+                    <div style="font-family: sans-serif; color: #1A3C4A;">
+                        <h1 style="color: #2D9E6B;">Olá, ${inscricao.users.nome}!</h1>
+                        <p>Sua inscrição no curso/atividade <strong>${titulo}</strong> foi confirmada com sucesso.</p>
+                        <div style="background: #f5f7f8; padding: 20px; border-radius: 10px;">
+                            <p><strong>Data:</strong> ${data}</p>
+                            <p><strong>Local:</strong> ${local}</p>
+                        </div>
+                        <p style="margin-top: 20px;">Nos vemos lá!</p>
+                        <hr />
+                        <p style="font-size: 12px; color: #999;">Esta é uma mensagem automática da plataforma Nexori.</p>
+                    </div>
+                `
+            }).catch(err => console.error('Email Error:', err))
         }
 
         return Response.json({ success: true, id: inscricao.id })
