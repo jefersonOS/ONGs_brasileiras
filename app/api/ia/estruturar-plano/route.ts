@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
         const { object } = await generateObject({
             model: model as any,
-            mode: 'tool',
+            mode: 'json',
             schema: z.object({
                 titulo: z.string(),
                 secoes: z.array(z.object({
@@ -66,6 +66,10 @@ export async function POST(req: Request) {
                 resumo_executivo: z.string()
             }),
             messages: [
+                {
+                    role: 'system',
+                    content: 'Você é um assistente que extrai estruturas de documentos para formulários. Responda estritamente com JSON.'
+                },
                 {
                     role: 'user',
                     content: promptContent

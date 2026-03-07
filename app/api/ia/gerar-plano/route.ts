@@ -38,12 +38,19 @@ export async function POST(req: Request) {
         const { object } = await generateObject({
             model: model as any,
             schema: PlanoSchema,
-            mode: 'tool',
-            system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras, seguindo rigorosamente as diretrizes da Lei 13.019/2014 (MROSC) e do Ministério da Cidadania.
-      
-      Sua tarefa é gerar um plano completo e profissional baseado em uma ideia central.
-      O plano deve ser estruturado, persuasivo e tecnicamente correto.`,
-            prompt: `Gere um Plano de Trabalho completo para a seguinte ideia: "${ideiaCentral}"`,
+            mode: 'json',
+            messages: [
+                {
+                    role: 'system',
+                    content: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC). 
+                    Responda estritamente com um objeto JSON válido seguindo o esquema fornecido. 
+                    Não inclua nenhuma outra explicação ou texto.`
+                },
+                {
+                    role: 'user',
+                    content: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`
+                }
+            ]
         })
 
         return Response.json(object)
