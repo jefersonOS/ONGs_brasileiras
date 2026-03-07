@@ -37,7 +37,7 @@ export async function POST(req: Request) {
 
         const { object } = await generateObject({
             model: model as any,
-            mode: 'json',
+            mode: 'tool',
             schema: planoSchema,
             system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC).`,
             prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`,
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
         return Response.json(object)
     } catch (error: any) {
-        console.error('Erro ao gerar plano:', error)
+        console.error('Erro ao gerar plano:', error?.message, '| text:', error?.text, '| cause:', error?.cause)
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
