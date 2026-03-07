@@ -45,7 +45,7 @@ export async function POST(req: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
 
-        const { data: convite, error: conviteError } = await adminSupabase
+        const { error: conviteError } = await adminSupabase
             .from('convites_equipe')
             .insert({
                 tenant_id: tenantId,

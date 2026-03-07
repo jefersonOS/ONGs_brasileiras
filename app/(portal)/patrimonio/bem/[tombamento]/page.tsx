@@ -50,10 +50,18 @@ export default async function PublicBemPage({ params }: { params: { tombamento: 
                         <p className="text-lg font-bold text-[#1A3C4A] capitalize">{bem.estado_conservacao}</p>
                     </div>
                     <div className={clsx(
-                        "w-12 h-12 rounded-2xl flex items-center justify-center",
+                        "w-12 h-12 rounded-2xl flex items-center justify-center relative overflow-hidden",
                         bem.estado_conservacao === 'otimo' || bem.estado_conservacao === 'bom' ? "bg-green-100 text-green-600" : "bg-orange-100 text-orange-600"
                     )}>
-                        {bem.qrcode_url && <img src={bem.qrcode_url} alt="QR Code" className="w-full h-full object-contain" />}
+                        {bem.qrcode_url && (
+                            <Image
+                                src={bem.qrcode_url}
+                                alt="QR Code"
+                                width={48}
+                                height={48}
+                                className="object-contain"
+                            />
+                        )}
                     </div>
                 </div>
 

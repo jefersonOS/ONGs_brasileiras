@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-    FileText, ArrowLeft, CheckCircle, XCircle,
+    FileText, ArrowLeft,
     MessageSquare, DollarSign, Calendar,
-    User, Clock, LayoutDashboard, Target, ShieldCheck
+    Clock, LayoutDashboard, Target, ShieldCheck
 } from 'lucide-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 export default function DetalhePlanoRevisaoPage({ params }: { params: { id: string } }) {

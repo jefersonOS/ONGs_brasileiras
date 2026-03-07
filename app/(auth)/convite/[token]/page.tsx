@@ -3,16 +3,14 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-    ShieldCheck, UserPlus, ArrowRight,
-    CheckCircle2, Building2, Lock, Sparkles
+    ShieldCheck, ArrowRight,
+    Building2, Lock, Sparkles
 } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 
 export default function AceitarConvitePage({ params }: { params: { token: string } }) {
     const { token } = params
     const supabase = createClient()
-    const router = useRouter()
 
     const [loading, setLoading] = useState(true)
     const [convite, setConvite] = useState<any>(null)
@@ -40,7 +38,7 @@ export default function AceitarConvitePage({ params }: { params: { token: string
             setLoading(false)
         }
         checkInvite()
-    }, [token])
+    }, [token, supabase])
 
     if (loading) return <div className="min-h-screen flex items-center justify-center bg-gray-50 animate-pulse text-[10px] font-black uppercase tracking-widest text-gray-400italic">Validando convite...</div>
 
@@ -85,7 +83,7 @@ export default function AceitarConvitePage({ params }: { params: { token: string
                     <div className="space-y-4">
                         <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Acessos que você terá:</p>
                         <div className="flex flex-wrap justify-center gap-2">
-                            {Object.entries(convite.permissoes).filter(([_, val]) => val).map(([key]) => (
+                            {Object.entries(convite.permissoes).filter(([, val]) => val).map(([key]) => (
                                 <span key={key} className="px-4 py-2 bg-[#1A3C4A]/5 text-[#1A3C4A] rounded-full text-[10px] font-black uppercase tracking-tighter">
                                     {key.replace('_', ' ')}
                                 </span>

@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
-    Users, UserPlus, Shield, Check,
-    Copy, Mail, ChevronRight, LayoutDashboard,
+    Users, UserPlus, Check,
+    Copy, Mail, ChevronRight,
     Lock, CheckCircle2, XCircle
 } from 'lucide-react'
 
@@ -31,7 +31,7 @@ export default function GestaoEquipePage() {
     )
     const [generatedLink, setGeneratedLink] = useState('')
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
 
@@ -45,11 +45,11 @@ export default function GestaoEquipePage() {
         setTeam(usersRes.data || [])
         setInvites(invitesRes.data || [])
         setLoading(false)
-    }
+    }, [supabase])
 
     useEffect(() => {
         fetchData()
-    }, [])
+    }, [fetchData])
 
     const handleCreateInvite = async () => {
         try {
@@ -221,8 +221,8 @@ export default function GestaoEquipePage() {
                                                 key={modulo.id}
                                                 onClick={() => togglePermission(modulo.id)}
                                                 className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between group ${permissions[modulo.id]
-                                                        ? 'bg-green-50 border-green-200 text-green-700'
-                                                        : 'bg-white border-gray-100 text-gray-400'
+                                                    ? 'bg-green-50 border-green-200 text-green-700'
+                                                    : 'bg-white border-gray-100 text-gray-400'
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-3">

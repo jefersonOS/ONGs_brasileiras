@@ -9,7 +9,6 @@ import { Sparkles, UserPlus, Info } from 'lucide-react'
 export default function RegisterPage() {
     const searchParams = useSearchParams()
     const token = searchParams.get('token')
-    const tenantIdParam = searchParams.get('tenant')
 
     const [nome, setNome] = useState('')
     const [email, setEmail] = useState('')
