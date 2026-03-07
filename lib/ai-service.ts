@@ -27,40 +27,50 @@ export async function getAIProvider() {
         }
     }
 
-    // 1. Verificar chaves específicas do Tenant (Salvas no banco)
-    if (tenantConfig.ai_key_openai) {
-        const openai = createOpenAI({ apiKey: tenantConfig.ai_key_openai })
-        return openai(tenantConfig.ai_modelo_ativo || 'gpt-4o')
+    // Determinar qual provedor usar com base no modelo ativo selecionado
+    const modeloAtivo = tenantConfig.ai_modelo_ativo || 'gemini-1.5-flash' // Default para Gemini
+
+    // OpenAI Models
+    if (modeloAtivo.startsWith('gpt-')) {
+        const key = tenantConfig.ai_key_openai || process.env.OPENAI_API_KEY
+        if (key) {
+            const openai = createOpenAI({ apiKey: key })
+            return openai(modeloAtivo)
+        }
     }
 
-    if (tenantConfig.ai_key_google) {
-        const google = createGoogleGenerativeAI({ apiKey: tenantConfig.ai_key_google })
-        return google(tenantConfig.ai_modelo_ativo || 'gemini-1.5-flash')
+    // Anthropic Models
+    if (modeloAtivo.startsWith('claude-')) {
+        const key = tenantConfig.ai_key_claude || process.env.ANTHROPIC_API_KEY
+        if (key) {
+            const anthropic = createAnthropic({ apiKey: key })
+            return anthropic(modeloAtivo)
+        }
     }
 
-    if (tenantConfig.ai_key_claude) {
-        const anthropic = createAnthropic({ apiKey: tenantConfig.ai_key_claude })
-        return anthropic(tenantConfig.ai_modelo_ativo || 'claude-3-5-sonnet-20240620')
+    // Google Models
+    if (modeloAtivo.startsWith('gemini-')) {
+        const key = tenantConfig.ai_key_google || process.env.GOOGLE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY
+        if (key) {
+            const google = createGoogleGenerativeAI({ apiKey: key })
+            return google(modeloAtivo)
+        }
     }
 
-    // 2. Fallback para Variáveis de Ambiente (Global)
-    if (process.env.OPENAI_API_KEY) {
-        const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
-        return openai('gpt-4o')
-    }
-
-    const googleKey = process.env.GOOGLE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY
-    if (googleKey) {
-        const google = createGoogleGenerativeAI({ apiKey: googleKey })
+    // 2. Fallback de Último Caso (Tenta qualquer uma configurada se o modelo específico falhou ou não bateu no prefixo)
+    if (tenantConfig.ai_key_google || process.env.GOOGLE_AI_API_KEY) {
+        const key = tenantConfig.ai_key_google || process.env.GOOGLE_AI_API_KEY
+        const google = createGoogleGenerativeAI({ apiKey: key! })
         return google('gemini-1.5-flash')
     }
 
-    if (process.env.ANTHROPIC_API_KEY) {
-        const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-        return anthropic('claude-3-5-sonnet-20240620')
+    if (tenantConfig.ai_key_openai || process.env.OPENAI_API_KEY) {
+        const key = tenantConfig.ai_key_openai || process.env.OPENAI_API_KEY
+        const openai = createOpenAI({ apiKey: key! })
+        return openai('gpt-4o')
     }
 
-    throw new Error("Nenhum provedor de IA configurado. Verifique as configurações ou as variáveis de ambiente.")
+    throw new Error("Nenhum provedor de IA configurado ou chave correspondente não encontrada para o modelo: " + modeloAtivo)
 }
 
 /**
