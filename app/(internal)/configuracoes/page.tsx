@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
     Save, Building, Palette, Sparkles, MessageSquare,
     FileText, Users, Upload, Eye,
-    CheckCircle, AlertCircle, Loader2, LayoutTemplate, Trash2, Plus
+    CheckCircle, AlertCircle, Loader2, LayoutTemplate, Trash2
 } from 'lucide-react'
 
 export default function ConfiguracoesPage() {
@@ -192,8 +192,10 @@ export default function ConfiguracoesPage() {
         if (activeTab === 'templates') {
             setLoadingTemplates(true)
             supabase.from('templates_plano').select('*').order('created_at', { ascending: false })
-                .then(({ data }) => { if (data) setTemplates(data) })
-                .finally(() => setLoadingTemplates(false))
+                .then(({ data }) => {
+                    if (data) setTemplates(data)
+                    setLoadingTemplates(false)
+                })
         }
     }, [activeTab, supabase])
 

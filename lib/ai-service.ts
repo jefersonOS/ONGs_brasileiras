@@ -2,7 +2,6 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createClient } from '@/lib/supabase/server'
-import { generateText } from 'ai'
 
 // Retorna o modelo configurado para o tenant atual
 export async function getAIProvider() {
