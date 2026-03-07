@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
     FileText, ArrowLeft,
     MessageSquare, DollarSign, Calendar,
-    Clock, LayoutDashboard, Target, ShieldCheck, Pencil
+    Clock, LayoutDashboard, Target, ShieldCheck, Pencil, Download
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -178,6 +178,13 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                 </div>
 
                 <div className="flex gap-3 self-end md:self-auto">
+                    <a
+                        href={`/api/planos-trabalho/${id}/exportar-docx`}
+                        download
+                        className="px-5 py-3 bg-white border border-gray-200 text-[#1A3C4A] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2"
+                    >
+                        <Download className="w-3.5 h-3.5" /> Baixar DOCX
+                    </a>
                     <button
                         onClick={() => router.push(`/planos-trabalho/${id}/editar`)}
                         className="px-5 py-3 bg-white border border-gray-200 text-[#1A3C4A] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2"
