@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
         const { object } = await generateObject({
             model: model as any,
-            mode: 'json',
+            mode: 'tool',
             schema: z.object({
                 titulo: z.string(),
                 secoes: z.array(z.object({

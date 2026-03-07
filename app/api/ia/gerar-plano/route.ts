@@ -38,21 +38,11 @@ export async function POST(req: Request) {
         const { object } = await generateObject({
             model: model as any,
             schema: PlanoSchema,
-            mode: 'json',
+            mode: 'tool',
             system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras, seguindo rigorosamente as diretrizes da Lei 13.019/2014 (MROSC) e do Ministério da Cidadania.
       
       Sua tarefa é gerar um plano completo e profissional baseado em uma ideia central.
-      O plano deve ser estruturado, persuasivo e tecnicamente correto.
-      
-      ESTRUTURA:
-      - Título: Nome profissional do projeto.
-      - Descrição: Contextualização do projeto (2-3 parágrafos).
-      - Objetivos: Objetivo Geral e pelo menos 3 Objetivos Específicos.
-      - Justificativa: Por que o projeto é necessário e qual o impacto esperado.
-      - Público-alvo: Quem será beneficiado diretamente.
-      - Metas: Pelo menos 3 metas claras com indicadores mensuráveis.
-      - Cronograma: Pelo menos 4 fases/etapas principais.
-      - Orçamento: Valor total estimado.`,
+      O plano deve ser estruturado, persuasivo e tecnicamente correto.`,
             prompt: `Gere um Plano de Trabalho completo para a seguinte ideia: "${ideiaCentral}"`,
         })
 
