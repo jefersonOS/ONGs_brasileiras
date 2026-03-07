@@ -2,7 +2,8 @@ import { createServerClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { Users, Building2, ShieldCheck, Search, LayoutDashboard } from 'lucide-react'
+import Link from 'next/link'
+import { Users, Building2, ShieldCheck, Search, LayoutDashboard, FileText } from 'lucide-react'
 
 export default async function BackofficePage() {
     const cookieStore = cookies()
@@ -28,23 +29,24 @@ export default async function BackofficePage() {
     }
 
     // Use a clean Service Role Client (Standard Supabase JS) to bypass RLS entirely
-    // We don't use the SSR client here to avoid any session inheritance from cookies
     const adminSupabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // 1. Fetch Stats
+    // 1. Fetch Stats & Data
     const [
         { count: totalTenants },
         { count: totalUsers },
         { data: tenants },
-        { data: allUsers }
+        { data: allUsers },
+        { data: planosPendentes }
     ] = await Promise.all([
         adminSupabase.from('tenants').select('*', { count: 'exact', head: true }),
         adminSupabase.from('users').select('*', { count: 'exact', head: true }),
         adminSupabase.from('tenants').select('*').order('created_at', { ascending: false }),
-        adminSupabase.from('users').select('*, tenant:tenants(nome)').order('created_at', { ascending: false }).limit(20)
+        adminSupabase.from('users').select('*, tenant:tenants(nome)').order('created_at', { ascending: false }).limit(20),
+        adminSupabase.from('planos_trabalho').select('*, tenant:tenants(nome)').eq('status', 'enviado').order('created_at', { ascending: false })
     ])
 
     return (
@@ -54,16 +56,14 @@ export default async function BackofficePage() {
                     <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter">Central do Backoffice</h1>
                     <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mt-2">Gestão Global da Plataforma Nexori</p>
                 </div>
-                <div className="flex gap-4">
-                    {/* Ações rápidas podem ir aqui */}
-                </div>
             </div>
 
             {/* Cards de Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                 {[
-                    { label: 'Total de Clientes', value: totalTenants || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
-                    { label: 'Usuários Registrados', value: totalUsers || 0, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+                    { label: 'Clientes', value: totalTenants || 0, icon: Building2, color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { label: 'Usuários', value: totalUsers || 0, icon: Users, color: 'text-purple-600', bg: 'bg-purple-50' },
+                    { label: 'Planos Pendentes', value: planosPendentes?.length || 0, icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50' },
                     { label: 'Assinaturas Ativas', value: totalTenants || 0, icon: ShieldCheck, color: 'text-green-600', bg: 'bg-green-50' },
                 ].map((stat, i) => (
                     <div key={i} className="bg-white p-8 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 flex items-center justify-between group hover:border-[var(--secondary)] transition-all">
@@ -71,12 +71,66 @@ export default async function BackofficePage() {
                             <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-1">{stat.label}</p>
                             <p className="text-4xl font-black text-[#1A3C4A]">{stat.value}</p>
                         </div>
-                        <div className={`w-16 h-16 ${stat.bg} ${stat.color} rounded-[24px] flex items-center justify-center transition-transform group-hover:scale-110`}>
-                            <stat.icon className="w-8 h-8" />
+                        <div className={`w-14 h-14 ${stat.bg} ${stat.color} rounded-[24px] flex items-center justify-center transition-transform group-hover:scale-110`}>
+                            <stat.icon className="w-7 h-7" />
                         </div>
                     </div>
                 ))}
             </div>
+
+            {/* Fila de Análise de Planos de Trabalho */}
+            {planosPendentes && planosPendentes.length > 0 && (
+                <div className="bg-white rounded-[40px] shadow-2xl shadow-black/5 border border-orange-100 overflow-hidden">
+                    <div className="p-8 border-b border-orange-50 flex justify-between items-center bg-orange-50/20">
+                        <h2 className="text-xl font-black text-[#1A3C4A] flex items-center gap-3">
+                            <FileText className="w-6 h-6 text-orange-500" /> Planos de Trabalho Pendentes
+                        </h2>
+                        <span className="px-4 py-1.5 bg-orange-100 text-orange-600 rounded-full text-[10px] font-black uppercase tracking-widest">
+                            Aguardando Revisão
+                        </span>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="border-b border-gray-50 uppercase text-[10px] font-black text-gray-400 tracking-widest">
+                                    <th className="px-8 py-5">Título do Plano</th>
+                                    <th className="px-8 py-5">Instituição</th>
+                                    <th className="px-8 py-5">Orçamento</th>
+                                    <th className="px-8 py-5">Data Envio</th>
+                                    <th className="px-8 py-5 text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {planosPendentes.map(p => (
+                                    <tr key={p.id} className="border-b border-gray-50 hover:bg-orange-50/10 transition-colors group">
+                                        <td className="px-8 py-6">
+                                            <p className="font-black text-[#1A3C4A]">{p.titulo}</p>
+                                            <p className="text-[10px] text-gray-400 font-bold">Ref: {p.id.slice(0, 8)}</p>
+                                        </td>
+                                        <td className="px-8 py-6 text-xs font-bold text-gray-500">
+                                            {p.tenant?.nome}
+                                        </td>
+                                        <td className="px-8 py-6 font-black text-[#1A3C4A] text-xs">
+                                            R$ {p.orcamento_estimado?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td className="px-8 py-6 text-xs text-gray-400 font-bold">
+                                            {new Date(p.created_at).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-8 py-6 text-right">
+                                            <Link
+                                                href={`/planos-trabalho/${p.id}`}
+                                                className="px-6 py-3 bg-[#1A3C4A] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2E6B7A] transition-all shadow-lg shadow-blue-900/10"
+                                            >
+                                                Analisar
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
 
             {/* Tabela de Tenants */}
             <div className="bg-white rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 overflow-hidden">
@@ -106,15 +160,13 @@ export default async function BackofficePage() {
                                     <td className="px-8 py-6">
                                         <div>
                                             <p className="font-black text-[#1A3C4A]">{t.nome}</p>
-                                            <p className="text-xs text-gray-400 font-bold">{t.dominio_custom || `${t.slug}.nexori.com`}</p>
+                                            <p className="text-xs text-gray-400 font-bold">CNPJ: {t.cnpj}</p>
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <select className="bg-white border border-gray-100 rounded-xl px-3 py-1.5 text-[10px] font-black uppercase text-[#1A3C4A] focus:outline-none">
-                                            <option value="gratuito" selected={t.plano === 'gratuito'}>Gratuito</option>
-                                            <option value="pro" selected={t.plano === 'pro'}>Pro</option>
-                                            <option value="enterprise" selected={t.plano === 'enterprise'}>Enterprise</option>
-                                        </select>
+                                        <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-widest italic">
+                                            {t.plano}
+                                        </span>
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${t.status === 'ativo' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
