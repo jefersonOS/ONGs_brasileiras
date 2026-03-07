@@ -61,7 +61,8 @@ export async function POST(req: Request) {
 
         if (conviteError) throw conviteError
 
-        const inviteLink = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/convite/${token}`
+        const origin = req.headers.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        const inviteLink = `${origin}/convite/${token}`
 
         return NextResponse.json({ inviteLink, token })
     } catch (error: any) {
