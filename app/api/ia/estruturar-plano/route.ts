@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import mammoth from 'mammoth'
 import { generateText } from 'ai'
-import { getAIProvider } from '@/lib/ai-service'
+import { getAIProvider, extractJSON } from '@/lib/ai-service'
 
 export async function POST(req: Request) {
     try {
@@ -13,6 +13,11 @@ export async function POST(req: Request) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer())
+        const uint8Array = new Uint8Array(buffer)
+
+        const model = await getAIProvider()
+        const modelId = (model as any)?.modelId || ''
+        const isGemini = modelId.includes('gemini')
 
         const promptContent: any[] = [
             {
@@ -29,10 +34,11 @@ export async function POST(req: Request) {
             }
         ]
 
-        if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        // Só enviar arquivo se for Gemini. Se for outro modelo (como GPT), enviamos apenas o texto se for DOCX
+        if (isGemini && (file.type === 'application/pdf' || file.name.endsWith('.pdf'))) {
             promptContent.push({
                 type: 'file',
-                data: buffer,
+                data: uint8Array,
                 mimeType: 'application/pdf'
             })
         } else if (
@@ -44,19 +50,16 @@ export async function POST(req: Request) {
                 type: 'text',
                 text: `CONTEÚDO DO ARQUIVO DOCX:\n${result.value}`
             })
+        } else if (!isGemini && (file.type === 'application/pdf' || file.name.endsWith('.pdf'))) {
+            return NextResponse.json({ error: 'Processamento de PDF nativo requer o modelo Gemini. Por favor, mude o modelo nas configurações ou use um arquivo DOCX.' }, { status: 400 })
         } else {
-            return NextResponse.json({ error: 'Formato de arquivo não suportado. Use PDF ou DOCX.' }, { status: 400 })
+            return NextResponse.json({ error: 'Formato de arquivo não suportado ou incompatível com o modelo selecionado.' }, { status: 400 })
         }
 
-        const model = await getAIProvider()
-
         const { text } = await generateText({
-            model: model as any,
+            model,
+            system: 'Você é um assistente que extrai estruturas de documentos para formulários. Responda APENAS com JSON puro.',
             messages: [
-                {
-                    role: 'system',
-                    content: 'Você é um assistente que extrai estruturas de documentos para formulários. Responda APENAS com JSON puro.'
-                },
                 {
                     role: 'user',
                     content: promptContent
@@ -64,9 +67,7 @@ export async function POST(req: Request) {
             ]
         })
 
-        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim()
-        const object = JSON.parse(cleanJson)
-
+        const object = extractJSON(text)
         return NextResponse.json(object)
     } catch (error: any) {
         console.error('Erro ao estruturar plano:', error)

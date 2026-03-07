@@ -2,6 +2,7 @@ import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { createClient } from '@/lib/supabase/server'
+import { generateText } from 'ai'
 
 // Retorna o modelo configurado para o tenant atual
 export async function getAIProvider() {
@@ -88,4 +89,19 @@ export async function logAIAudit(supabase: any, {
         gerado_por_ia: true,
         modelo_ia: modelo
     })
+}
+
+export function extractJSON(text: string) {
+    try {
+        const start = text.indexOf('{')
+        const end = text.lastIndexOf('}')
+        if (start === -1 || end === -1 || end < start) {
+            throw new Error('JSON não encontrado na resposta da IA')
+        }
+        const jsonContent = text.slice(start, end + 1)
+        return JSON.parse(jsonContent)
+    } catch (e) {
+        console.error('Falha ao extrair JSON:', text)
+        throw e
+    }
 }

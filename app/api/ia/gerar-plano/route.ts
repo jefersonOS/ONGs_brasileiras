@@ -1,29 +1,8 @@
-import { generateObject } from 'ai'
-import { z } from 'zod'
+import { generateText } from 'ai'
 import { createClient } from '@/lib/supabase/server'
-import { getAIProvider } from '@/lib/ai-service'
+import { getAIProvider, extractJSON } from '@/lib/ai-service'
 
 export const maxDuration = 60
-
-const planoSchema = z.object({
-    titulo: z.string(),
-    descricao: z.string(),
-    objetivos: z.string(),
-    justificativa: z.string(),
-    publico_alvo: z.string(),
-    metas: z.array(z.object({
-        descricao: z.string(),
-        indicador: z.string(),
-        prazo: z.string(),
-    })),
-    cronograma: z.array(z.object({
-        fase: z.string(),
-        atividades: z.string(),
-        inicio: z.string(),
-        fim: z.string(),
-    })),
-    orcamento_estimado: z.number(),
-})
 
 export async function POST(req: Request) {
     try {
@@ -35,12 +14,25 @@ export async function POST(req: Request) {
 
         const model = await getAIProvider()
 
-        const { object } = await generateObject({
+        const { text } = await generateText({
             model,
-            schema: planoSchema,
-            system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC).`,
-            prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`,
+            system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC). 
+            Responda estritamente com um objeto JSON válido. Não inclua Markdown, não inclua explicações, apenas o JSON puro.
+            Estrutura esperada:
+            {
+              "titulo": "string",
+              "descricao": "string",
+              "objetivos": "string",
+              "justificativa": "string",
+              "publico_alvo": "string",
+              "metas": [{"descricao": "string", "indicador": "string", "prazo": "string"}],
+              "cronograma": [{"fase": "string", "atividades": "string", "inicio": "string", "fim": "string"}],
+              "orcamento_estimado": number
+            }`,
+            prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`
         })
+
+        const object = extractJSON(text)
 
         return Response.json(object)
     } catch (error: any) {
