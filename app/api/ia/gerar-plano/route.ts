@@ -37,6 +37,7 @@ export async function POST(req: Request) {
 
         const { object } = await generateObject({
             model: model as any,
+            mode: 'json',
             schema: planoSchema,
             system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC).`,
             prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`,
