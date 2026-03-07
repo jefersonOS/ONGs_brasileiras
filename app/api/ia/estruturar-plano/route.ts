@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-const pdf = require('pdf-parse')
+// @ts-ignore
+import pdf from 'pdf-parse/lib/pdf-parse.js'
 import mammoth from 'mammoth'
 import { generateObject } from 'ai'
 import { google } from '@ai-sdk/google'
@@ -37,6 +38,7 @@ export async function POST(req: Request) {
         // Usar AI para estruturar o plano baseado no texto extraído
         const { object } = await generateObject({
             model: google('gemini-1.5-flash'),
+            output: 'object',
             schema: z.object({
                 titulo: z.string(),
                 secoes: z.array(z.object({
