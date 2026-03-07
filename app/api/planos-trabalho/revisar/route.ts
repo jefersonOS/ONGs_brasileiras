@@ -30,8 +30,19 @@ export async function POST(req: Request) {
         )
 
         const { data: { user } } = await supabase.auth.getUser()
-        if (!user || user.user_metadata?.role !== 'superadmin') {
-            return NextResponse.json({ error: 'Não autorizado' }, { status: 403 })
+        if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 })
+
+        const role = user.user_metadata?.role
+        const permissoes = user.user_metadata?.permissoes || {}
+
+        // Autorizados: Super Admin, Proprietário ou Colaborador com permissão específica
+        const isAuthorized =
+            role === 'superadmin' ||
+            role === 'proprietario' ||
+            permissoes.aprovar_planos === true
+
+        if (!isAuthorized) {
+            return NextResponse.json({ error: 'Você não tem permissão para aprovar planos' }, { status: 403 })
         }
 
         // 2. Usar Service Role para garantir a atualização (Independente de RLS de Tenant)

@@ -42,7 +42,13 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
             // - Proprietário do mesmo Tenant
             const role = user?.user_metadata?.role
             const tenantId = user?.user_metadata?.tenant_id
-            setIsReviewer(role === 'superadmin' || (role === 'proprietario' && data.tenant_id === tenantId))
+            const permissoes = user?.user_metadata?.permissoes || {}
+
+            setIsReviewer(
+                role === 'superadmin' ||
+                (role === 'proprietario' && data.tenant_id === tenantId) ||
+                (permissoes.aprovar_planos === true && data.tenant_id === tenantId)
+            )
         }
         setLoading(false)
     }, [id, supabase])

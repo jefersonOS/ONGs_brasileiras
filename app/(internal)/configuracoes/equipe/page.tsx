@@ -14,7 +14,8 @@ const MODULOS = [
     { id: 'prestacoes_contas', nome: 'Prestação de Contas' },
     { id: 'patrimonio', nome: 'Gestão de Patrimônio' },
     { id: 'atividades', nome: 'Projetos & Atividades' },
-    { id: 'configuracoes', nome: 'Configurações de Nexo' }
+    { id: 'configuracoes', nome: 'Configurações de Nexo' },
+    { id: 'aprovar_planos', nome: 'Pode Aprovar Planos' }
 ]
 
 export default function GestaoEquipePage() {
