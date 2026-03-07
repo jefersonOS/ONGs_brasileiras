@@ -38,6 +38,7 @@ export async function POST(req: Request) {
         const { object } = await generateObject({
             model: model as any,
             schema: PlanoSchema,
+            output: 'object',
             system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras, seguindo rigorosamente as diretrizes da Lei 13.019/2014 (MROSC) e do Ministério da Cidadania.
       
       Sua tarefa é gerar um plano completo e profissional baseado em uma ideia central.

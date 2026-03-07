@@ -51,6 +51,7 @@ export async function POST(req: Request) {
         // Usar AI para estruturar o plano
         const { object } = await generateObject({
             model: google('gemini-1.5-flash') as any,
+            output: 'object',
             schema: z.object({
                 titulo: z.string(),
                 secoes: z.array(z.object({
