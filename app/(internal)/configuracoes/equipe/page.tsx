@@ -33,6 +33,10 @@ export default function GestaoEquipePage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const [inviteError, setInviteError] = useState<string | null>(null)
 
+    // Edit Member State
+    const [editingUser, setEditingUser] = useState<any>(null)
+    const [isUpdating, setIsUpdating] = useState(false)
+
     const fetchData = useCallback(async () => {
         try {
             const { data: { user } } = await supabase.auth.getUser()
@@ -92,8 +96,44 @@ export default function GestaoEquipePage() {
         }
     }
 
-    const togglePermission = (id: string) => {
-        setPermissions(prev => ({ ...prev, [id]: !prev[id] }))
+    const togglePermission = (id: string, isEditing = false) => {
+        if (isEditing) {
+            setEditingUser((prev: any) => ({
+                ...prev,
+                permissoes: {
+                    ...prev.permissoes,
+                    [id]: !prev.permissoes?.[id]
+                }
+            }))
+        } else {
+            setPermissions(prev => ({ ...prev, [id]: !prev[id] }))
+        }
+    }
+
+    const handleUpdateMember = async () => {
+        if (!editingUser) return
+        setIsUpdating(true)
+        try {
+            const res = await fetch('/api/equipe/atualizar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: editingUser.id,
+                    role: editingUser.role,
+                    permissoes: editingUser.permissoes
+                })
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error || 'Erro ao atualizar')
+
+            setEditingUser(null)
+            fetchData()
+            alert('Dados atualizados com sucesso!')
+        } catch (err: any) {
+            alert(err.message)
+        } finally {
+            setIsUpdating(false)
+        }
     }
 
     if (loading) return <div className="p-10 text-center animate-pulse text-gray-400 font-black uppercase text-xs">Carregando equipe...</div>
@@ -140,7 +180,10 @@ export default function GestaoEquipePage() {
                                         <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${member.role === 'proprietario' ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
                                             {member.role === 'proprietario' ? 'Dono / Diretor' : 'Colaborador'}
                                         </span>
-                                        <button className="p-2 text-gray-300 hover:text-[#1A3C4A] transition-colors">
+                                        <button
+                                            onClick={() => setEditingUser(member)}
+                                            className="p-2 text-gray-300 hover:text-[#1A3C4A] transition-colors"
+                                        >
                                             <ChevronRight className="w-4 h-4" />
                                         </button>
                                     </div>
@@ -300,6 +343,72 @@ export default function GestaoEquipePage() {
                                 </button>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Modal de Edição */}
+            {editingUser && (
+                <div className="fixed inset-0 bg-[#1A3C4A]/80 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+                    <div className="bg-white max-w-xl w-full rounded-[40px] shadow-3xl p-10 space-y-8 animate-in zoom-in-95 duration-300">
+                        <div className="flex justify-between items-start">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center">
+                                    <Users className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-2xl font-black text-[#1A3C4A] tracking-tighter italic">Editar Colaborador</h2>
+                                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">{editingUser.email}</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-red-500 transition-colors">
+                                <XCircle className="w-6 h-6" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-8">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Função / Cargo</label>
+                                <select
+                                    className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-black uppercase focus:ring-2 focus:ring-[#2D9E6B]/20 outline-none transition-all"
+                                    value={editingUser.role}
+                                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
+                                >
+                                    <option value="colaborador">Colaborador (Padrão)</option>
+                                    <option value="gestor">Gestor (Coordenador)</option>
+                                    <option value="proprietario">Dono / Diretor</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Módulos Liberados</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {MODULOS.map(modulo => (
+                                        <button
+                                            key={modulo.id}
+                                            onClick={() => togglePermission(modulo.id, true)}
+                                            className={`p-4 rounded-2xl border text-left transition-all flex items-center justify-between group ${editingUser.permissoes?.[modulo.id]
+                                                ? 'bg-green-50 border-green-200 text-green-700'
+                                                : 'bg-white border-gray-100 text-gray-400'
+                                                }`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                {editingUser.permissoes?.[modulo.id] ? <CheckCircle2 className="w-4 h-4" /> : <Lock className="w-4 h-4 opacity-30" />}
+                                                <span className="text-[10px] font-black uppercase tracking-tighter leading-tight">{modulo.nome}</span>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleUpdateMember}
+                                disabled={isUpdating}
+                                className="w-full py-4 bg-[#1A3C4A] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2E6B7A] transition-all shadow-xl shadow-blue-900/10 disabled:opacity-50 flex items-center justify-center gap-3"
+                            >
+                                {isUpdating ? 'Salvando...' : 'Salvar Alterações'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
