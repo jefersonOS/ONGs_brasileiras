@@ -2,8 +2,15 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
     Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-    HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType, Header
+    HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType,
+    Header, VerticalAlign
 } from 'docx'
+
+const DARK = '1A3C4A'
+const LIGHT_GRAY = 'F2F2F2'
+const BORDER = { style: BorderStyle.SINGLE, size: 6, color: DARK }
+const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
+const TABLE_WIDTH = { size: 9638, type: WidthType.DXA }
 
 function parseSecoes(val: string | null): any[] | null {
     if (!val) return null
@@ -13,131 +20,215 @@ function parseSecoes(val: string | null): any[] | null {
     } catch { return null }
 }
 
-function heading(text: string): Paragraph {
-    return new Paragraph({
-        text,
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 300, after: 100 },
-    })
-}
-
-function body(text: string): Paragraph {
-    return new Paragraph({
-        children: [new TextRun({ text: text || '', size: 24 })],
-        spacing: { after: 120 },
-    })
-}
-
-function labelValue(label: string, value: string): Paragraph {
-    return new Paragraph({
+// Linha de título da seção (fundo escuro, texto branco em negrito)
+function sectionTitleRow(label: string, colspan = 1): TableRow {
+    return new TableRow({
         children: [
-            new TextRun({ text: `${label}: `, bold: true, size: 22 }),
-            new TextRun({ text: value || '—', size: 22 }),
+            new TableCell({
+                columnSpan: colspan,
+                children: [new Paragraph({
+                    children: [new TextRun({ text: label, bold: true, color: 'FFFFFF', size: 22 })],
+                    spacing: { before: 60, after: 60 },
+                })],
+                shading: { type: ShadingType.CLEAR, fill: DARK },
+                borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+                width: TABLE_WIDTH,
+            }),
         ],
-        spacing: { after: 80 },
     })
 }
 
-function makeTable(columns: string[], rows: string[][]): Table {
-    const headerRow = new TableRow({
+// Linha de conteúdo simples (fundo branco)
+function contentRow(text: string, colspan = 1, minHeight = 800): TableRow {
+    return new TableRow({
+        height: { value: minHeight, rule: 'atLeast' as any },
+        children: [
+            new TableCell({
+                columnSpan: colspan,
+                children: [new Paragraph({
+                    children: [new TextRun({ text: text || '', size: 22 })],
+                    spacing: { before: 80, after: 80 },
+                })],
+                borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+                width: TABLE_WIDTH,
+            }),
+        ],
+    })
+}
+
+// Linha de dois campos lado a lado (label: valor | label: valor)
+function twoColRow(fields: { label: string; value: string }[]): TableRow {
+    const cols = fields.slice(0, 2)
+    return new TableRow({
+        children: cols.map(f => new TableCell({
+            children: [new Paragraph({
+                children: [
+                    new TextRun({ text: `${f.label}: `, bold: true, size: 20 }),
+                    new TextRun({ text: f.value || '', size: 20 }),
+                ],
+                spacing: { before: 60, after: 60 },
+            })],
+            borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+            width: { size: Math.floor(9638 / cols.length), type: WidthType.DXA },
+        })),
+    })
+}
+
+// Linha de um campo (label em negrito + valor)
+function singleFieldRow(label: string, value: string): TableRow {
+    return new TableRow({
+        children: [
+            new TableCell({
+                children: [new Paragraph({
+                    children: [
+                        new TextRun({ text: `${label}: `, bold: true, size: 20 }),
+                        new TextRun({ text: value || '', size: 20 }),
+                    ],
+                    spacing: { before: 60, after: 60 },
+                })],
+                borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+                width: TABLE_WIDTH,
+            }),
+        ],
+    })
+}
+
+// Cabeçalho de tabela (fundo cinza claro)
+function tableHeaderRow(columns: string[]): TableRow {
+    return new TableRow({
         children: columns.map(col => new TableCell({
             children: [new Paragraph({
                 children: [new TextRun({ text: col, bold: true, size: 20 })],
                 alignment: AlignmentType.CENTER,
+                spacing: { before: 60, after: 60 },
             })],
-            shading: { type: ShadingType.CLEAR, fill: '1A3C4A', color: 'FFFFFF' },
-            width: { size: Math.floor(9000 / columns.length), type: WidthType.DXA },
+            shading: { type: ShadingType.CLEAR, fill: LIGHT_GRAY },
+            borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+            width: { size: Math.floor(9638 / columns.length), type: WidthType.DXA },
+            verticalAlign: VerticalAlign.CENTER,
         })),
     })
+}
 
-    const dataRows = (rows || []).map(row => new TableRow({
-        children: (row || []).map(cell => new TableCell({
+// Linha de dados de tabela
+function tableDataRow(cells: string[], columns: number): TableRow {
+    return new TableRow({
+        height: { value: 500, rule: 'atLeast' as any },
+        children: cells.map(cell => new TableCell({
             children: [new Paragraph({
                 children: [new TextRun({ text: cell || '', size: 20 })],
+                spacing: { before: 60, after: 60 },
             })],
-            width: { size: Math.floor(9000 / columns.length), type: WidthType.DXA },
+            borders: { top: BORDER, bottom: BORDER, left: BORDER, right: BORDER },
+            width: { size: Math.floor(9638 / columns), type: WidthType.DXA },
         })),
-    }))
-
-    return new Table({
-        rows: [headerRow, ...dataRows],
-        width: { size: 9000, type: WidthType.DXA },
-        borders: {
-            top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-            bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-            left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-            right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-        },
     })
 }
 
-function buildSecoesContent(secoes: any[]): (Paragraph | Table)[] {
-    const content: (Paragraph | Table)[] = []
-    for (const secao of secoes) {
-        content.push(heading(secao.label))
-
-        if (secao.tipo === 'text' || secao.tipo === 'textarea') {
-            content.push(body(secao.valor || ''))
-        } else if (secao.tipo === 'number') {
-            content.push(body(secao.valor ? `R$ ${Number(secao.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : ''))
-        } else if (secao.tipo === 'list') {
-            for (const item of (secao.valor || [])) {
-                content.push(new Paragraph({
-                    children: [new TextRun({ text: `• ${item}`, size: 22 })],
-                    spacing: { after: 60 },
-                }))
-            }
-        } else if (secao.tipo === 'group') {
-            for (const campo of (secao.campos || [])) {
-                if (campo.valor) {
-                    content.push(labelValue(campo.label, campo.valor))
-                }
-            }
-        } else if (secao.tipo === 'table') {
-            if (secao.colunas?.length && secao.valor?.length) {
-                content.push(makeTable(secao.colunas, secao.valor))
-                content.push(new Paragraph({ text: '', spacing: { after: 100 } }))
-            }
-        }
-    }
-    return content
+function spacer(): Paragraph {
+    return new Paragraph({ text: '', spacing: { after: 120 } })
 }
 
-function buildRegularContent(plano: any): (Paragraph | Table)[] {
-    const content: (Paragraph | Table)[] = []
+function buildTable(rows: TableRow[]): Table {
+    return new Table({ rows, width: TABLE_WIDTH })
+}
 
-    if (plano.descricao) {
-        content.push(heading('Descrição'))
-        content.push(body(plano.descricao))
+// Renderiza uma seção como bloco de tabela fiel ao template
+function renderSecao(secao: any): (Table | Paragraph)[] {
+    const blocks: (Table | Paragraph)[] = []
+
+    if (secao.tipo === 'group') {
+        const campos: any[] = secao.campos || []
+        const rows: TableRow[] = [sectionTitleRow(secao.label, 2)]
+
+        // Agrupa campos de 2 em 2 para layout lado a lado
+        for (let i = 0; i < campos.length; i += 2) {
+            const pair = campos.slice(i, i + 2)
+            if (pair.length === 2) {
+                rows.push(twoColRow([
+                    { label: pair[0].label, value: pair[0].valor || '' },
+                    { label: pair[1].label, value: pair[1].valor || '' },
+                ]))
+            } else {
+                rows.push(singleFieldRow(pair[0].label, pair[0].valor || ''))
+            }
+        }
+
+        blocks.push(buildTable(rows))
+
+    } else if (secao.tipo === 'table') {
+        const colunas: string[] = secao.colunas || []
+        const linhas: string[][] = secao.valor || [[]]
+        const rows: TableRow[] = [
+            sectionTitleRow(secao.label, colunas.length),
+            tableHeaderRow(colunas),
+            ...linhas.map((row: string[]) => tableDataRow(row, colunas.length)),
+        ]
+        blocks.push(buildTable(rows))
+
+    } else if (secao.tipo === 'textarea' || secao.tipo === 'text') {
+        blocks.push(buildTable([
+            sectionTitleRow(secao.label),
+            contentRow(secao.valor || '', 1, secao.tipo === 'textarea' ? 1200 : 600),
+        ]))
+
+    } else if (secao.tipo === 'number') {
+        blocks.push(buildTable([
+            sectionTitleRow(secao.label),
+            contentRow(secao.valor ? `R$ ${Number(secao.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : ''),
+        ]))
+
+    } else if (secao.tipo === 'list') {
+        const items: string[] = Array.isArray(secao.valor) ? secao.valor : []
+        blocks.push(buildTable([
+            sectionTitleRow(secao.label),
+            contentRow(items.join('\n') || ''),
+        ]))
     }
-    if (plano.objetivos) {
-        content.push(heading('Objetivos'))
-        content.push(body(plano.objetivos))
+
+    blocks.push(spacer())
+    return blocks
+}
+
+function buildRegularContent(plano: any): (Table | Paragraph)[] {
+    const blocks: (Table | Paragraph)[] = []
+
+    const sections = [
+        { label: 'Descrição', value: plano.descricao, tipo: 'textarea' },
+        { label: 'Objetivos', value: plano.objetivos, tipo: 'textarea' },
+        { label: 'Justificativa', value: plano.justificativa, tipo: 'textarea' },
+        { label: 'Orçamento Estimado', value: plano.orcamento_estimado ? `R$ ${Number(plano.orcamento_estimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', tipo: 'text' },
+    ]
+
+    for (const s of sections) {
+        if (s.value) {
+            blocks.push(buildTable([
+                sectionTitleRow(s.label),
+                contentRow(s.value, 1, s.tipo === 'textarea' ? 1200 : 600),
+            ]))
+            blocks.push(spacer())
+        }
     }
-    if (plano.justificativa) {
-        content.push(heading('Justificativa'))
-        content.push(body(plano.justificativa))
-    }
-    if (plano.orcamento_estimado) {
-        content.push(heading('Orçamento Estimado'))
-        content.push(body(`R$ ${Number(plano.orcamento_estimado).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`))
-    }
+
     if (Array.isArray(plano.metas) && plano.metas.length > 0) {
-        content.push(heading('Metas'))
-        content.push(makeTable(
-            ['Meta', 'Descrição'],
-            plano.metas.map((m: any) => [m.nome || '', m.descricao || ''])
-        ))
-        content.push(new Paragraph({ text: '', spacing: { after: 100 } }))
+        blocks.push(buildTable([
+            sectionTitleRow('Metas', 2),
+            tableHeaderRow(['Meta', 'Descrição']),
+            ...plano.metas.map((m: any) => tableDataRow([m.nome || '', m.descricao || ''], 2)),
+        ]))
+        blocks.push(spacer())
     }
+
     if (Array.isArray(plano.cronograma) && plano.cronograma.length > 0) {
-        content.push(heading('Cronograma Físico'))
-        content.push(makeTable(
-            ['Mês', 'Atividade'],
-            plano.cronograma.map((c: any) => [c.mes || '', c.atividade || ''])
-        ))
+        blocks.push(buildTable([
+            sectionTitleRow('Cronograma Físico', 2),
+            tableHeaderRow(['Mês', 'Atividade']),
+            ...plano.cronograma.map((c: any) => tableDataRow([c.mes || '', c.atividade || ''], 2)),
+        ]))
+        blocks.push(spacer())
     }
-    return content
+
+    return blocks
 }
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
@@ -154,22 +245,30 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         }
 
         const secoes = parseSecoes(plano.descricao)
-        const bodyContent: (Paragraph | Table)[] = [
+
+        const bodyContent: (Table | Paragraph)[] = [
             new Paragraph({
-                text: 'PLANO DE TRABALHO',
-                heading: HeadingLevel.HEADING_1,
+                children: [new TextRun({ text: 'PLANO DE TRABALHO', bold: true, size: 32, color: DARK })],
                 alignment: AlignmentType.CENTER,
-                spacing: { after: 200 },
+                spacing: { after: 160 },
             }),
             new Paragraph({
-                children: [new TextRun({ text: plano.titulo, bold: true, size: 28 })],
+                children: [new TextRun({ text: plano.titulo, size: 24, color: DARK })],
                 alignment: AlignmentType.CENTER,
                 spacing: { after: 400 },
             }),
-            ...(plano.tenants?.nome ? [labelValue('Organização', plano.tenants.nome)] : []),
-            ...(plano.created_at ? [labelValue('Data', new Date(plano.created_at).toLocaleDateString('pt-BR'))] : []),
-            new Paragraph({ text: '', spacing: { after: 200 } }),
-            ...(secoes ? buildSecoesContent(secoes) : buildRegularContent(plano)),
+            ...(secoes ? secoes.flatMap(renderSecao) : buildRegularContent(plano)),
+            spacer(),
+            spacer(),
+            new Paragraph({
+                children: [new TextRun({ text: '___________________________', size: 22 })],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 800, after: 80 },
+            }),
+            new Paragraph({
+                children: [new TextRun({ text: 'Assinatura', size: 20, color: '666666' })],
+                alignment: AlignmentType.CENTER,
+            }),
         ]
 
         const doc = new Document({
@@ -179,7 +278,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
                 headers: {
                     default: new Header({
                         children: [new Paragraph({
-                            children: [new TextRun({ text: `${plano.tenants?.nome || 'Plano de Trabalho'} — ${plano.titulo}`, size: 18, color: '666666' })],
+                            children: [new TextRun({ text: `${plano.tenants?.nome || ''} — PLANO DE TRABALHO`, size: 18, color: '888888' })],
                             alignment: AlignmentType.RIGHT,
                         })],
                     }),
@@ -190,7 +289,6 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
         const buffer = await Packer.toBuffer(doc)
         const uint8 = new Uint8Array(buffer)
-
         const filename = `plano-trabalho-${plano.titulo.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.docx`
 
         return new NextResponse(uint8, {
