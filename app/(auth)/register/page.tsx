@@ -1,24 +1,54 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Sparkles, UserPlus, Info } from 'lucide-react'
 
 export default function RegisterPage() {
+    const searchParams = useSearchParams()
+    const token = searchParams.get('token')
+    const tenantIdParam = searchParams.get('tenant')
+
     const [nome, setNome] = useState('')
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [tipo, setTipo] = useState('cidadao')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
+    const [inviteData, setInviteData] = useState<any>(null)
+
     const router = useRouter()
     const supabase = createClient()
+
+    useEffect(() => {
+        if (token) {
+            const fetchInvite = async () => {
+                const { data } = await supabase
+                    .from('convites_equipe')
+                    .select('*, tenant:tenants(nome)')
+                    .eq('token', token)
+                    .single()
+
+                if (data) {
+                    setInviteData(data)
+                    setTipo('interno')
+                    if (data.email) setEmail(data.email)
+                }
+            }
+            fetchInvite()
+        }
+    }, [token, supabase])
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
+
+        const finalRole = token ? 'colaborador' : (tipo === 'cidadao' ? 'cidadao' : 'proprietario')
+        const finalTenantId = token ? inviteData?.tenant_id : null
+        const finalPermissions = token ? inviteData?.permissoes : {}
 
         const { error: signUpError, data } = await supabase.auth.signUp({
             email,
@@ -26,8 +56,10 @@ export default function RegisterPage() {
             options: {
                 data: {
                     nome,
-                    tipo,
-                    role: tipo === 'cidadao' ? 'cidadao' : 'proprietario' // Simplified role attribution for registering
+                    tipo: token ? 'interno' : tipo,
+                    role: finalRole,
+                    tenant_id: finalTenantId,
+                    permissoes: finalPermissions
                 }
             }
         })
@@ -39,79 +71,107 @@ export default function RegisterPage() {
         }
 
         if (data.user) {
-            // Here we could insert the user in the public.users table if not using a trigger.
-            // For now, we will assume Supabase Auth Trigger will handle inserting to public.users.
-            router.push('/login?message=Cadastro realizado, faça login.')
+            if (token) {
+                // Marcar convite como aceito
+                await supabase
+                    .from('convites_equipe')
+                    .update({ status: 'aceito' })
+                    .eq('token', token)
+            }
+            router.push('/login?message=Cadastro realizado com sucesso! Faça login para começar.')
         }
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-[#F5F7F8]">
-            <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-                <div className="text-center">
-                    <h1 className="text-3xl font-bold text-[#1A3C4A]">Nexori</h1>
-                    <p className="text-gray-500 mt-2">Crie sua conta</p>
+        <div className="min-h-screen items-center justify-center bg-[#F5F7F8] flex p-6">
+            <div className="w-full max-w-lg p-12 space-y-8 bg-white rounded-[50px] shadow-2xl border border-gray-50 animate-in zoom-in-95 duration-700">
+                <div className="text-center space-y-2">
+                    <div className="w-16 h-16 bg-[#1A3C4A] text-white rounded-[24px] flex items-center justify-center mx-auto shadow-xl shadow-blue-900/10 mb-4">
+                        <Sparkles className="w-8 h-8" />
+                    </div>
+                    <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter italic">Nexori</h1>
+                    <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest leading-loose">
+                        {token ? 'Finalizando seu convite de equipe' : 'Crie sua nova conta na plataforma'}
+                    </p>
                 </div>
 
-                {error && (
-                    <div className="p-3 text-sm text-red-500 bg-red-100 rounded-md">
-                        {error}
+                {inviteData && (
+                    <div className="bg-green-50 p-6 rounded-[30px] border border-green-100 flex items-start gap-4">
+                        <UserPlus className="w-5 h-5 text-green-600 mt-1" />
+                        <div>
+                            <p className="text-xs font-black text-[#1A3C4A]">Convite Confirmado!</p>
+                            <p className="text-[10px] text-green-700 font-medium">Você está se juntando à equipe da **{inviteData.tenant?.nome}**.</p>
+                        </div>
                     </div>
                 )}
 
-                <form onSubmit={handleRegister} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Nome Completo</label>
+                {error && (
+                    <div className="p-4 text-xs font-bold text-red-600 bg-red-50 rounded-2xl border border-red-100 flex items-center gap-3">
+                        <Info className="w-4 h-4" /> {error}
+                    </div>
+                )}
+
+                <form onSubmit={handleRegister} className="space-y-6">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Nome Completo</label>
                         <input
                             type="text"
                             required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"
+                            placeholder="Seu nome completo"
+                            className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all outline-none"
                             value={nome}
                             onChange={(e) => setNome(e.target.value)}
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Email</label>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Email Profissional</label>
                         <input
                             type="email"
                             required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"
+                            disabled={!!(token && inviteData?.email)}
+                            placeholder="contato@empresa.com"
+                            className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all outline-none disabled:opacity-50"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Senha</label>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Senha de Acesso</label>
                         <input
                             type="password"
                             required
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"
+                            placeholder="••••••••"
+                            className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-bold focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all outline-none"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700">Tipo de Conta</label>
-                        <select
-                            className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B] bg-white"
-                            value={tipo}
-                            onChange={(e) => setTipo(e.target.value)}
-                        >
-                            <option value="cidadao">Cidadão (Portal Público)</option>
-                            <option value="interno">ONG (Sistema Interno)</option>
-                        </select>
-                    </div>
+
+                    {!token && (
+                        <div className="space-y-2">
+                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Tipo de Perfil</label>
+                            <select
+                                className="w-full px-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-xs font-black uppercase tracking-tight focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all outline-none appearance-none"
+                                value={tipo}
+                                onChange={(e) => setTipo(e.target.value)}
+                            >
+                                <option value="cidadao">Cidadão (Portal Público)</option>
+                                <option value="interno">ONG (Gestão Interna)</option>
+                            </select>
+                        </div>
+                    )}
+
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full px-4 py-2 mt-4 text-white bg-[#1A3C4A] rounded-md hover:bg-[#2E6B7A] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1A3C4A] disabled:opacity-50"
+                        className="w-full py-5 text-white bg-[#1A3C4A] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2E6B7A] transition-all shadow-xl shadow-blue-900/10 active:scale-95 disabled:opacity-50"
                     >
-                        {loading ? 'Cadastrando...' : 'Cadastrar'}
+                        {loading ? 'Processando Cadastro...' : 'Finalizar Cadastro'}
                     </button>
                 </form>
 
-                <p className="text-sm text-center text-gray-600">
-                    Já tem uma conta? <Link href="/login" className="text-[#2D9E6B] hover:underline">Faça login</Link>
+                <p className="text-[10px] text-center text-gray-400 font-bold uppercase tracking-wider">
+                    Já possui acesso? <Link href="/login" className="text-[#2D9E6B] hover:underline">Entre por aqui</Link>
                 </p>
             </div>
         </div>

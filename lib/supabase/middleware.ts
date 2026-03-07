@@ -62,10 +62,10 @@ export async function updateSession(request: NextRequest) {
     // 4. Check Tenant/User Status (Access Control)
     if (user && isInternalRoute && user.user_metadata?.role !== 'superadmin') {
         const tenantId = user.user_metadata?.tenant_id
+        const userRole = user.user_metadata?.role
+        const permissions = user.user_metadata?.permissoes || {}
 
         if (tenantId) {
-            // We fetch the tenant status. 
-            // NOTE: In a high-traffic app, this should be cached or in JWT.
             const { data: tenant } = await supabase
                 .from('tenants')
                 .select('status')
@@ -74,6 +74,24 @@ export async function updateSession(request: NextRequest) {
 
             if (tenant && tenant.status !== 'ativo') {
                 url.pathname = '/conta-suspensa'
+                return NextResponse.redirect(url)
+            }
+        }
+
+        // Granular Permissions for Collaborators
+        if (userRole === 'colaborador') {
+            const path = request.nextUrl.pathname
+            let requiredModule = ''
+
+            if (path.startsWith('/planos-trabalho')) requiredModule = 'planos_trabalho'
+            else if (path.startsWith('/projetos') || path.startsWith('/atividades') || path.startsWith('/cursos')) requiredModule = 'atividades'
+            else if (path.startsWith('/patrimonio')) requiredModule = 'patrimonio'
+            else if (path.startsWith('/configuracoes')) requiredModule = 'configuracoes'
+            else if (path.startsWith('/prestacoes-contas')) requiredModule = 'prestacoes_contas'
+
+            if (requiredModule && !permissions[requiredModule]) {
+                url.pathname = '/dashboard'
+                url.searchParams.set('error', 'Sem permissão para este módulo')
                 return NextResponse.redirect(url)
             }
         }
@@ -87,7 +105,6 @@ export async function updateSession(request: NextRequest) {
 
         if (userData && !userData.ativo) {
             url.pathname = '/login'
-            // Sign out or clear session could be handled here if needed
             return NextResponse.redirect(url)
         }
     }

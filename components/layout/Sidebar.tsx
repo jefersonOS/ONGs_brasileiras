@@ -13,7 +13,8 @@ import {
     Building2,
     ScrollText,
     Settings,
-    Plus
+    Plus,
+    Users
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { createClient } from '@/lib/supabase/client'
@@ -22,12 +23,13 @@ import { useEffect, useState } from 'react'
 const MENU_ITEMS = [
     { name: 'Painel', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Backoffice', href: '/backoffice', icon: ShieldCheck, adminOnly: true },
-    { name: 'Projetos', href: '/projetos', icon: FolderOpen },
-    { name: 'Planos de Trabalho', href: '/planos-trabalho', icon: FileText },
-    { name: 'Prestações de Contas', href: '/prestacoes-contas', icon: Wallet },
-    { name: 'Atividades', href: '/atividades', icon: CalendarDays },
-    { name: 'Cursos', href: '/cursos', icon: GraduationCap },
-    { name: 'Patrimônio', href: '/patrimonio', icon: Building2 },
+    { name: 'Projetos', href: '/projetos', icon: FolderOpen, module: 'atividades' },
+    { name: 'Planos de Trabalho', href: '/planos-trabalho', icon: FileText, module: 'planos_trabalho' },
+    { name: 'Prestações de Contas', href: '/prestacoes-contas', icon: Wallet, module: 'prestacoes_contas' },
+    { name: 'Atividades', href: '/atividades', icon: CalendarDays, module: 'atividades' },
+    { name: 'Cursos', href: '/cursos', icon: GraduationCap, module: 'atividades' },
+    { name: 'Patrimônio', href: '/patrimonio', icon: Building2, module: 'patrimonio' },
+    { name: 'Minha Equipe', href: '/configuracoes/equipe', icon: Users, ownerOnly: true },
     { name: 'Logs de Auditoria', href: '/logs-auditoria', icon: ScrollText, adminOnly: true },
     { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ]
@@ -36,6 +38,7 @@ export function Sidebar() {
     const pathname = usePathname()
     const [userRole, setUserRole] = useState('')
     const [userName, setUserName] = useState('')
+    const [permissions, setPermissions] = useState<Record<string, boolean>>({})
     const supabase = createClient()
 
     useEffect(() => {
@@ -43,6 +46,7 @@ export function Sidebar() {
             if (data.user) {
                 setUserRole(data.user.user_metadata?.role || 'membro')
                 setUserName(data.user.user_metadata?.nome || data.user.email)
+                setPermissions(data.user.user_metadata?.permissoes || {})
             }
         })
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,8 +61,17 @@ export function Sidebar() {
             <div className="flex-1 overflow-y-auto py-4">
                 {/* Menu Principal */}
                 <nav className="space-y-1 px-3">
-                    {MENU_ITEMS.map((item) => {
+                    {MENU_ITEMS.map((item: any) => {
+                        // 1. Super Admin Only
                         if (item.adminOnly && userRole !== 'superadmin') return null;
+
+                        // 2. Owner/Admin Only (for Team Management)
+                        if (item.ownerOnly && userRole !== 'proprietario' && userRole !== 'superadmin') return null;
+
+                        // 3. Module Permissions for Collaborators
+                        if (userRole === 'colaborador' && item.module && !permissions[item.module]) {
+                            return null;
+                        }
 
                         const isActive = pathname.startsWith(item.href)
 
