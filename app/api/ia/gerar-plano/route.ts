@@ -1,29 +1,8 @@
-import { generateObject } from 'ai'
+import { generateText } from 'ai'
 import { createClient } from '@/lib/supabase/server'
-import { z } from 'zod'
 import { getAIProvider } from '@/lib/ai-service'
 
 export const maxDuration = 60
-
-const PlanoSchema = z.object({
-    titulo: z.string(),
-    descricao: z.string(),
-    objetivos: z.string(),
-    justificativa: z.string(),
-    publico_alvo: z.string(),
-    metas: z.array(z.object({
-        descricao: z.string(),
-        indicador: z.string(),
-        prazo: z.string()
-    })),
-    cronograma: z.array(z.object({
-        fase: z.string(),
-        atividades: z.string(),
-        inicio: z.string(),
-        fim: z.string()
-    })),
-    orcamento_estimado: z.number()
-})
 
 export async function POST(req: Request) {
     try {
@@ -35,23 +14,27 @@ export async function POST(req: Request) {
 
         const model = await getAIProvider()
 
-        const { object } = await generateObject({
+        const { text } = await generateText({
             model: model as any,
-            schema: PlanoSchema,
-            mode: 'json',
-            messages: [
-                {
-                    role: 'system',
-                    content: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC). 
-                    Responda estritamente com um objeto JSON válido seguindo o esquema fornecido. 
-                    Não inclua nenhuma outra explicação ou texto.`
-                },
-                {
-                    role: 'user',
-                    content: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`
-                }
-            ]
+            system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC). 
+            Responda estritamente com um objeto JSON válido. Não inclua Markdown, não inclua explicações, apenas o JSON puro.
+            Estrutura esperada:
+            {
+              "titulo": "string",
+              "descricao": "string",
+              "objetivos": "string",
+              "justificativa": "string",
+              "publico_alvo": "string",
+              "metas": [{"descricao": "string", "indicador": "string", "prazo": "string"}],
+              "cronograma": [{"fase": "string", "atividades": "string", "inicio": "string", "fim": "string"}],
+              "orcamento_estimado": number
+            }`,
+            prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`
         })
+
+        // Limpeza e Parse manual para evitar erro do SDK
+        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        const object = JSON.parse(cleanJson)
 
         return Response.json(object)
     } catch (error: any) {

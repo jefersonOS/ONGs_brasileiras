@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import mammoth from 'mammoth'
-import { generateObject } from 'ai'
+import { generateText } from 'ai'
 import { getAIProvider } from '@/lib/ai-service'
-import { z } from 'zod'
 
 export async function POST(req: Request) {
     try {
@@ -23,12 +22,14 @@ export async function POST(req: Request) {
                 
                 Crie seções (secoes) que representem os campos do documento (ex: Objetivos, Justificativa, Metas, Orçamento, etc.).
                 Para listas (como cronogramas ou metas), use o tipo 'list'.
-                Retorne também um resumo executivo.`
+                Retorne também um resumo executivo.
+                
+                RESPOSTA: OBRIGATORIAMENTE APENAS O JSON, sem markdown ou explicações.
+                Estrutura: { "titulo": "string", "secoes": [{ "id": "string", "label": "string", "tipo": "text|textarea|number|list", "valor": any, "descricao": "string" }], "resumo_executivo": "string" }`
             }
         ]
 
         if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-            // Enviar PDF diretamente para o Gemini (Nativo)
             promptContent.push({
                 type: 'file',
                 data: buffer,
@@ -38,7 +39,6 @@ export async function POST(req: Request) {
             file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
             file.name.endsWith('.docx')
         ) {
-            // Para DOCX ainda extraímos texto via Mammoth
             const result = await mammoth.extractRawText({ buffer })
             promptContent.push({
                 type: 'text',
@@ -48,27 +48,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Formato de arquivo não suportado. Use PDF ou DOCX.' }, { status: 400 })
         }
 
-        // Usar AI para estruturar o plano
         const model = await getAIProvider()
 
-        const { object } = await generateObject({
+        const { text } = await generateText({
             model: model as any,
-            mode: 'json',
-            schema: z.object({
-                titulo: z.string(),
-                secoes: z.array(z.object({
-                    id: z.string(),
-                    label: z.string(),
-                    tipo: z.enum(['text', 'textarea', 'number', 'list']),
-                    valor: z.any(),
-                    descricao: z.string().optional()
-                })),
-                resumo_executivo: z.string()
-            }),
             messages: [
                 {
                     role: 'system',
-                    content: 'Você é um assistente que extrai estruturas de documentos para formulários. Responda estritamente com JSON.'
+                    content: 'Você é um assistente que extrai estruturas de documentos para formulários. Responda APENAS com JSON puro.'
                 },
                 {
                     role: 'user',
@@ -76,6 +63,9 @@ export async function POST(req: Request) {
                 }
             ]
         })
+
+        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim()
+        const object = JSON.parse(cleanJson)
 
         return NextResponse.json(object)
     } catch (error: any) {
