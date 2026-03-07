@@ -35,6 +35,10 @@ function NovoPlanoForm() {
     const [ideiaCentral, setIdeiaCentral] = useState('')
     const [generating, setGenerating] = useState(false)
 
+    // Refine Field States
+    const [refiningField, setRefiningField] = useState<{ name: string; value: string; setter: (v: string) => void } | null>(null)
+    const [isRefining, setIsRefining] = useState(false)
+
     // File Extraction States
     const [fileProcessing, setFileProcessing] = useState(false)
     const [secoesDinamicas, setSecoesDinamicas] = useState<any[] | null>(null)
