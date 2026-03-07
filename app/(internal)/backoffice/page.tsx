@@ -6,7 +6,7 @@ export default async function BackofficePage() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user || (user.user_metadata?.role !== 'superadmin' && user.user_metadata?.role !== 'proprietario')) {
+    if (!user || user.user_metadata?.role !== 'superadmin') {
         redirect('/dashboard')
     }
 

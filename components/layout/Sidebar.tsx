@@ -28,7 +28,7 @@ const MENU_ITEMS = [
     { name: 'Atividades', href: '/atividades', icon: CalendarDays },
     { name: 'Cursos', href: '/cursos', icon: GraduationCap },
     { name: 'Patrimônio', href: '/patrimonio', icon: Building2 },
-    { name: 'Logs de Auditoria', href: '/logs-auditoria', icon: ScrollText },
+    { name: 'Logs de Auditoria', href: '/logs-auditoria', icon: ScrollText, adminOnly: true },
     { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ]
 
@@ -58,7 +58,7 @@ export function Sidebar() {
                 {/* Menu Principal */}
                 <nav className="space-y-1 px-3">
                     {MENU_ITEMS.map((item) => {
-                        if (item.adminOnly && !['superadmin', 'proprietario'].includes(userRole)) return null;
+                        if (item.adminOnly && userRole !== 'superadmin') return null;
 
                         const isActive = pathname.startsWith(item.href)
 

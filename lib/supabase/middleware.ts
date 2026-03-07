@@ -50,5 +50,14 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // Role-based access control (RBAC) for Global Backoffice
+    const isAdminRoute = request.nextUrl.pathname.startsWith('/backoffice') ||
+        request.nextUrl.pathname.startsWith('/logs-auditoria')
+
+    if (user && isAdminRoute && user.user_metadata?.role !== 'superadmin') {
+        url.pathname = '/dashboard'
+        return NextResponse.redirect(url)
+    }
+
     return supabaseResponse
 }
