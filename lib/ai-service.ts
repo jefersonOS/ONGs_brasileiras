@@ -11,8 +11,9 @@ export async function getAIProvider() {
         const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
         return openai('gpt-4o')
     }
-    if (process.env.GOOGLE_AI_API_KEY) {
-        const google = createGoogleGenerativeAI({ apiKey: process.env.GOOGLE_AI_API_KEY })
+    const googleKey = process.env.GOOGLE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY
+    if (googleKey) {
+        const google = createGoogleGenerativeAI({ apiKey: googleKey })
         return google('gemini-1.5-pro-latest')
     }
     if (process.env.ANTHROPIC_API_KEY) {
