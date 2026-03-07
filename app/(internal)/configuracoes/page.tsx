@@ -431,32 +431,24 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab === 'usuarios' && (
-                            <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 animate-in fade-in duration-500">
-                                <div className="flex justify-between items-center mb-10">
-                                    <h3 className="text-xl font-black text-[#1A3C4A]">Gestão da Equipe</h3>
-                                    <button type="button" className="px-8 py-3 bg-[var(--secondary)] text-white text-[10px] font-black uppercase rounded-2xl shadow-xl shadow-[var(--secondary)]/20 hover:scale-105 transition-transform">Convidar Membro</button>
+                            <div className="bg-white p-12 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 animate-in fade-in duration-500 text-center space-y-8">
+                                <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[30px] flex items-center justify-center mx-auto shadow-xl shadow-blue-500/10">
+                                    <Users className="w-10 h-10" />
                                 </div>
-
-                                <div className="space-y-4">
-                                    {/* Mock da lista de usuários, você pode carregar do banco depois */}
-                                    {[
-                                        { nome: 'Admin Nexori', email: 'admin@nexori.org', role: 'admin' },
-                                        { nome: 'João Silva', email: 'joao@nexori.org', role: 'gestor' },
-                                    ].map(user => (
-                                        <div key={user.email} className="flex items-center justify-between p-6 bg-gray-50 rounded-3xl border border-gray-100">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-[#1A3C4A] text-white flex items-center justify-center font-black">{user.nome[0]}</div>
-                                                <div>
-                                                    <p className="text-sm font-black text-[#1A3C4A]">{user.nome}</p>
-                                                    <p className="text-xs text-gray-400 font-bold">{user.email}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-6">
-                                                <span className="px-3 py-1 bg-white border border-gray-100 rounded-full text-[9px] font-black uppercase text-gray-400 tracking-widest">{user.role}</span>
-                                                <button type="button" className="text-[10px] font-black text-red-500 uppercase tracking-widest">Remover</button>
-                                            </div>
-                                        </div>
-                                    ))}
+                                <div className="max-w-md mx-auto space-y-3">
+                                    <h3 className="text-2xl font-black text-[#1A3C4A] tracking-tighter">Gestão de Equipe e Permissões</h3>
+                                    <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                                        Agora a gestão de colaboradores, convites e controle de acesso granular possui uma área dedicada e mais segura.
+                                    </p>
+                                </div>
+                                <div className="pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => window.location.href = '/configuracoes/equipe'}
+                                        className="inline-flex items-center gap-3 px-10 py-5 bg-[#1A3C4A] text-white rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] hover:bg-[#2D9E6B] transition-all shadow-2xl shadow-black/20"
+                                    >
+                                        Acessar Painel da Equipe
+                                    </button>
                                 </div>
                             </div>
                         )}

@@ -32,19 +32,31 @@ export default function GestaoEquipePage() {
     const [generatedLink, setGeneratedLink] = useState('')
 
     const fetchData = useCallback(async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                setLoading(false)
+                return
+            }
 
-        const tenantId = user.user_metadata?.tenant_id
+            const tenantId = user.user_metadata?.tenant_id
+            if (!tenantId) {
+                setLoading(false)
+                return
+            }
 
-        const [usersRes, invitesRes] = await Promise.all([
-            supabase.from('users').select('*').eq('tenant_id', tenantId),
-            supabase.from('convites_equipe').select('*').eq('tenant_id', tenantId).eq('status', 'pendente')
-        ])
+            const [usersRes, invitesRes] = await Promise.all([
+                supabase.from('users').select('*').eq('tenant_id', tenantId),
+                supabase.from('convites_equipe').select('*').eq('tenant_id', tenantId).eq('status', 'pendente')
+            ])
 
-        setTeam(usersRes.data || [])
-        setInvites(invitesRes.data || [])
-        setLoading(false)
+            setTeam(usersRes.data || [])
+            setInvites(invitesRes.data || [])
+        } catch (err) {
+            console.error('Erro ao buscar dados da equipe:', err)
+        } finally {
+            setLoading(false)
+        }
     }, [supabase])
 
     useEffect(() => {
