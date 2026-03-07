@@ -9,6 +9,73 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
+function parseSecoes(val: string | null): any[] | null {
+    if (!val) return null
+    try {
+        const parsed = JSON.parse(val)
+        return Array.isArray(parsed) ? parsed : null
+    } catch {
+        return null
+    }
+}
+
+function RenderSecoes({ secoes }: { secoes: any[] }) {
+    return (
+        <div className="space-y-6">
+            {secoes.map((secao, idx) => (
+                <div key={secao.id || idx}>
+                    <h4 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-2">{secao.label}</h4>
+                    {secao.tipo === 'textarea' || secao.tipo === 'text' ? (
+                        <p className="text-gray-600 text-sm whitespace-pre-wrap leading-relaxed">{secao.valor || '—'}</p>
+                    ) : secao.tipo === 'number' ? (
+                        <p className="text-gray-600 text-sm font-semibold">{secao.valor || '—'}</p>
+                    ) : secao.tipo === 'list' ? (
+                        <ul className="space-y-1">
+                            {(secao.valor || []).map((item: string, i: number) => (
+                                <li key={i} className="text-sm text-gray-600 flex gap-2">
+                                    <span className="text-[#2D9E6B] font-bold">·</span> {item}
+                                </li>
+                            ))}
+                        </ul>
+                    ) : secao.tipo === 'group' ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 bg-gray-50 rounded-2xl p-4">
+                            {(secao.campos || []).map((campo: any, ci: number) => (
+                                campo.valor ? (
+                                    <div key={ci}>
+                                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">{campo.label}</p>
+                                        <p className="text-sm text-gray-700 font-medium mt-0.5">{campo.valor}</p>
+                                    </div>
+                                ) : null
+                            ))}
+                        </div>
+                    ) : secao.tipo === 'table' ? (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm border-collapse">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        {(secao.colunas || []).map((col: string, ci: number) => (
+                                            <th key={ci} className="border border-gray-200 px-3 py-2 text-left text-xs font-bold text-gray-600">{col}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(secao.valor || []).map((row: string[], ri: number) => (
+                                        <tr key={ri} className="even:bg-gray-50">
+                                            {row.map((cell: string, ci: number) => (
+                                                <td key={ci} className="border border-gray-200 px-3 py-2 text-xs text-gray-600">{cell || '—'}</td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : null}
+                </div>
+            ))}
+        </div>
+    )
+}
+
 export default function DetalhePlanoRevisaoPage({ params }: { params: { id: string } }) {
     const supabase = createClient()
     const router = useRouter()
@@ -147,27 +214,37 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
 
                     {/* Descrição e Detalhes */}
                     <div className="bg-white rounded-[40px] border border-gray-50 p-8 shadow-sm space-y-8">
-                        <div>
-                            <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-4 flex items-center gap-2">
-                                <FileText className="w-4 h-4 text-blue-500" /> Descrição Geral
-                            </h3>
-                            <p className="text-gray-600 leading-relaxed">{plano.descricao || 'Sem descrição.'}</p>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {parseSecoes(plano.descricao) ? (
                             <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-4 flex items-center gap-2">
-                                    <Target className="w-4 h-4 text-purple-500" /> Objetivos
+                                <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-6 flex items-center gap-2">
+                                    <FileText className="w-4 h-4 text-blue-500" /> Conteúdo do Plano
                                 </h3>
-                                <p className="text-gray-600 text-sm whitespace-pre-wrap">{plano.objetivos || 'Não informados.'}</p>
+                                <RenderSecoes secoes={parseSecoes(plano.descricao)!} />
                             </div>
-                            <div>
-                                <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-4 flex items-center gap-2">
-                                    <MessageSquare className="w-4 h-4 text-orange-500" /> Justificativa
-                                </h3>
-                                <p className="text-gray-600 text-sm whitespace-pre-wrap">{plano.justificativa || 'Não informada.'}</p>
-                            </div>
-                        </div>
+                        ) : (
+                            <>
+                                <div>
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-4 flex items-center gap-2">
+                                        <FileText className="w-4 h-4 text-blue-500" /> Descrição Geral
+                                    </h3>
+                                    <p className="text-gray-600 leading-relaxed">{plano.descricao || 'Sem descrição.'}</p>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-4 flex items-center gap-2">
+                                            <Target className="w-4 h-4 text-purple-500" /> Objetivos
+                                        </h3>
+                                        <p className="text-gray-600 text-sm whitespace-pre-wrap">{plano.objetivos || 'Não informados.'}</p>
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xs font-black uppercase tracking-widest text-[#1A3C4A] mb-4 flex items-center gap-2">
+                                            <MessageSquare className="w-4 h-4 text-orange-500" /> Justificativa
+                                        </h3>
+                                        <p className="text-gray-600 text-sm whitespace-pre-wrap">{plano.justificativa || 'Não informada.'}</p>
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         <div className="pt-8 border-t border-gray-50 flex items-center justify-between">
                             <div className="flex items-center gap-3">
