@@ -112,8 +112,8 @@ export default async function BackofficePage() {
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${t.status === 'ativo' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                                            {t.status === 'ativo' ? 'Regular / Ativo' : 'Pendente / Bloqueado'}
+                                        <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${t.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                            {t.status === 'active' ? 'Regular / Ativo' : 'Pendente / Bloqueado'}
                                         </span>
                                     </td>
                                     <td className="px-8 py-6 text-xs text-gray-400 font-bold">

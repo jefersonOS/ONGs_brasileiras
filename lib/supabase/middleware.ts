@@ -72,7 +72,7 @@ export async function updateSession(request: NextRequest) {
                 .eq('id', tenantId)
                 .single()
 
-            if (tenant && tenant.status !== 'ativo') {
+            if (tenant && tenant.status !== 'active') {
                 url.pathname = '/conta-suspensa'
                 return NextResponse.redirect(url)
             }

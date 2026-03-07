@@ -12,7 +12,7 @@ interface TenantStatusToggleProps {
 export function TenantStatusToggle({ tenantId, initialStatus }: TenantStatusToggleProps) {
     const [loading, setLoading] = useState(false)
     const router = useRouter()
-    const isActive = initialStatus === 'ativo'
+    const isActive = initialStatus === 'active'
 
     const handleToggle = async () => {
         if (!confirm(`Deseja realmente ${isActive ? 'desativar' : 'ativar'} esta instituição?`)) {
@@ -21,7 +21,7 @@ export function TenantStatusToggle({ tenantId, initialStatus }: TenantStatusTogg
 
         setLoading(true)
         try {
-            const nextStatus = isActive ? 'inativo' : 'ativo'
+            const nextStatus = isActive ? 'inactive' : 'active'
             const res = await fetch(`/api/backoffice/tenants/${tenantId}/status`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -46,8 +46,8 @@ export function TenantStatusToggle({ tenantId, initialStatus }: TenantStatusTogg
             onClick={handleToggle}
             disabled={loading}
             className={`p-3 rounded-xl transition-all shadow-lg flex items-center gap-2 group ${isActive
-                    ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white shadow-red-500/10'
-                    : 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white shadow-green-500/10'
+                ? 'bg-red-50 text-red-600 hover:bg-red-600 hover:text-white shadow-red-500/10'
+                : 'bg-green-50 text-green-600 hover:bg-green-600 hover:text-white shadow-green-500/10'
                 }`}
             title={isActive ? 'Desativar Instituição' : 'Ativar Instituição'}
         >
