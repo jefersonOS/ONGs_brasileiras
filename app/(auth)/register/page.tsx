@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Sparkles, UserPlus, Info } from 'lucide-react'
 
-export default function RegisterPage() {
+function RegisterForm() {
     const searchParams = useSearchParams()
     const token = searchParams.get('token')
 
@@ -174,5 +174,13 @@ export default function RegisterPage() {
                 </p>
             </div>
         </div>
+    )
+}
+
+export default function RegisterPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen items-center justify-center bg-[#F5F7F8] flex p-6 animate-pulse text-[10px] font-black uppercase tracking-widest text-[#1A3C4A]">Carregando página de cadastro...</div>}>
+            <RegisterForm />
+        </Suspense>
     )
 }

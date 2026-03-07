@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react'
 
-export default function InscricaoPage({ params }: { params: { tipo: string, id: string } }) {
+function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
     const { tipo, id } = params
     const searchParams = useSearchParams()
     const turmaId = searchParams.get('turma')
@@ -136,7 +136,7 @@ export default function InscricaoPage({ params }: { params: { tipo: string, id: 
                     </div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">Você já está inscrito</h1>
                     <p className="text-gray-600 mb-8">
-                        O sistema detectou que você já possui uma inscrição ativa para esta atividade ou turma.
+                        O sistema detectou que você já possui uma inscription ativa para esta atividade ou turma.
                     </p>
                     <Link href="/minha-area" className="block w-full py-3 bg-[#1A3C4A] text-white rounded-md font-bold hover:bg-[#2E6B7A] transition-colors">
                         Ver Minhas Inscrições
@@ -219,5 +219,13 @@ export default function InscricaoPage({ params }: { params: { tipo: string, id: 
                 </div>
             </div>
         </div>
+    )
+}
+
+export default function InscricaoPage({ params }: { params: { tipo: string, id: string } }) {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-[#F5F7F8] flex items-center justify-center animate-pulse"><p className="text-[#1A3C4A] font-medium uppercase text-xs tracking-widest">Carregando formulário...</p></div>}>
+            <InscricaoForm params={params} />
+        </Suspense>
     )
 }
