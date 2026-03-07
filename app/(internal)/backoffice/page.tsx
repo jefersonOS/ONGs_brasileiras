@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Users, Building2, ShieldCheck, Search, LayoutDashboard } from 'lucide-react'
 import { TenantStatusToggle } from './TenantStatusToggle'
+import { TenantPlanSelector } from './TenantPlanSelector'
 
 export default async function BackofficePage() {
     const cookieStore = cookies()
@@ -107,9 +108,7 @@ export default async function BackofficePage() {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-widest italic">
-                                            {t.plano}
-                                        </span>
+                                        <TenantPlanSelector tenantId={t.id} currentPlan={t.plano || 'free'} />
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${t.status === 'active' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
