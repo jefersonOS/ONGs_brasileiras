@@ -36,5 +36,7 @@ export default async function PlanosTrabalhoPage() {
         )
     }
 
-    return <PlanosTable initialData={(planos as any[]) || []} />
+    const userRole = user.user_metadata?.role
+
+    return <PlanosTable initialData={(planos as any[]) || []} userRole={userRole} />
 }

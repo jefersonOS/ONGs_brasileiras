@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
     FileText, ArrowLeft, CheckCircle, XCircle,
     MessageSquare, DollarSign, Calendar,
-    User, Clock, LayoutDashboard, Target
+    User, Clock, LayoutDashboard, Target, ShieldCheck
 } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -19,12 +19,11 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
     const [saving, setSaving] = useState(false)
     const [plano, setPlano] = useState<any>(null)
     const [parecerText, setParecerText] = useState('')
-    const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+    const [isReviewer, setIsReviewer] = useState(false)
 
     const fetchData = useCallback(async () => {
-        // Obter usuário para checar role
+        // Obter usuário para checar role e tenant
         const { data: { user } } = await supabase.auth.getUser()
-        setIsSuperAdmin(user?.user_metadata?.role === 'superadmin')
 
         // Obter Plano
         const { data, error } = await supabase
@@ -38,6 +37,13 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
         } else {
             setPlano(data)
             if (data.parecer_tecnico) setParecerText(data.parecer_tecnico)
+
+            // Autorização de revisão:
+            // - Super Admin
+            // - Proprietário do mesmo Tenant
+            const role = user?.user_metadata?.role
+            const tenantId = user?.user_metadata?.tenant_id
+            setIsReviewer(role === 'superadmin' || (role === 'proprietario' && data.tenant_id === tenantId))
         }
         setLoading(false)
     }, [id, supabase])
@@ -47,8 +53,8 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
     }, [fetchData])
 
     const handleReview = async (newStatus: string) => {
-        if (!isSuperAdmin) {
-            alert('Apenas Super Admins podem revisar planos.')
+        if (!isReviewer) {
+            alert('Você não tem permissão para revisar este plano.')
             return
         }
 
@@ -65,8 +71,8 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                 throw new Error(errData.error || 'Erro ao processar revisão')
             }
 
-            alert('Plano atualizado com sucesso!')
-            router.push('/backoffice')
+            alert(`Plano ${newStatus === 'aprovado' ? 'aprovado' : 'rejeitado'} com sucesso!`)
+            router.push('/planos-trabalho')
             router.refresh()
         } catch (error: any) {
             alert(error.message)
@@ -99,7 +105,7 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                     </div>
                 </div>
 
-                {isSuperAdmin && plano.status === 'enviado' && (
+                {isReviewer && plano.status === 'enviado' && (
                     <div className="flex gap-4 self-end md:self-auto">
                         <button
                             onClick={() => handleReview('rejeitado')}
@@ -124,7 +130,7 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                     {/* Status Card */}
                     <div className="bg-white p-8 rounded-[40px] border border-gray-50 shadow-sm flex items-center gap-6">
                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${plano.status === 'aprovado' ? 'bg-green-50 text-green-500' :
-                                plano.status === 'enviado' ? 'bg-blue-50 text-blue-500' : 'bg-gray-50 text-gray-500'
+                            plano.status === 'enviado' ? 'bg-blue-50 text-blue-500' : 'bg-gray-50 text-gray-500'
                             }`}>
                             <Clock className="w-6 h-6" />
                         </div>
@@ -218,12 +224,12 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                             <textarea
                                 value={parecerText}
                                 onChange={e => setParecerText(e.target.value)}
-                                disabled={plano.status !== 'enviado' || !isSuperAdmin}
+                                disabled={plano.status !== 'enviado' || !isReviewer}
                                 placeholder="Descreva os pontos de correção ou a justificativa da aprovação..."
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-xs font-medium focus:ring-2 focus:ring-[#2D9E6B]/50 min-h-[200px] text-white placeholder:text-white/20"
                             ></textarea>
 
-                            {plano.status === 'enviado' && isSuperAdmin && (
+                            {plano.status === 'enviado' && isReviewer && (
                                 <p className="text-[10px] text-[#2D9E6B] font-bold">Instrução: Adicione o parecer antes de tomar uma decisão final.</p>
                             )}
 
@@ -260,25 +266,5 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                 </div>
             </div>
         </div>
-    )
-}
-
-function ShieldCheck(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-            <path d="m9 12 2 2 4-4" />
-        </svg>
     )
 }
