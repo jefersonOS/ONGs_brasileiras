@@ -167,7 +167,6 @@ function NovoPlanoForm() {
             status: isDraft ? 'rascunho' : 'enviado',
             gerado_por_ia: isAIGenerated,
             arquivo_url: arquivoUrl,
-            dados_template: secoesDinamicas ? { secoes: secoesDinamicas } : null,
         })
 
         if (insertError) {
