@@ -6,21 +6,61 @@ import { generateText } from 'ai'
 // Simulates a DB fetch of provider config. 
 // For now, defaults to OpenAI or Google based on env vars available.
 // Retorna o objeto do modelo configurado para o tenant
+import { createClient } from '@/lib/supabase/server'
+
+// Retorna o objeto do modelo configurado para o tenant
 export async function getAIProvider() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    let tenantConfig: any = {}
+
+    if (user?.user_metadata?.tenant_id) {
+        const { data: tenant } = await supabase
+            .from('tenants')
+            .select('config_portal')
+            .eq('id', user.user_metadata.tenant_id)
+            .single()
+
+        if (tenant?.config_portal) {
+            tenantConfig = tenant.config_portal
+        }
+    }
+
+    // 1. Verificar chaves específicas do Tenant (Salvas no banco)
+    if (tenantConfig.ai_key_openai) {
+        const openai = createOpenAI({ apiKey: tenantConfig.ai_key_openai })
+        return openai(tenantConfig.ai_modelo_ativo || 'gpt-4o')
+    }
+
+    if (tenantConfig.ai_key_google) {
+        const google = createGoogleGenerativeAI({ apiKey: tenantConfig.ai_key_google })
+        return google(tenantConfig.ai_modelo_ativo || 'gemini-1.5-pro-latest')
+    }
+
+    if (tenantConfig.ai_key_claude) {
+        const anthropic = createAnthropic({ apiKey: tenantConfig.ai_key_claude })
+        return anthropic(tenantConfig.ai_modelo_ativo || 'claude-3-5-sonnet-20240620')
+    }
+
+    // 2. Fallback para Variáveis de Ambiente (Global)
     if (process.env.OPENAI_API_KEY) {
         const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY })
         return openai('gpt-4o')
     }
+
     const googleKey = process.env.GOOGLE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY
     if (googleKey) {
         const google = createGoogleGenerativeAI({ apiKey: googleKey })
         return google('gemini-1.5-pro-latest')
     }
+
     if (process.env.ANTHROPIC_API_KEY) {
         const anthropic = createAnthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
         return anthropic('claude-3-5-sonnet-20240620')
     }
-    throw new Error("Nenhum provedor de IA configurado no ambiente.")
+
+    throw new Error("Nenhum provedor de IA configurado. Verifique as configurações ou as variáveis de ambiente.")
 }
 
 /**
