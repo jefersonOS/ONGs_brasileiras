@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Sparkles, Plus, Trash2, X } from 'lucide-react'
+import { Sparkles, Plus, Trash2, X, LayoutTemplate, BookMarked } from 'lucide-react'
 
 function NovoPlanoForm() {
     const router = useRouter()
@@ -44,15 +44,57 @@ function NovoPlanoForm() {
     const [secoesDinamicas, setSecoesDinamicas] = useState<any[] | null>(null)
     const [arquivoUrl, setArquivoUrl] = useState<string | null>(null)
 
+    // Template States
+    const [templates, setTemplates] = useState<any[]>([])
+    const [showTemplateModal, setShowTemplateModal] = useState(false)
+    const [showSaveTemplateModal, setShowSaveTemplateModal] = useState(false)
+    const [templateNome, setTemplateNome] = useState('')
+    const [templateDescricao, setTemplateDescricao] = useState('')
+    const [savingTemplate, setSavingTemplate] = useState(false)
+
     useEffect(() => {
         supabase.from('projetos').select('id, nome').eq('status', 'ativo').then(({ data }) => {
             if (data) setProjetos(data)
         })
-
+        supabase.from('templates_plano').select('id, nome, descricao, secoes').order('created_at', { ascending: false }).then(({ data }) => {
+            if (data) setTemplates(data)
+        })
         if (searchParams.get('ai') === 'true') {
             setShowAIModal(true)
         }
     }, [supabase, searchParams])
+
+    const saveTemplate = async () => {
+        if (!templateNome.trim() || !secoesDinamicas) return
+        setSavingTemplate(true)
+        const { data: { user } } = await supabase.auth.getUser()
+        const { error } = await supabase.from('templates_plano').insert({
+            tenant_id: user?.user_metadata?.tenant_id,
+            nome: templateNome.trim(),
+            descricao: templateDescricao.trim() || null,
+            secoes: secoesDinamicas,
+        })
+        if (!error) {
+            setShowSaveTemplateModal(false)
+            setTemplateNome('')
+            setTemplateDescricao('')
+            // Recarrega lista
+            supabase.from('templates_plano').select('id, nome, descricao, secoes').order('created_at', { ascending: false }).then(({ data }) => {
+                if (data) setTemplates(data)
+            })
+            alert('Template salvo com sucesso!')
+        } else {
+            alert('Erro ao salvar template: ' + error.message)
+        }
+        setSavingTemplate(false)
+    }
+
+    const applyTemplate = (template: any) => {
+        setSecoesDinamicas(template.secoes)
+        setTitulo(template.nome)
+        setIsAIGenerated(false)
+        setShowTemplateModal(false)
+    }
 
     const handleFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -239,15 +281,23 @@ function NovoPlanoForm() {
                     <h1 className="text-2xl font-bold text-[#1A3C4A]">Plano de Trabalho</h1>
                     <p className="text-gray-500 mt-1">Crie um novo plano detalhado para um projeto.</p>
                 </div>
-                <div className="flex gap-2">
-                    <label className="flex items-center gap-2 px-4 py-2 bg-white border border-[#1A3C4A] text-[#1A3C4A] rounded-md hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">
+                <div className="flex gap-2 flex-wrap">
+                    {templates.length > 0 && (
+                        <button
+                            onClick={() => setShowTemplateModal(true)}
+                            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors shadow-sm text-sm"
+                        >
+                            <LayoutTemplate className="w-4 h-4" /> Usar Template
+                        </button>
+                    )}
+                    <label className="flex items-center gap-2 px-4 py-2 bg-white border border-[#1A3C4A] text-[#1A3C4A] rounded-md hover:bg-gray-50 transition-colors shadow-sm cursor-pointer text-sm">
                         <Plus className="w-4 h-4" />
-                        {fileProcessing ? 'Processando...' : 'Importar Estrutura (PDF/DOCX)'}
+                        {fileProcessing ? 'Processando...' : 'Importar PDF/DOCX'}
                         <input type="file" className="hidden" accept=".pdf,.docx" onChange={handleFileSelection} disabled={fileProcessing} />
                     </label>
                     <button
                         onClick={() => setShowAIModal(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors shadow-sm text-sm"
                     >
                         <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Gerar com IA
                     </button>
@@ -255,9 +305,25 @@ function NovoPlanoForm() {
             </div>
 
             {isAIGenerated && (
-                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-center gap-3 text-amber-800 animate-pulse">
-                    <Sparkles className="w-5 h-5 text-amber-600" />
-                    <p className="text-sm font-medium">Estrutura carregada — revise ou complete os campos abaixo antes de enviar.</p>
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-center gap-3 text-amber-800">
+                    <Sparkles className="w-5 h-5 text-amber-600 shrink-0" />
+                    <p className="text-sm font-medium flex-1">Estrutura carregada — revise ou complete os campos abaixo antes de enviar.</p>
+                </div>
+            )}
+
+            {secoesDinamicas && secoesDinamicas.length > 0 && (
+                <div className="bg-green-50 border border-green-200 p-4 rounded-lg flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 text-green-800">
+                        <BookMarked className="w-5 h-5 text-green-600 shrink-0" />
+                        <p className="text-sm font-medium">Quer reutilizar essa estrutura no futuro? Salve como template.</p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowSaveTemplateModal(true)}
+                        className="shrink-0 flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 text-sm font-medium"
+                    >
+                        <LayoutTemplate className="w-4 h-4" /> Salvar Template
+                    </button>
                 </div>
             )}
 
@@ -535,6 +601,89 @@ function NovoPlanoForm() {
                                 className="px-4 py-2 text-sm bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] flex items-center gap-2 disabled:opacity-50 shadow-sm"
                             >
                                 <Sparkles className="w-4 h-4" /> {generating ? 'Gerando...' : 'Gerar Plano Completo'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Usar Template */}
+            {showTemplateModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-lg overflow-hidden border border-gray-100">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#F5F7F8]">
+                            <h3 className="font-semibold text-[#1A3C4A] flex items-center gap-2">
+                                <LayoutTemplate className="w-4 h-4 text-[#2D9E6B]" /> Selecionar Template
+                            </h3>
+                            <button onClick={() => setShowTemplateModal(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
+                            {templates.map(t => (
+                                <button
+                                    key={t.id}
+                                    type="button"
+                                    onClick={() => applyTemplate(t)}
+                                    className="w-full text-left flex items-center gap-4 p-4 bg-gray-50 hover:bg-[#1A3C4A]/5 rounded-lg border border-gray-100 hover:border-[#1A3C4A]/20 transition-colors"
+                                >
+                                    <div className="w-9 h-9 bg-[#1A3C4A]/10 rounded-lg flex items-center justify-center shrink-0">
+                                        <LayoutTemplate className="w-4 h-4 text-[#1A3C4A]" />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-sm text-[#1A3C4A]">{t.nome}</p>
+                                        {t.descricao && <p className="text-xs text-gray-400 mt-0.5">{t.descricao}</p>}
+                                        <p className="text-[10px] text-gray-300 mt-1">{t.secoes?.length || 0} seções</p>
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+                            <button onClick={() => setShowTemplateModal(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md bg-white">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal Salvar Template */}
+            {showSaveTemplateModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden border border-gray-100">
+                        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-[#F5F7F8]">
+                            <h3 className="font-semibold text-[#1A3C4A] flex items-center gap-2">
+                                <BookMarked className="w-4 h-4 text-[#2D9E6B]" /> Salvar como Template
+                            </h3>
+                            <button onClick={() => setShowSaveTemplateModal(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Template *</label>
+                                <input
+                                    type="text"
+                                    autoFocus
+                                    value={templateNome}
+                                    onChange={e => setTemplateNome(e.target.value)}
+                                    placeholder="Ex: Plano de Trabalho Municipal 2025"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#2D9E6B]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição (opcional)</label>
+                                <input
+                                    type="text"
+                                    value={templateDescricao}
+                                    onChange={e => setTemplateDescricao(e.target.value)}
+                                    placeholder="Ex: Modelo da Secretaria de Assistência Social"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#2D9E6B]"
+                                />
+                            </div>
+                        </div>
+                        <div className="p-4 border-t border-gray-200 bg-gray-50 flex justify-end gap-2">
+                            <button onClick={() => setShowSaveTemplateModal(false)} className="px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-md bg-white">Cancelar</button>
+                            <button
+                                onClick={saveTemplate}
+                                disabled={savingTemplate || !templateNome.trim()}
+                                className="px-4 py-2 text-sm bg-[#2D9E6B] text-white rounded-md hover:bg-green-600 flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <BookMarked className="w-4 h-4" /> {savingTemplate ? 'Salvando...' : 'Salvar Template'}
                             </button>
                         </div>
                     </div>

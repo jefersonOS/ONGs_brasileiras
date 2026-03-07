@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
     Save, Building, Palette, Sparkles, MessageSquare,
     FileText, Users, Upload, Eye,
-    CheckCircle, AlertCircle, Loader2
+    CheckCircle, AlertCircle, Loader2, LayoutTemplate, Trash2, Plus
 } from 'lucide-react'
 
 export default function ConfiguracoesPage() {
@@ -179,8 +179,31 @@ export default function ConfiguracoesPage() {
         { id: 'ai', label: 'IA Central', icon: Sparkles },
         { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
         { id: 'certificados', label: 'Certificados', icon: FileText },
+        { id: 'templates', label: 'Templates', icon: LayoutTemplate },
         { id: 'usuarios', label: 'Equipe', icon: Users },
     ]
+
+    // Templates
+    const [templates, setTemplates] = useState<any[]>([])
+    const [loadingTemplates, setLoadingTemplates] = useState(false)
+    const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (activeTab === 'templates') {
+            setLoadingTemplates(true)
+            supabase.from('templates_plano').select('*').order('created_at', { ascending: false })
+                .then(({ data }) => { if (data) setTemplates(data) })
+                .finally(() => setLoadingTemplates(false))
+        }
+    }, [activeTab, supabase])
+
+    const deleteTemplate = async (id: string) => {
+        if (!confirm('Excluir este template?')) return
+        setDeletingTemplateId(id)
+        await supabase.from('templates_plano').delete().eq('id', id)
+        setTemplates(prev => prev.filter(t => t.id !== id))
+        setDeletingTemplateId(null)
+    }
 
     if (loading) return <div className="p-8 text-center animate-pulse">Carregando configurações...</div>
 
@@ -453,6 +476,61 @@ export default function ConfiguracoesPage() {
                             </div>
                         )}
 
+                        {activeTab === 'templates' && (
+                            <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
+                                <div className="flex items-center justify-between mb-8">
+                                    <div>
+                                        <h3 className="text-xl font-black text-[#1A3C4A] tracking-tighter">Templates de Plano de Trabalho</h3>
+                                        <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">Templates salvos a partir de PDFs importados</p>
+                                    </div>
+                                    <div className="w-12 h-12 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                        <LayoutTemplate className="w-5 h-5 text-[#1A3C4A]" />
+                                    </div>
+                                </div>
+
+                                {loadingTemplates ? (
+                                    <div className="flex items-center justify-center py-12">
+                                        <Loader2 className="w-6 h-6 animate-spin text-[#2D9E6B]" />
+                                    </div>
+                                ) : templates.length === 0 ? (
+                                    <div className="text-center py-16 space-y-4">
+                                        <div className="w-16 h-16 bg-gray-100 rounded-[24px] flex items-center justify-center mx-auto">
+                                            <LayoutTemplate className="w-8 h-8 text-gray-300" />
+                                        </div>
+                                        <p className="text-gray-400 text-sm font-medium">Nenhum template salvo ainda.</p>
+                                        <p className="text-xs text-gray-400">Importe um PDF na página de Planos de Trabalho e salve-o como template.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {templates.map(t => (
+                                            <div key={t.id} className="flex items-center justify-between p-5 bg-gray-50 rounded-2xl border border-gray-100">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 bg-[#1A3C4A]/10 rounded-xl flex items-center justify-center shrink-0">
+                                                        <FileText className="w-5 h-5 text-[#1A3C4A]" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-bold text-sm text-[#1A3C4A]">{t.nome}</p>
+                                                        {t.descricao && <p className="text-xs text-gray-400 mt-0.5">{t.descricao}</p>}
+                                                        <p className="text-[10px] text-gray-300 mt-1">{t.secoes?.length || 0} seções · {new Date(t.created_at).toLocaleDateString('pt-BR')}</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => deleteTemplate(t.id)}
+                                                    disabled={deletingTemplateId === t.id}
+                                                    className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                                                    title="Excluir template"
+                                                >
+                                                    {deletingTemplateId === t.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab !== 'templates' && (
                         <div className="flex justify-end pt-10">
                             <button
                                 type="submit"
@@ -462,6 +540,7 @@ export default function ConfiguracoesPage() {
                                 {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Salvar Alterações</>}
                             </button>
                         </div>
+                        )}
 
                     </form>
                 </div>
