@@ -35,9 +35,10 @@ function NovoPlanoForm() {
     const [ideiaCentral, setIdeiaCentral] = useState('')
     const [generating, setGenerating] = useState(false)
 
-    // Refine Field States
-    const [refiningField, setRefiningField] = useState<{ name: string; value: string; setter: (v: string) => void } | null>(null)
-    const [isRefining, setIsRefining] = useState(false)
+    // File Extraction States
+    const [fileProcessing, setFileProcessing] = useState(false)
+    const [secoesDinamicas, setSecoesDinamicas] = useState<any[] | null>(null)
+    const [arquivoUrl, setArquivoUrl] = useState<string | null>(null)
 
     useEffect(() => {
         supabase.from('projetos').select('id, nome').eq('status', 'ativo').then(({ data }) => {
@@ -47,8 +48,57 @@ function NovoPlanoForm() {
         if (searchParams.get('ai') === 'true') {
             setShowAIModal(true)
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [supabase, searchParams])
+
+    const handleFileSelection = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+
+        setFileProcessing(true)
+        setError(null)
+
+        try {
+            // 1. Upload para o Storage (para histórico)
+            const { data: { user } } = await supabase.auth.getUser()
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${user?.id}-${Math.random()}.${fileExt}`
+            const filePath = `uploads/${fileName}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('planos-trabalho')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('planos-trabalho')
+                .getPublicUrl(filePath)
+
+            setArquivoUrl(publicUrl)
+
+            // 2. Enviar para Processamento de IA (Estruturação)
+            const formData = new FormData()
+            formData.append('file', file)
+
+            const res = await fetch('/api/ia/estruturar-plano', {
+                method: 'POST',
+                body: formData
+            })
+
+            const data = await res.json()
+            if (data.error) throw new Error(data.error)
+
+            setTitulo(data.titulo || '')
+            setSecoesDinamicas(data.secoes || [])
+            setIsAIGenerated(true)
+
+            alert('Estrutura extraída com sucesso! Agora você pode preencher os campos abaixo.')
+        } catch (err: any) {
+            setError('Erro ao processar arquivo: ' + err.message)
+        } finally {
+            setFileProcessing(false)
+        }
+    }
 
     const handleCreate = async (e: React.FormEvent, isDraft: boolean) => {
         e.preventDefault()
@@ -57,19 +107,22 @@ function NovoPlanoForm() {
 
         const { data: { user } } = await supabase.auth.getUser()
 
+        // Se tiver seções dinâmicas, salvamos como um campo JSON adicional ou usamos a descrição
+        // Por agora, vamos garantir que o Nexori salve a estrutura enviada
         const { error: insertError } = await supabase.from('planos_trabalho').insert({
             tenant_id: user?.user_metadata?.tenant_id,
             projeto_id: projetoId || null,
             criador_id: user?.id,
             titulo,
-            descricao,
+            descricao: secoesDinamicas ? JSON.stringify(secoesDinamicas) : descricao,
             objetivos,
             justificativa,
             metas,
             cronograma,
             orcamento_estimado: Number(orcamento) || 0,
             status: isDraft ? 'rascunho' : 'enviado',
-            gerado_por_ia: isAIGenerated
+            gerado_por_ia: isAIGenerated,
+            arquivo_url: arquivoUrl
         })
 
         if (insertError) {
@@ -157,18 +210,25 @@ function NovoPlanoForm() {
                     <h1 className="text-2xl font-bold text-[#1A3C4A]">Plano de Trabalho</h1>
                     <p className="text-gray-500 mt-1">Crie um novo plano detalhado para um projeto.</p>
                 </div>
-                <button
-                    onClick={() => setShowAIModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors shadow-sm"
-                >
-                    <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Gerar com IA
-                </button>
+                <div className="flex gap-2">
+                    <label className="flex items-center gap-2 px-4 py-2 bg-white border border-[#1A3C4A] text-[#1A3C4A] rounded-md hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">
+                        <Plus className="w-4 h-4" />
+                        {fileProcessing ? 'Processando...' : 'Importar Estrutura (PDF/DOCX)'}
+                        <input type="file" className="hidden" accept=".pdf,.docx" onChange={handleFileSelection} disabled={fileProcessing} />
+                    </label>
+                    <button
+                        onClick={() => setShowAIModal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors shadow-sm"
+                    >
+                        <Sparkles className="w-4 h-4 text-[#2D9E6B]" /> Gerar com IA
+                    </button>
+                </div>
             </div>
 
             {isAIGenerated && (
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-center gap-3 text-amber-800 animate-pulse">
                     <Sparkles className="w-5 h-5 text-amber-600" />
-                    <p className="text-sm font-medium">Plano gerado pela IA — revise todos os campos antes de enviar para análise.</p>
+                    <p className="text-sm font-medium">Estrutura carregada — revise ou complete os campos abaixo antes de enviar.</p>
                 </div>
             )}
 
@@ -179,7 +239,7 @@ function NovoPlanoForm() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <div className="flex items-center justify-between mb-1">
-                                <label className="block text-sm font-medium text-gray-700">Título *</label>
+                                <label className="block text-sm font-medium text-gray-700">Título do Plano *</label>
                                 <RefineButton fieldName="Título" value={titulo} setter={setTitulo} />
                             </div>
                             <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]" />
@@ -193,73 +253,127 @@ function NovoPlanoForm() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-sm font-medium text-gray-700">Descrição</label>
-                                    <RefineButton fieldName="Descrição" value={descricao} setter={setDescricao} />
-                                </div>
-                                <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-sm font-medium text-gray-700">Objetivos</label>
-                                    <RefineButton fieldName="Objetivos" value={objetivos} setter={setObjetivos} />
-                                </div>
-                                <textarea value={objetivos} onChange={e => setObjetivos(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
-                            </div>
-                            <div>
-                                <div className="flex items-center justify-between mb-1">
-                                    <label className="block text-sm font-medium text-gray-700">Justificativa</label>
-                                    <RefineButton fieldName="Justificativa" value={justificativa} setter={setJustificativa} />
-                                </div>
-                                <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Orçamento Estimado (R$)</label>
-                                <input type="number" step="0.01" value={orcamento} onChange={e => setOrcamento(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]" />
-                            </div>
-                        </div>
-
+                    {/* Campos Dinâmicos (Se extraídos do arquivo) */}
+                    {secoesDinamicas && secoesDinamicas.length > 0 ? (
                         <div className="space-y-6">
-                            {/* Metas */}
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="block text-sm font-medium text-gray-700">Metas do Plano</label>
-                                    <button type="button" onClick={() => setMetas([...metas, { nome: '', descricao: '' }])} className="text-xs text-[#2D9E6B] font-medium hover:text-green-700 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Meta</button>
-                                </div>
-                                <div className="space-y-3">
-                                    {metas.map((m, i) => (
-                                        <div key={i} className="flex gap-2 items-start bg-gray-50 p-2 rounded-md border border-gray-100">
-                                            <div className="flex-1 space-y-2">
-                                                <input type="text" placeholder="Nome da meta" value={m.nome} onChange={e => { const nm = [...metas]; nm[i].nome = e.target.value; setMetas(nm); }} className="w-full text-sm px-2 py-1 border border-gray-200 rounded" />
-                                                <input type="text" placeholder="Descrição" value={m.descricao} onChange={e => { const nm = [...metas]; nm[i].descricao = e.target.value; setMetas(nm); }} className="w-full text-xs px-2 py-1 border border-gray-200 rounded text-gray-500" />
+                            <h2 className="text-xs font-black uppercase tracking-widest text-gray-400 border-b pb-2">Estrutura Extraída do Arquivo</h2>
+                            <div className="grid grid-cols-1 gap-6">
+                                {secoesDinamicas.map((secao, idx) => (
+                                    <div key={secao.id || idx}>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">{secao.label}</label>
+                                        {secao.tipo === 'textarea' || secao.tipo === 'text' ? (
+                                            <textarea
+                                                value={secao.valor}
+                                                onChange={e => {
+                                                    const newSecoes = [...secoesDinamicas]
+                                                    newSecoes[idx].valor = e.target.value
+                                                    setSecoesDinamicas(newSecoes)
+                                                }}
+                                                rows={4}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"
+                                            />
+                                        ) : secao.tipo === 'list' ? (
+                                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-2">
+                                                {Array.isArray(secao.valor) ? secao.valor.map((item: any, i: number) => (
+                                                    <div key={i} className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            value={typeof item === 'string' ? item : JSON.stringify(item)}
+                                                            onChange={e => {
+                                                                const newSecoes = [...secoesDinamicas]
+                                                                newSecoes[idx].valor[i] = e.target.value
+                                                                setSecoesDinamicas(newSecoes)
+                                                            }}
+                                                            className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded"
+                                                        />
+                                                    </div>
+                                                )) : <p className="text-xs text-gray-400 italic">Lista vazia ou não reconhecida</p>}
                                             </div>
-                                            <button type="button" onClick={() => setMetas(metas.filter((_, idx) => idx !== i))} className="mt-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                    ))}
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={secao.valor}
+                                                onChange={e => {
+                                                    const newSecoes = [...secoesDinamicas]
+                                                    newSecoes[idx].valor = e.target.value
+                                                    setSecoesDinamicas(newSecoes)
+                                                }}
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"
+                                            />
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-sm font-medium text-gray-700">Descrição</label>
+                                        <RefineButton fieldName="Descrição" value={descricao} setter={setDescricao} />
+                                    </div>
+                                    <textarea value={descricao} onChange={e => setDescricao(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
+                                </div>
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-sm font-medium text-gray-700">Objetivos</label>
+                                        <RefineButton fieldName="Objetivos" value={objetivos} setter={setObjetivos} />
+                                    </div>
+                                    <textarea value={objetivos} onChange={e => setObjetivos(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
+                                </div>
+                                <div>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <label className="block text-sm font-medium text-gray-700">Justificativa</label>
+                                        <RefineButton fieldName="Justificativa" value={justificativa} setter={setJustificativa} />
+                                    </div>
+                                    <textarea value={justificativa} onChange={e => setJustificativa(e.target.value)} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"></textarea>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Orçamento Estimado (R$)</label>
+                                    <input type="number" step="0.01" value={orcamento} onChange={e => setOrcamento(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]" />
                                 </div>
                             </div>
 
-                            {/* Cronograma */}
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <label className="block text-sm font-medium text-gray-700">Cronograma Físico</label>
-                                    <button type="button" onClick={() => setCronograma([...cronograma, { mes: (cronograma.length + 1).toString(), atividade: '' }])} className="text-xs text-[#2D9E6B] font-medium hover:text-green-700 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Etapa</button>
+                            <div className="space-y-6">
+                                {/* Metas */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">Metas do Plano</label>
+                                        <button type="button" onClick={() => setMetas([...metas, { nome: '', descricao: '' }])} className="text-xs text-[#2D9E6B] font-medium hover:text-green-700 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Meta</button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {metas.map((m, i) => (
+                                            <div key={i} className="flex gap-2 items-start bg-gray-50 p-2 rounded-md border border-gray-100">
+                                                <div className="flex-1 space-y-2">
+                                                    <input type="text" placeholder="Nome da meta" value={m.nome} onChange={e => { const nm = [...metas]; nm[i].nome = e.target.value; setMetas(nm); }} className="w-full text-sm px-2 py-1 border border-gray-200 rounded" />
+                                                    <input type="text" placeholder="Descrição" value={m.descricao} onChange={e => { const nm = [...metas]; nm[i].descricao = e.target.value; setMetas(nm); }} className="w-full text-xs px-2 py-1 border border-gray-200 rounded text-gray-500" />
+                                                </div>
+                                                <button type="button" onClick={() => setMetas(metas.filter((_, idx) => idx !== i))} className="mt-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="space-y-3">
-                                    {cronograma.map((c, i) => (
-                                        <div key={i} className="flex gap-2 items-start bg-gray-50 p-2 rounded-md border border-gray-100">
-                                            <input type="text" placeholder="Mês (ex: 1, ou Jan/24)" value={c.mes} onChange={e => { const nc = [...cronograma]; nc[i].mes = e.target.value; setCronograma(nc); }} className="w-24 text-sm px-2 py-1 border border-gray-200 rounded" />
-                                            <input type="text" placeholder="Atividade" value={c.atividade} onChange={e => { const nc = [...cronograma]; nc[i].atividade = e.target.value; setCronograma(nc); }} className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded" />
-                                            <button type="button" onClick={() => setCronograma(cronograma.filter((_, idx) => idx !== i))} className="mt-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                    ))}
+
+                                {/* Cronograma */}
+                                <div>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-gray-700">Cronograma Físico</label>
+                                        <button type="button" onClick={() => setCronograma([...cronograma, { mes: (cronograma.length + 1).toString(), atividade: '' }])} className="text-xs text-[#2D9E6B] font-medium hover:text-green-700 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Etapa</button>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {cronograma.map((c, i) => (
+                                            <div key={i} className="flex gap-2 items-start bg-gray-50 p-2 rounded-md border border-gray-100">
+                                                <input type="text" placeholder="Mês (ex: 1, ou Jan/24)" value={c.mes} onChange={e => { const nc = [...cronograma]; nc[i].mes = e.target.value; setCronograma(nc); }} className="w-24 text-sm px-2 py-1 border border-gray-200 rounded" />
+                                                <input type="text" placeholder="Atividade" value={c.atividade} onChange={e => { const nc = [...cronograma]; nc[i].atividade = e.target.value; setCronograma(nc); }} className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded" />
+                                                <button type="button" onClick={() => setCronograma(cronograma.filter((_, idx) => idx !== i))} className="mt-1 text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    )}
 
                     <div className="pt-6 border-t border-gray-200 flex items-center justify-end gap-3">
                         <button type="button" onClick={() => router.back()} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">Cancelar</button>
