@@ -1,14 +1,42 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Users, Building2, ShieldCheck, Search, LayoutDashboard } from 'lucide-react'
 
 export default async function BackofficePage() {
-    const supabase = createClient()
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+            cookies: {
+                getAll() { return cookieStore.getAll() },
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        cookieStore.set(name, value, options)
+                    )
+                }
+            }
+        }
+    )
+
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user || user.user_metadata?.role !== 'superadmin') {
         redirect('/dashboard')
     }
+
+    // Use Service Role Client for administrative queries (Bypasses RLS)
+    const adminSupabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        {
+            cookies: {
+                getAll() { return cookieStore.getAll() },
+                setAll(cookiesToSet) { }
+            }
+        }
+    )
 
     // 1. Fetch Stats
     const [
@@ -17,10 +45,10 @@ export default async function BackofficePage() {
         { data: tenants },
         { data: allUsers }
     ] = await Promise.all([
-        supabase.from('tenants').select('*', { count: 'exact', head: true }),
-        supabase.from('users').select('*', { count: 'exact', head: true }),
-        supabase.from('tenants').select('*').order('created_at', { ascending: false }),
-        supabase.from('users').select('*, tenant:tenants(nome)').order('created_at', { ascending: false }).limit(20)
+        adminSupabase.from('tenants').select('*', { count: 'exact', head: true }),
+        adminSupabase.from('users').select('*', { count: 'exact', head: true }),
+        adminSupabase.from('tenants').select('*').order('created_at', { ascending: false }),
+        adminSupabase.from('users').select('*, tenant:tenants(nome)').order('created_at', { ascending: false }).limit(20)
     ])
 
     return (
