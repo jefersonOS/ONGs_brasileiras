@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import {
     FileText, ArrowLeft,
     MessageSquare, DollarSign, Calendar,
-    Clock, LayoutDashboard, Target, ShieldCheck
+    Clock, LayoutDashboard, Target, ShieldCheck, Pencil
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
@@ -175,6 +175,15 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <div className="flex gap-3 self-end md:self-auto">
+                    <button
+                        onClick={() => router.push(`/planos-trabalho/${id}/editar`)}
+                        className="px-5 py-3 bg-white border border-gray-200 text-[#1A3C4A] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2"
+                    >
+                        <Pencil className="w-3.5 h-3.5" /> Editar
+                    </button>
                 </div>
 
                 {isReviewer && plano.status === 'enviado' && (
