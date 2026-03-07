@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/no-require-imports */
 const pdf = require('pdf-parse')
 import mammoth from 'mammoth'
 import { generateObject } from 'ai'
