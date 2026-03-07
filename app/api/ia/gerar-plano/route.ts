@@ -34,6 +34,7 @@ export async function POST(req: Request) {
         if (!user) return new Response('Unauthorized', { status: 401 })
 
         const model = await getAIProvider()
+        console.log('[gerar-plano] model provider:', (model as any)?.provider, '| model id:', (model as any)?.modelId)
 
         const { object } = await generateObject({
             model: model as any,
@@ -45,7 +46,14 @@ export async function POST(req: Request) {
 
         return Response.json(object)
     } catch (error: any) {
-        console.error('Erro ao gerar plano:', error?.message, '| text:', error?.text, '| cause:', error?.cause)
+        console.error('[gerar-plano] ERRO:', {
+            message: error?.message,
+            name: error?.name,
+            text: error?.text,
+            cause: error?.cause,
+            statusCode: error?.statusCode ?? error?.status,
+            responseBody: error?.responseBody,
+        })
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }
