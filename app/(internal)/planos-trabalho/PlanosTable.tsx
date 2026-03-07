@@ -2,7 +2,7 @@
 
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
-import { Plus, Sparkles, LayoutDashboard } from 'lucide-react'
+import { Plus, Sparkles, LayoutDashboard, Download, Pencil } from 'lucide-react'
 
 interface PlanoTrabalho extends Record<string, unknown> {
     id: string
@@ -51,7 +51,7 @@ export function PlanosTable({ initialData, userRole }: PlanosTableProps) {
         { title: 'Orçamento', key: 'orcamento_estimado', render: (row) => <span className="font-black text-[#1A3C4A]">{Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(row.orcamento_estimado || 0)}</span> },
         {
             title: 'Ações', key: 'id', render: (row) => (
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-1">
                     {isReviewer && row.status === 'enviado' && (
                         <Link
                             href={`/planos-trabalho/${row.id}`}
@@ -60,8 +60,24 @@ export function PlanosTable({ initialData, userRole }: PlanosTableProps) {
                             Analisar
                         </Link>
                     )}
+                    <a
+                        href={`/api/planos-trabalho/${row.id}/exportar-docx`}
+                        download
+                        title="Baixar DOCX"
+                        className="p-1.5 text-gray-400 hover:text-[#2D9E6B] transition-colors"
+                    >
+                        <Download className="w-4 h-4" />
+                    </a>
+                    <Link
+                        href={`/planos-trabalho/${row.id}/editar`}
+                        title="Editar"
+                        className="p-1.5 text-gray-400 hover:text-[#1A3C4A] transition-colors"
+                    >
+                        <Pencil className="w-4 h-4" />
+                    </Link>
                     <Link
                         href={`/planos-trabalho/${row.id}`}
+                        title="Ver detalhes"
                         className="p-1.5 text-gray-400 hover:text-[#1A3C4A] transition-colors"
                     >
                         <LayoutDashboard className="w-4 h-4" />
