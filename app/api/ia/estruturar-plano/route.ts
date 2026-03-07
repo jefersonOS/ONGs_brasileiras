@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import mammoth from 'mammoth'
 import { generateObject } from 'ai'
-import { google } from '@ai-sdk/google'
+import { getAIProvider } from '@/lib/ai-service'
 import { z } from 'zod'
 
 export async function POST(req: Request) {
@@ -49,9 +49,11 @@ export async function POST(req: Request) {
         }
 
         // Usar AI para estruturar o plano
+        const model = await getAIProvider()
+
         const { object } = await generateObject({
-            model: google('gemini-1.5-flash') as any,
-            output: 'object',
+            model: model as any,
+            mode: 'json',
             schema: z.object({
                 titulo: z.string(),
                 secoes: z.array(z.object({
