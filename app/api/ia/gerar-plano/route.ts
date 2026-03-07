@@ -32,9 +32,13 @@ export async function POST(req: Request) {
             prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`
         })
 
-        // Limpeza e Parse manual para evitar erro do SDK
-        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim()
-        const object = JSON.parse(cleanJson)
+        // Extrai o JSON pelo primeiro '{' e último '}' para ignorar texto extra do modelo
+        const start = text.indexOf('{')
+        const end = text.lastIndexOf('}')
+        if (start === -1 || end === -1 || end < start) {
+            throw new Error(`Resposta da IA não contém JSON válido. Texto recebido: "${text.slice(0, 200)}"`)
+        }
+        const object = JSON.parse(text.slice(start, end + 1))
 
         return Response.json(object)
     } catch (error: any) {

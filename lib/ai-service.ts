@@ -129,8 +129,12 @@ Devolva APENAS um objeto JSON válido, contendo as seguintes chaves exatas (e ne
     })
 
     try {
-        const limpo = text.replace(/```json/g, '').replace(/```/g, '').trim()
-        return JSON.parse(limpo)
+        const start = text.indexOf('{')
+        const end = text.lastIndexOf('}')
+        if (start === -1 || end === -1 || end < start) {
+            throw new Error('Resposta sem JSON')
+        }
+        return JSON.parse(text.slice(start, end + 1))
     } catch {
         console.error("Failed to parse JSON from AI", text)
         throw new Error('A resposta da IA não foi um JSON válido.')
