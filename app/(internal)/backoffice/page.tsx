@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { Users, Building2, ShieldCheck, Search, LayoutDashboard } from 'lucide-react'
@@ -26,16 +27,11 @@ export default async function BackofficePage() {
         redirect('/dashboard')
     }
 
-    // Use Service Role Client for administrative queries (Bypasses RLS)
-    const adminSupabase = createServerClient(
+    // Use a clean Service Role Client (Standard Supabase JS) to bypass RLS entirely
+    // We don't use the SSR client here to avoid any session inheritance from cookies
+    const adminSupabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-            cookies: {
-                getAll() { return cookieStore.getAll() },
-                setAll(cookiesToSet) { }
-            }
-        }
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
     // 1. Fetch Stats
