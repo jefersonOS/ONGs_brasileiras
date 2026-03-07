@@ -310,14 +310,14 @@ export default function ConfiguracoesPage() {
                                             <select value={aiData.modelo_ativo} onChange={e => setAiData({ ...aiData, modelo_ativo: e.target.value })} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20">
                                                 <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
                                                 <option value="gpt-4o">GPT-4o</option>
-                                                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                                                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                                             </select>
                                         </div>
                                         <div className="space-y-2">
                                             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Modelo Fallback</label>
                                             <select value={aiData.modelo_fallback} onChange={e => setAiData({ ...aiData, modelo_fallback: e.target.value })} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20">
                                                 <option value="gpt-4o">GPT-4o</option>
-                                                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                                                <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
                                                 <option value="claude-3-haiku">Claude 3 Haiku</option>
                                             </select>
                                         </div>
