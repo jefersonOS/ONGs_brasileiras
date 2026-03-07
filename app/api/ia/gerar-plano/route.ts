@@ -34,11 +34,9 @@ export async function POST(req: Request) {
         if (!user) return new Response('Unauthorized', { status: 401 })
 
         const model = await getAIProvider()
-        console.log('[gerar-plano] model provider:', (model as any)?.provider, '| model id:', (model as any)?.modelId)
 
         const { object } = await generateObject({
-            model: model as any,
-            mode: 'tool',
+            model,
             schema: planoSchema,
             system: `Você é uma IA especialista em elaboração de Planos de Trabalho para ONGs brasileiras (MROSC).`,
             prompt: `Gere um Plano de Trabalho completo para a seguinte ideia central: "${ideiaCentral}"`,
@@ -46,14 +44,7 @@ export async function POST(req: Request) {
 
         return Response.json(object)
     } catch (error: any) {
-        console.error('[gerar-plano] ERRO:', {
-            message: error?.message,
-            name: error?.name,
-            text: error?.text,
-            cause: error?.cause,
-            statusCode: error?.statusCode ?? error?.status,
-            responseBody: error?.responseBody,
-        })
+        console.error('Erro ao gerar plano:', error)
         return new Response(JSON.stringify({ error: error.message }), {
             status: 500,
             headers: { 'Content-Type': 'application/json' }

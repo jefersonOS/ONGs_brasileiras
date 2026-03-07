@@ -1,4 +1,4 @@
-import { streamText } from 'ai'
+import { streamText, convertToModelMessages } from 'ai'
 import { createClient } from '@/lib/supabase/server'
 import { getAIProvider } from '@/lib/ai-service'
 
@@ -13,7 +13,6 @@ export async function POST(req: Request) {
         return new Response('Unauthorized', { status: 401 })
     }
 
-    // 1. Identificar Perfil do Usuário
     const { data: dbUser } = await supabase
         .from('users')
         .select('*, tenant:tenants(*)')
@@ -23,11 +22,9 @@ export async function POST(req: Request) {
     const isCidadao = dbUser?.role === 'cidadao'
     const tenantId = dbUser?.tenant_id
 
-    // 2. Buscar Contexto Baseado no Papel
     let contexto: any = {}
 
     if (isCidadao) {
-        // Contexto para Cidadão: Cursos, Atividades e suas Inscrições
         const [
             { data: cursos },
             { data: atividades },
@@ -45,7 +42,6 @@ export async function POST(req: Request) {
             ong_nome: dbUser?.tenant?.nome || 'ONG'
         }
     } else {
-        // Contexto para Gestor (Original)
         const [
             { data: projetos },
             { data: planosProximos },
@@ -64,7 +60,6 @@ export async function POST(req: Request) {
         }
     }
 
-    // System Prompt Dinâmico
     const systemPrompt = isCidadao
         ? `Você é o assistente virtual da ${contexto.ong_nome}. Sua missão é ajudar CIDADÃOS.
            DADOS DO CIDADÃO: ${JSON.stringify(contexto)}
@@ -81,15 +76,14 @@ export async function POST(req: Request) {
            2. Sempre que for sugerir uma ação automatizada (criar plano, etc.), use o JSON formatado.
            Mantenha o tom de consultoria especializada em MROSC.`
 
-    // Provedor dinâmico
     const model = await getAIProvider()
+    const modelMessages = await convertToModelMessages(messages)
 
-    return streamText({
-        model: model as any,
+    const result = streamText({
+        model,
         system: systemPrompt,
-        messages,
+        messages: modelMessages,
         async onFinish({ text }) {
-            // Log simplificado de conversa
             try {
                 await supabase.from('ia_mensagens').insert({
                     role: 'assistant',
@@ -101,5 +95,7 @@ export async function POST(req: Request) {
                 console.error('Error logging IA message:', e)
             }
         }
-    }).toTextStreamResponse()
+    })
+
+    return result.toUIMessageStreamResponse()
 }

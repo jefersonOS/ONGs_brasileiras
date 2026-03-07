@@ -3,8 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import { Sparkles, X, Send, Check, Plus } from 'lucide-react'
 import { clsx } from 'clsx'
-import { useChat } from 'ai/react'
-import type { Message } from 'ai'
+import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport, isTextUIPart } from 'ai'
+import type { UIMessage } from 'ai'
 import { usePathname } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -65,18 +66,30 @@ function AIActionCard({ action, onConfirm, onCancel }: { action: any, onConfirm:
     )
 }
 
+function getMessageText(msg: UIMessage): string {
+    return msg.parts
+        .filter(isTextUIPart)
+        .map(p => p.text)
+        .join('')
+}
+
 export function AIChat() {
     const [isOpen, setIsOpen] = useState(false)
+    const [input, setInput] = useState('')
     const [unreadAlerts, setUnreadAlerts] = useState(0)
     const pathname = usePathname()
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const supabase = createClient()
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading, append } = useChat({
-        api: '/api/ia/chat',
-        body: { paginaAtual: pathname },
+    const { messages, sendMessage, status } = useChat({
+        transport: new DefaultChatTransport({
+            api: '/api/ia/chat',
+            body: { paginaAtual: pathname },
+        }),
         onError: (error: Error) => console.error('Chat Error:', error)
     })
+
+    const isLoading = status === 'submitted' || status === 'streaming'
 
     useEffect(() => {
         const fetchAlertsCount = async () => {
@@ -100,6 +113,13 @@ export function AIChat() {
             if (jsonMatch) return JSON.parse(jsonMatch[0])
         } catch { return null }
         return null
+    }
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!input.trim() || isLoading) return
+        sendMessage({ text: input })
+        setInput('')
     }
 
     const CONTEXTUAL_BUTTONS: Record<string, { label: string, prompt: string }[]> = {
@@ -159,7 +179,7 @@ export function AIChat() {
                                     {currentButtons.map(btn => (
                                         <button
                                             key={btn.label}
-                                            onClick={() => append({ role: 'user', content: btn.prompt })}
+                                            onClick={() => sendMessage({ text: btn.prompt })}
                                             className="text-left px-4 py-3 bg-white border border-gray-200 rounded-xl text-xs font-semibold hover:border-[#2D9E6B] hover:text-[#2D9E6B] transition-all flex items-center justify-between group"
                                         >
                                             {btn.label}
@@ -169,9 +189,12 @@ export function AIChat() {
                                 </div>
                             </div>
                         ) : (
-                            messages.map((msg: Message) => {
-                                const action = msg.role === 'assistant' ? parseJSONAction(msg.content) : null
-                                const cleanContent = action ? msg.content.replace(/\{[\s\S]*"acao":\s*true[\s\S]*\}/, '').trim() : msg.content
+                            messages.map((msg: UIMessage) => {
+                                const textContent = getMessageText(msg)
+                                const action = msg.role === 'assistant' ? parseJSONAction(textContent) : null
+                                const cleanContent = action
+                                    ? textContent.replace(/\{[\s\S]*"acao":\s*true[\s\S]*\}/, '').trim()
+                                    : textContent
 
                                 return (
                                     <div key={msg.id} className={clsx("flex w-full animate-in slide-in-from-bottom-2", msg.role === 'user' ? 'justify-end' : 'justify-start')}>
@@ -196,7 +219,7 @@ export function AIChat() {
                                 placeholder="Descreva o que você precisa..."
                                 className="w-full pl-6 pr-14 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[#2D9E6B] transition-all"
                                 value={input}
-                                onChange={handleInputChange}
+                                onChange={e => setInput(e.target.value)}
                                 disabled={isLoading}
                             />
                             <button
