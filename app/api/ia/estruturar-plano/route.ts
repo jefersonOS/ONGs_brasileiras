@@ -19,38 +19,38 @@ export async function POST(req: Request) {
         const modelId = (model as any)?.modelId || ''
         const isGemini = modelId.includes('gemini')
 
-        const systemPrompt = `Você é um especialista em análise de documentos de ONGs brasileiras (MROSC).
-Analise o documento e extraia sua estrutura como um formulário web dinâmico.
+        const systemPrompt = `Você é um especialista em análise de documentos. Sua tarefa é extrair a estrutura EXATA de um documento para um formulário web.
 
-Retorne APENAS JSON puro, sem markdown. Estrutura esperada:
+REGRAS ABSOLUTAS:
+1. Preserve EXATAMENTE os títulos, numerações e hierarquias do documento original (ex: "1.1 DADOS DA ENTIDADE", "3. Objeto", "8. METAS E ATIVIDADES")
+2. NÃO renomeie, NÃO resuma, NÃO agrupe seções de forma diferente do original
+3. Para cada campo ou grupo de campos do documento, crie uma entrada em "secoes"
+
+TIPOS e quando usar:
+- "group": para blocos de identificação com múltiplos campos curtos (nome, CPF, endereço, etc.). Use "campos" com cada campo individual preservando o rótulo exato do documento
+- "table": para tabelas com cabeçalhos e linhas (ex: Recursos Humanos, Metas, Despesas). Use "colunas" com os nomes EXATOS das colunas do documento e "valor" como array de arrays com 1 linha vazia
+- "textarea": para campos de texto livre longo (justificativa, metodologia, objeto, apresentação, etc.)
+- "text": para campos curtos de uma linha (tempo de execução, público-alvo, abrangência, etc.)
+- "number": para valores monetários
+
+ESTRUTURA JSON (retorne APENAS JSON puro, sem markdown):
 {
-  "titulo": "string",
+  "titulo": "string (título principal do documento)",
   "secoes": [
     {
-      "id": "string (snake_case)",
-      "label": "string (ex: '1.1 Dados da Entidade')",
-      "tipo": "text | textarea | number | list | table | group",
-      "descricao": "string (opcional, dica para o usuário)",
-      "valor": "string | number | string[] | string[][]",
-      "colunas": ["string"] (apenas quando tipo='table', lista de nomes das colunas),
-      "campos": [ (apenas quando tipo='group', lista de campos do grupo)
-        { "id": "string", "label": "string", "tipo": "text | textarea | number | date", "valor": "" }
-      ]
+      "id": "snake_case_unico",
+      "label": "EXATAMENTE como aparece no documento",
+      "tipo": "group | table | textarea | text | number | list",
+      "descricao": "",
+      "valor": "" | [] | [[]],
+      "colunas": ["col1", "col2"] (somente para tipo='table'),
+      "campos": [{"id":"","label":"rótulo exato","tipo":"text|textarea|date|number","valor":""}] (somente para tipo='group')
     }
   ],
-  "resumo_executivo": "string"
-}
+  "resumo_executivo": ""
+}`
 
-Regras:
-- Use tipo='group' para subseções de identificação (dados da entidade, representante legal, responsável técnico)
-- Use tipo='table' para tabelas com múltiplas colunas (recursos humanos, metas e atividades, plano de aplicação)
-- Para tabelas, 'valor' deve ser um array de arrays (linhas x colunas), inicialmente com 1 linha vazia
-- Use tipo='textarea' para campos de texto longo (justificativa, metodologia, apresentação, objeto, etc.)
-- Use tipo='text' para campos curtos (tempo de execução, público-alvo, abrangência geográfica)
-- Use tipo='number' para valores monetários (orçamento, valor da proposta)
-- Preserve a numeração e hierarquia das seções do documento original`
-
-        const promptContent: any[] = [{ type: 'text', text: 'Analise este documento de Plano de Trabalho e extraia sua estrutura conforme as instruções.' }]
+        const promptContent: any[] = [{ type: 'text', text: 'Analise este documento e extraia sua estrutura COMPLETA e FIEL conforme as instruções do sistema. Preserve todos os títulos, numerações e campos exatamente como aparecem no documento.' }]
 
         if (isGemini && (file.type === 'application/pdf' || file.name.endsWith('.pdf'))) {
             promptContent.push({ type: 'file', data: uint8Array, mimeType: 'application/pdf' })
