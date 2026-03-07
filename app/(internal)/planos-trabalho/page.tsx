@@ -28,14 +28,16 @@ export default async function PlanosTrabalhoPage() {
     }
 
     // In Next.js App Router we fetch data server-side
-    const { data: planos, error } = await supabase
-        .from('planos_trabalho')
-        .select(`
+    let query = supabase.from('planos_trabalho').select(`
       *,
       projetos ( nome )
     `)
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false })
+
+    if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+    }
+
+    const { data: planos, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
         return (

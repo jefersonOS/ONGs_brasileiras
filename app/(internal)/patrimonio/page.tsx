@@ -30,11 +30,13 @@ export default async function PatrimonioPage() {
         qrcode_url: string
     }
 
-    const { data: bens, error } = await supabase
-        .from('patrimonio_bens')
-        .select('*')
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false })
+    let query = supabase.from('patrimonio_bens').select('*')
+
+    if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+    }
+
+    const { data: bens, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
         return (

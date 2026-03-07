@@ -25,10 +25,13 @@ export default async function ProjetosPage() {
         created_at: string
     }
 
-    const { data: projetos, error } = await supabase.from('projetos')
-        .select('*')
-        .eq('tenant_id', tenantId)
-        .order('created_at', { ascending: false })
+    let query = supabase.from('projetos').select('*')
+
+    if (tenantId) {
+        query = query.eq('tenant_id', tenantId)
+    }
+
+    const { data: projetos, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
         return (
