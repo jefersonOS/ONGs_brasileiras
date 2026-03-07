@@ -19,52 +19,59 @@ export async function POST(req: Request) {
         const modelId = (model as any)?.modelId || ''
         const isGemini = modelId.includes('gemini')
 
-        const promptContent: any[] = [
-            {
-                type: 'text',
-                text: `Analise o arquivo anexo (Plano de Trabalho de uma ONG). 
-                Sua tarefa é transformar essa estrutura em um formulário web dinâmico.
-                
-                Crie seções (secoes) que representem os campos do documento (ex: Objetivos, Justificativa, Metas, Orçamento, etc.).
-                Para listas (como cronogramas ou metas), use o tipo 'list'.
-                Retorne também um resumo executivo.
-                
-                RESPOSTA: OBRIGATORIAMENTE APENAS O JSON, sem markdown ou explicações.
-                Estrutura: { "titulo": "string", "secoes": [{ "id": "string", "label": "string", "tipo": "text|textarea|number|list", "valor": any, "descricao": "string" }], "resumo_executivo": "string" }`
-            }
-        ]
+        const systemPrompt = `Você é um especialista em análise de documentos de ONGs brasileiras (MROSC).
+Analise o documento e extraia sua estrutura como um formulário web dinâmico.
 
-        // Só enviar arquivo se for Gemini. Se for outro modelo (como GPT), enviamos apenas o texto se for DOCX
+Retorne APENAS JSON puro, sem markdown. Estrutura esperada:
+{
+  "titulo": "string",
+  "secoes": [
+    {
+      "id": "string (snake_case)",
+      "label": "string (ex: '1.1 Dados da Entidade')",
+      "tipo": "text | textarea | number | list | table | group",
+      "descricao": "string (opcional, dica para o usuário)",
+      "valor": "string | number | string[] | string[][]",
+      "colunas": ["string"] (apenas quando tipo='table', lista de nomes das colunas),
+      "campos": [ (apenas quando tipo='group', lista de campos do grupo)
+        { "id": "string", "label": "string", "tipo": "text | textarea | number | date", "valor": "" }
+      ]
+    }
+  ],
+  "resumo_executivo": "string"
+}
+
+Regras:
+- Use tipo='group' para subseções de identificação (dados da entidade, representante legal, responsável técnico)
+- Use tipo='table' para tabelas com múltiplas colunas (recursos humanos, metas e atividades, plano de aplicação)
+- Para tabelas, 'valor' deve ser um array de arrays (linhas x colunas), inicialmente com 1 linha vazia
+- Use tipo='textarea' para campos de texto longo (justificativa, metodologia, apresentação, objeto, etc.)
+- Use tipo='text' para campos curtos (tempo de execução, público-alvo, abrangência geográfica)
+- Use tipo='number' para valores monetários (orçamento, valor da proposta)
+- Preserve a numeração e hierarquia das seções do documento original`
+
+        const promptContent: any[] = [{ type: 'text', text: 'Analise este documento de Plano de Trabalho e extraia sua estrutura conforme as instruções.' }]
+
         if (isGemini && (file.type === 'application/pdf' || file.name.endsWith('.pdf'))) {
-            promptContent.push({
-                type: 'file',
-                data: uint8Array,
-                mimeType: 'application/pdf'
-            })
+            promptContent.push({ type: 'file', data: uint8Array, mimeType: 'application/pdf' })
         } else if (
             file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
             file.name.endsWith('.docx')
         ) {
             const result = await mammoth.extractRawText({ buffer })
-            promptContent.push({
-                type: 'text',
-                text: `CONTEÚDO DO ARQUIVO DOCX:\n${result.value}`
-            })
+            promptContent.push({ type: 'text', text: `CONTEÚDO DO DOCUMENTO:\n${result.value}` })
         } else if (!isGemini && (file.type === 'application/pdf' || file.name.endsWith('.pdf'))) {
-            return NextResponse.json({ error: 'Processamento de PDF nativo requer o modelo Gemini. Por favor, mude o modelo nas configurações ou use um arquivo DOCX.' }, { status: 400 })
+            return NextResponse.json({
+                error: 'Para importar PDF, configure o modelo Gemini nas configurações. Para outros modelos, use o formato DOCX.'
+            }, { status: 400 })
         } else {
-            return NextResponse.json({ error: 'Formato de arquivo não suportado ou incompatível com o modelo selecionado.' }, { status: 400 })
+            return NextResponse.json({ error: 'Formato não suportado. Use PDF (com Gemini) ou DOCX.' }, { status: 400 })
         }
 
         const { text } = await generateText({
             model,
-            system: 'Você é um assistente que extrai estruturas de documentos para formulários. Responda APENAS com JSON puro.',
-            messages: [
-                {
-                    role: 'user',
-                    content: promptContent
-                }
-            ]
+            system: systemPrompt,
+            messages: [{ role: 'user', content: promptContent }]
         })
 
         const object = extractJSON(text)
