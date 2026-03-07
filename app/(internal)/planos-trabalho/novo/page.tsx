@@ -311,7 +311,7 @@ function NovoPlanoForm() {
                 </div>
             )}
 
-            {secoesDinamicas && secoesDinamicas.length > 0 && (
+            {secoesDinamicas !== null && (
                 <div className="bg-green-50 border border-green-200 p-4 rounded-lg flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 text-green-800">
                         <BookMarked className="w-5 h-5 text-green-600 shrink-0" />
