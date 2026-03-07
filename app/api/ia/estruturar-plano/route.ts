@@ -15,7 +15,7 @@ export async function POST(req: Request) {
 
         const buffer = Buffer.from(await file.arrayBuffer())
 
-        let promptContent: any[] = [
+        const promptContent: any[] = [
             {
                 type: 'text',
                 text: `Analise o arquivo anexo (Plano de Trabalho de uma ONG). 
