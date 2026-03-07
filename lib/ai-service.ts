@@ -35,7 +35,7 @@ export async function getAIProvider() {
         const key = tenantConfig.ai_key_openai || process.env.OPENAI_API_KEY
         if (key) {
             const openai = createOpenAI({ apiKey: key })
-            return openai(modeloAtivo)
+            return openai.chat(modeloAtivo)
         }
     }
 
@@ -67,7 +67,7 @@ export async function getAIProvider() {
     if (tenantConfig.ai_key_openai || process.env.OPENAI_API_KEY) {
         const key = tenantConfig.ai_key_openai || process.env.OPENAI_API_KEY
         const openai = createOpenAI({ apiKey: key! })
-        return openai('gpt-4o')
+        return openai.chat('gpt-4o')
     }
 
     throw new Error("Nenhum provedor de IA configurado ou chave correspondente não encontrada para o modelo: " + modeloAtivo)
