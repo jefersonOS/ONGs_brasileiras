@@ -35,7 +35,7 @@ export async function getAIProvider() {
 
     if (tenantConfig.ai_key_google) {
         const google = createGoogleGenerativeAI({ apiKey: tenantConfig.ai_key_google })
-        return google(tenantConfig.ai_modelo_ativo || 'gemini-1.5-pro-latest')
+        return google(tenantConfig.ai_modelo_ativo || 'gemini-1.5-flash')
     }
 
     if (tenantConfig.ai_key_claude) {
@@ -52,7 +52,7 @@ export async function getAIProvider() {
     const googleKey = process.env.GOOGLE_AI_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_AI_API_KEY
     if (googleKey) {
         const google = createGoogleGenerativeAI({ apiKey: googleKey })
-        return google('gemini-1.5-pro-latest')
+        return google('gemini-1.5-flash')
     }
 
     if (process.env.ANTHROPIC_API_KEY) {
