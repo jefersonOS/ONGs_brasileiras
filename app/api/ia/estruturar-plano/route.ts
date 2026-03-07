@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-/* eslint-disable @typescript-eslint/no-require-imports */
-const pdf = require('pdf-parse')
 import mammoth from 'mammoth'
 import { generateObject } from 'ai'
 import { google } from '@ai-sdk/google'
@@ -16,26 +14,41 @@ export async function POST(req: Request) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer())
-        let text = ''
+
+        let promptContent: any[] = [
+            {
+                type: 'text',
+                text: `Analise o arquivo anexo (Plano de Trabalho de uma ONG). 
+                Sua tarefa é transformar essa estrutura em um formulário web dinâmico.
+                
+                Crie seções (secoes) que representem os campos do documento (ex: Objetivos, Justificativa, Metas, Orçamento, etc.).
+                Para listas (como cronogramas ou metas), use o tipo 'list'.
+                Retorne também um resumo executivo.`
+            }
+        ]
 
         if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-            const data = await pdf(buffer)
-            text = data.text
+            // Enviar PDF diretamente para o Gemini (Nativo)
+            promptContent.push({
+                type: 'file',
+                data: buffer,
+                mimeType: 'application/pdf'
+            })
         } else if (
             file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
             file.name.endsWith('.docx')
         ) {
+            // Para DOCX ainda extraímos texto via Mammoth
             const result = await mammoth.extractRawText({ buffer })
-            text = result.value
+            promptContent.push({
+                type: 'text',
+                text: `CONTEÚDO DO ARQUIVO DOCX:\n${result.value}`
+            })
         } else {
             return NextResponse.json({ error: 'Formato de arquivo não suportado. Use PDF ou DOCX.' }, { status: 400 })
         }
 
-        if (!text || text.trim().length < 50) {
-            return NextResponse.json({ error: 'Não foi possível extrair texto suficiente do arquivo.' }, { status: 400 })
-        }
-
-        // Usar AI para estruturar o plano baseado no texto extraído
+        // Usar AI para estruturar o plano
         const { object } = await generateObject({
             model: google('gemini-1.5-flash') as any,
             schema: z.object({
@@ -49,14 +62,12 @@ export async function POST(req: Request) {
                 })),
                 resumo_executivo: z.string()
             }),
-            prompt: `Analise o seguinte texto extraído de um Plano de Trabalho de uma ONG. 
-            Sua tarefa é transformar essa estrutura em um formulário web dinâmico.
-            
-            Crie seções (secoes) que representem os campos do documento (ex: Objetivos, Justificativa, Metas, Orçamento, etc.).
-            Para listas (como cronogramas ou metas), use o tipo 'list'.
-            
-            TEXTO EXTRAÍDO:
-            ${text.substring(0, 15000)}` // Limite para evitar estouro de tokens
+            messages: [
+                {
+                    role: 'user',
+                    content: promptContent
+                }
+            ]
         })
 
         return NextResponse.json(object)
