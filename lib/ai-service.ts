@@ -23,7 +23,7 @@ export async function getAIProvider() {
         }
     }
 
-    const modeloAtivo = tenantConfig.ai_modelo_ativo || 'gemini-1.5-flash'
+    const modeloAtivo = tenantConfig.ai_modelo_ativo || 'gemini-2.0-flash'
 
     // OpenAI — usa .chat() para Chat Completions (não Responses API)
     if (modeloAtivo.startsWith('gpt-')) {
