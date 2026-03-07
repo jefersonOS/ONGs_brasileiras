@@ -59,5 +59,38 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
+    // 4. Check Tenant/User Status (Access Control)
+    if (user && isInternalRoute && user.user_metadata?.role !== 'superadmin') {
+        const tenantId = user.user_metadata?.tenant_id
+
+        if (tenantId) {
+            // We fetch the tenant status. 
+            // NOTE: In a high-traffic app, this should be cached or in JWT.
+            const { data: tenant } = await supabase
+                .from('tenants')
+                .select('status')
+                .eq('id', tenantId)
+                .single()
+
+            if (tenant && tenant.status !== 'ativo') {
+                url.pathname = '/conta-suspensa'
+                return NextResponse.redirect(url)
+            }
+        }
+
+        // Also check if user is active
+        const { data: userData } = await supabase
+            .from('users')
+            .select('ativo')
+            .eq('id', user.id)
+            .single()
+
+        if (userData && !userData.ativo) {
+            url.pathname = '/login'
+            // Sign out or clear session could be handled here if needed
+            return NextResponse.redirect(url)
+        }
+    }
+
     return supabaseResponse
 }
