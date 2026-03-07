@@ -30,6 +30,8 @@ export default function GestaoEquipePage() {
         MODULOS.reduce((acc, m) => ({ ...acc, [m.id]: true }), {})
     )
     const [generatedLink, setGeneratedLink] = useState('')
+    const [isGenerating, setIsGenerating] = useState(false)
+    const [inviteError, setInviteError] = useState<string | null>(null)
 
     const fetchData = useCallback(async () => {
         try {
@@ -64,6 +66,8 @@ export default function GestaoEquipePage() {
     }, [fetchData])
 
     const handleCreateInvite = async () => {
+        setIsGenerating(true)
+        setInviteError(null)
         try {
             const res = await fetch('/api/equipe/convidar', {
                 method: 'POST',
@@ -71,12 +75,20 @@ export default function GestaoEquipePage() {
                 body: JSON.stringify({ email: inviteEmail, permissoes: permissions })
             })
             const data = await res.json()
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Erro ao gerar convite')
+            }
+
             if (data.inviteLink) {
                 setGeneratedLink(data.inviteLink)
                 fetchData()
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error(err)
+            setInviteError(err.message || 'Falha na conexão com o servidor')
+        } finally {
+            setIsGenerating(false)
         }
     }
 
@@ -246,11 +258,26 @@ export default function GestaoEquipePage() {
                                     </div>
                                 </div>
 
+                                {inviteError && (
+                                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 animate-in shake duration-500">
+                                        <XCircle className="w-4 h-4" />
+                                        <p className="text-[10px] font-black uppercase">{inviteError}</p>
+                                    </div>
+                                )}
+
                                 <button
                                     onClick={handleCreateInvite}
-                                    className="w-full py-4 bg-[#1A3C4A] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2E6B7A] transition-all shadow-xl shadow-blue-900/10"
+                                    disabled={isGenerating}
+                                    className="w-full py-4 bg-[#1A3C4A] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#2E6B7A] transition-all shadow-xl shadow-blue-900/10 disabled:opacity-50 flex items-center justify-center gap-3"
                                 >
-                                    Gerar Link de Convite
+                                    {isGenerating ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            Gerando...
+                                        </>
+                                    ) : (
+                                        'Gerar Link de Convite'
+                                    )}
                                 </button>
                             </div>
                         ) : (
