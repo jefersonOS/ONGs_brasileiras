@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
     Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-    HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType,
-    Header, PageNumber, NumberFormat
+    HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType, Header
 } from 'docx'
 
 function parseSecoes(val: string | null): any[] | null {
@@ -19,14 +18,6 @@ function heading(text: string): Paragraph {
         text,
         heading: HeadingLevel.HEADING_2,
         spacing: { before: 300, after: 100 },
-    })
-}
-
-function subheading(text: string): Paragraph {
-    return new Paragraph({
-        text,
-        heading: HeadingLevel.HEADING_3,
-        spacing: { before: 200, after: 80 },
     })
 }
 
@@ -76,8 +67,6 @@ function makeTable(columns: string[], rows: string[][]): Table {
             bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
             left: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
             right: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-            insideH: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
-            insideV: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' },
         },
     })
 }
