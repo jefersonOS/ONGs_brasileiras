@@ -189,10 +189,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
         })
 
         const buffer = await Packer.toBuffer(doc)
+        const uint8 = new Uint8Array(buffer)
 
         const filename = `plano-trabalho-${plano.titulo.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.docx`
 
-        return new NextResponse(buffer, {
+        return new NextResponse(uint8, {
             headers: {
                 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
                 'Content-Disposition': `attachment; filename="${filename}"`,
