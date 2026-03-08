@@ -1,12 +1,31 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
     try {
         const { titulo } = await req.json()
         if (!titulo?.trim()) return Response.json({ error: 'Título obrigatório' }, { status: 400 })
 
-        const apiKey = process.env.OPENAI_API_KEY
-        if (!apiKey) return Response.json({ error: 'OPENAI_API_KEY não configurada' }, { status: 500 })
+        // Busca a chave OpenAI da mesma forma que o ai-service.ts:
+        // 1. Chave do tenant (config_portal.ai_key_openai)
+        // 2. Fallback para variável de ambiente OPENAI_API_KEY
+        const supabaseAuth = createClient()
+        const { data: { user } } = await supabaseAuth.auth.getUser()
+
+        let apiKey = process.env.OPENAI_API_KEY
+
+        if (user?.user_metadata?.tenant_id) {
+            const { data: tenant } = await supabaseAuth
+                .from('tenants')
+                .select('config_portal')
+                .eq('id', user.user_metadata.tenant_id)
+                .single()
+
+            const tenantKey = tenant?.config_portal?.ai_key_openai
+            if (tenantKey) apiKey = tenantKey
+        }
+
+        if (!apiKey) return Response.json({ error: 'Chave OpenAI não configurada. Adicione em Configurações > IA.' }, { status: 500 })
 
         // 1. Gerar imagem com DALL-E 3
         const dalleRes = await fetch('https://api.openai.com/v1/images/generations', {
