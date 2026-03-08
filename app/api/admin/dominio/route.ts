@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-const VERCEL_TOKEN = process.env.VERCEL_TOKEN
-const VERCEL_PROJECT_ID = process.env.VERCEL_PROJECT_ID
+const VERCEL_TOKEN = process.env.NEXORI_VERCEL_TOKEN
+const VERCEL_PROJECT_ID = process.env.NEXORI_VERCEL_PROJECT_ID
 
 export async function POST(req: Request) {
     try {
