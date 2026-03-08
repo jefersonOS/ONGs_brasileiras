@@ -18,10 +18,7 @@ export default function LoginPage() {
         setLoading(true)
         setError(null)
 
-        const { error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-        })
+        const { error } = await supabase.auth.signInWithPassword({ email, password })
 
         if (error) {
             setError(error.message)
@@ -29,13 +26,30 @@ export default function LoginPage() {
             return
         }
 
-        // Checking user metadata to redirect appropriately
         const { data: { user } } = await supabase.auth.getUser()
-        if (user?.user_metadata?.tipo === 'cidadao') {
-            router.push('/minha-area')
-        } else {
-            router.push('/dashboard')
+        const tenantId = user?.user_metadata?.tenant_id
+        const destPath = user?.user_metadata?.tipo === 'cidadao' ? '/minha-area' : '/dashboard'
+
+        // Se o usuário pertence a um tenant, verificar se está no domínio correto
+        if (tenantId) {
+            const { data: tenant } = await supabase
+                .from('tenants')
+                .select('slug, dominio_custom')
+                .eq('id', tenantId)
+                .single()
+
+            if (tenant) {
+                const currentHost = window.location.hostname
+                const correctHost = tenant.dominio_custom || (tenant.slug ? `${tenant.slug}.nexori.com.br` : null)
+
+                if (correctHost && currentHost !== correctHost) {
+                    window.location.href = `https://${correctHost}${destPath}`
+                    return
+                }
+            }
         }
+
+        router.push(destPath)
         router.refresh()
     }
 
