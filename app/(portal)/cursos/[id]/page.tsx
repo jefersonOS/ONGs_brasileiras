@@ -81,7 +81,7 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
                     <div className="lg:col-span-2 space-y-10">
-                        <div className="bg-white rounded-[40px] p-10 shadow-2xl shadow-black/5 border border-gray-100">
+                        <div className="bg-white rounded-[65px] p-10 shadow-2xl shadow-black/5 border border-gray-100">
                             <h2 className="text-2xl font-black text-[#1A3C4A] mb-6 tracking-tight">Sobre este curso</h2>
                             <p className="text-gray-500 font-medium whitespace-pre-wrap leading-relaxed text-lg">
                                 {curso.descricao || 'Este curso oferece uma oportunidade única de aprendizado e desenvolvimento pessoal.'}
@@ -89,7 +89,7 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
                         </div>
 
                         {curso.conteudo_programatico && curso.conteudo_programatico.length > 0 && (
-                            <div className="bg-white rounded-[40px] p-10 shadow-2xl shadow-black/5 border border-gray-100">
+                            <div className="bg-white rounded-[65px] p-10 shadow-2xl shadow-black/5 border border-gray-100">
                                 <h2 className="text-2xl font-black text-[#1A3C4A] mb-10 tracking-tight">O que você vai aprender</h2>
                                 <div className="grid grid-cols-1 gap-8">
                                     {curso.conteudo_programatico.map((mod: any, i: number) => (
@@ -110,7 +110,7 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
 
                     {/* Sidebar de Inscrição */}
                     <div className="space-y-8">
-                        <div className="bg-white rounded-[40px] p-8 shadow-2xl shadow-black/10 border border-gray-100 sticky top-24">
+                        <div className="bg-white rounded-[65px] p-8 shadow-2xl shadow-black/10 border border-gray-100 sticky top-24">
                             <h3 className="text-xl font-black text-[#1A3C4A] mb-8 flex items-center gap-3">
                                 <Calendar className="w-6 h-6 text-[var(--secondary)]" /> Turmas Disponíveis
                             </h3>
