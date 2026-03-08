@@ -1,33 +1,62 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Sparkles, RefreshCw, ImageIcon } from 'lucide-react'
 
 export default function NovoCursoPage() {
     const router = useRouter()
     const supabase = createClient()
+    const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
-    // Form States
     const [titulo, setTitulo] = useState('')
     const [categoria, setCategoria] = useState('profissionalizante')
     const [descricao, setDescricao] = useState('')
     const [cargaHoraria, setCargaHoraria] = useState<number | ''>('')
     const [instrutor, setInstrutor] = useState('')
     const [modalidade, setModalidade] = useState('presencial')
-
-    // Settings
     const [visibilidade, setVisibilidade] = useState('publico')
     const [presencaMinima, setPresencaMinima] = useState(75)
-
-    // Dynamic Arrays
     const [conteudoProgramatico, setConteudoProgramatico] = useState<{ modulo: string, topicos: string }[]>([
         { modulo: '', topicos: '' }
     ])
 
+    const [thumbnailUrl, setThumbnailUrl] = useState('')
+    const [thumbLoading, setThumbLoading] = useState(false)
+    const [thumbError, setThumbError] = useState<string | null>(null)
+
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    const gerarThumbnail = async (tituloParam?: string) => {
+        const t = (tituloParam ?? titulo).trim()
+        if (!t) return
+        setThumbLoading(true)
+        setThumbError(null)
+        try {
+            const res = await fetch('/api/cursos/gerar-thumb', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titulo: t }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            setThumbnailUrl(data.url)
+        } catch (e: any) {
+            setThumbError(e.message || 'Erro ao gerar imagem')
+        } finally {
+            setThumbLoading(false)
+        }
+    }
+
+    const handleTituloChange = (value: string) => {
+        setTitulo(value)
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => {
+            if (value.trim().length >= 4) gerarThumbnail(value)
+        }, 1500)
+    }
 
     const handleCreate = async (e: React.FormEvent, statusOverride?: string) => {
         e.preventDefault()
@@ -47,7 +76,8 @@ export default function NovoCursoPage() {
             visibilidade,
             presenca_minima: presencaMinima,
             conteudo_programatico: conteudoProgramatico,
-            status: statusOverride || status
+            thumbnail_url: thumbnailUrl || null,
+            status: statusOverride || 'rascunho',
         })
 
         if (insertError) {
@@ -70,14 +100,71 @@ export default function NovoCursoPage() {
             <form onSubmit={handleCreate} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-8">
                 {error && <div className="p-3 bg-red-100 text-red-600 rounded-md text-sm">{error}</div>}
 
-                {/* Detalhes Principais */}
+                {/* Informações Básicas */}
                 <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Informações Básicas</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Título do Curso *</label>
-                            <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" placeholder="Ex: Informática Básica, Corte e Costura..." />
+                            <input
+                                type="text"
+                                value={titulo}
+                                onChange={e => handleTituloChange(e.target.value)}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]"
+                                placeholder="Ex: Informática Básica, Corte e Costura..."
+                            />
+                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-purple-400" />
+                                A thumbnail será gerada automaticamente com IA ao digitar o título
+                            </p>
                         </div>
+
+                        {/* Thumbnail Preview */}
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail do Curso</label>
+                            <div className="flex gap-4 items-start">
+                                <div className="w-64 h-36 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0 relative">
+                                    {thumbLoading ? (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-purple-50">
+                                            <RefreshCw className="w-6 h-6 text-purple-400 animate-spin mb-2" />
+                                            <p className="text-xs text-purple-500 font-medium">Gerando com IA...</p>
+                                        </div>
+                                    ) : thumbnailUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="text-center text-gray-300">
+                                            <ImageIcon className="w-8 h-8 mx-auto mb-1" />
+                                            <p className="text-xs">Aguardando título</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex flex-col gap-2 pt-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => gerarThumbnail()}
+                                        disabled={!titulo.trim() || thumbLoading}
+                                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-600 border border-purple-200 rounded-md hover:bg-purple-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <Sparkles className="w-3 h-3" />
+                                        {thumbLoading ? 'Gerando...' : 'Gerar novamente'}
+                                    </button>
+                                    {thumbError && <p className="text-xs text-red-500">{thumbError}</p>}
+                                    <div className="mt-1">
+                                        <p className="text-xs text-gray-400 mb-1">Ou cole uma URL:</p>
+                                        <input
+                                            type="url"
+                                            value={thumbnailUrl}
+                                            onChange={e => setThumbnailUrl(e.target.value)}
+                                            className="w-48 px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
                             <input type="text" value={categoria} onChange={e => setCategoria(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" placeholder="Ex: Profissionalizante" />
@@ -108,25 +195,12 @@ export default function NovoCursoPage() {
                 {/* Conteúdo Programático */}
                 <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Conteúdo Programático</h3>
-
                     <div className="space-y-4">
                         {conteudoProgramatico.map((m, i) => (
                             <div key={i} className="flex flex-col md:flex-row gap-3 items-start bg-gray-50 p-4 rounded-md border border-gray-200">
                                 <div className="flex-1 w-full space-y-3">
-                                    <input
-                                        type="text"
-                                        placeholder={`Módulo ${i + 1} (Ex: Introdução ao Tema)`}
-                                        value={m.modulo}
-                                        onChange={e => { const nc = [...conteudoProgramatico]; nc[i].modulo = e.target.value; setConteudoProgramatico(nc) }}
-                                        className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]"
-                                    />
-                                    <textarea
-                                        rows={2}
-                                        placeholder="Tópicos abordados (separados por vírgula)"
-                                        value={m.topicos}
-                                        onChange={e => { const nc = [...conteudoProgramatico]; nc[i].topicos = e.target.value; setConteudoProgramatico(nc) }}
-                                        className="w-full text-sm px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]"
-                                    />
+                                    <input type="text" placeholder={`Módulo ${i + 1} (Ex: Introdução ao Tema)`} value={m.modulo} onChange={e => { const nc = [...conteudoProgramatico]; nc[i].modulo = e.target.value; setConteudoProgramatico(nc) }} className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
+                                    <textarea rows={2} placeholder="Tópicos abordados (separados por vírgula)" value={m.topicos} onChange={e => { const nc = [...conteudoProgramatico]; nc[i].topicos = e.target.value; setConteudoProgramatico(nc) }} className="w-full text-sm px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
                                 </div>
                                 <button type="button" onClick={() => setConteudoProgramatico(conteudoProgramatico.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-500 p-2"><Trash2 className="w-5 h-5" /></button>
                             </div>
@@ -135,7 +209,7 @@ export default function NovoCursoPage() {
                     </div>
                 </div>
 
-                {/* Regras e Visibilidade */}
+                {/* Inscrição e Certificação */}
                 <div>
                     <h3 className="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b border-gray-100">Inscrição e Certificação</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

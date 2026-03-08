@@ -1,16 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Sparkles, RefreshCw, ImageIcon } from 'lucide-react'
 
 export default function EditarCursoPage() {
     const router = useRouter()
     const { id } = useParams<{ id: string }>()
     const supabase = createClient()
+    const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
     const [titulo, setTitulo] = useState('')
+    const [thumbnailUrl, setThumbnailUrl] = useState('')
+    const [thumbLoading, setThumbLoading] = useState(false)
+    const [thumbError, setThumbError] = useState<string | null>(null)
     const [categoria, setCategoria] = useState('')
     const [descricao, setDescricao] = useState('')
     const [cargaHoraria, setCargaHoraria] = useState<number | ''>('')
@@ -36,10 +40,40 @@ export default function EditarCursoPage() {
             setVisibilidade(data.visibilidade || 'publico')
             setPresencaMinima(data.presenca_minima ?? 75)
             setConteudoProgramatico(data.conteudo_programatico?.length ? data.conteudo_programatico : [{ modulo: '', topicos: '' }])
+            setThumbnailUrl(data.thumbnail_url || '')
             setFetching(false)
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
+
+    const gerarThumbnail = async (tituloParam?: string) => {
+        const t = (tituloParam ?? titulo).trim()
+        if (!t) return
+        setThumbLoading(true)
+        setThumbError(null)
+        try {
+            const res = await fetch('/api/cursos/gerar-thumb', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titulo: t }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            setThumbnailUrl(data.url)
+        } catch (e: any) {
+            setThumbError(e.message || 'Erro ao gerar imagem')
+        } finally {
+            setThumbLoading(false)
+        }
+    }
+
+    const handleTituloChange = (value: string) => {
+        setTitulo(value)
+        if (debounceRef.current) clearTimeout(debounceRef.current)
+        debounceRef.current = setTimeout(() => {
+            if (value.trim().length >= 4) gerarThumbnail(value)
+        }, 1500)
+    }
 
     const handleSave = async (e: React.FormEvent, statusOverride?: string) => {
         e.preventDefault()
@@ -56,6 +90,7 @@ export default function EditarCursoPage() {
             visibilidade,
             presenca_minima: presencaMinima,
             conteudo_programatico: conteudoProgramatico,
+            thumbnail_url: thumbnailUrl || null,
         }
         if (statusOverride) updateData.status = statusOverride
 
@@ -89,7 +124,45 @@ export default function EditarCursoPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Título do Curso *</label>
-                            <input type="text" value={titulo} onChange={e => setTitulo(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" placeholder="Ex: Informática Básica, Corte e Costura..." />
+                            <input type="text" value={titulo} onChange={e => handleTituloChange(e.target.value)} required className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" placeholder="Ex: Informática Básica, Corte e Costura..." />
+                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                <Sparkles className="w-3 h-3 text-purple-400" />
+                                Alterar o título regenera a thumbnail automaticamente com IA
+                            </p>
+                        </div>
+
+                        {/* Thumbnail */}
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Thumbnail do Curso</label>
+                            <div className="flex gap-4 items-start">
+                                <div className="w-64 h-36 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center flex-shrink-0 relative">
+                                    {thumbLoading ? (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-purple-50">
+                                            <RefreshCw className="w-6 h-6 text-purple-400 animate-spin mb-2" />
+                                            <p className="text-xs text-purple-500 font-medium">Gerando com IA...</p>
+                                        </div>
+                                    ) : thumbnailUrl ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={thumbnailUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="text-center text-gray-300">
+                                            <ImageIcon className="w-8 h-8 mx-auto mb-1" />
+                                            <p className="text-xs">Sem thumbnail</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="flex flex-col gap-2 pt-1">
+                                    <button type="button" onClick={() => gerarThumbnail()} disabled={!titulo.trim() || thumbLoading} className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-purple-50 text-purple-600 border border-purple-200 rounded-md hover:bg-purple-100 disabled:opacity-40 transition-colors">
+                                        <Sparkles className="w-3 h-3" />
+                                        {thumbLoading ? 'Gerando...' : 'Gerar com IA'}
+                                    </button>
+                                    {thumbError && <p className="text-xs text-red-500">{thumbError}</p>}
+                                    <div className="mt-1">
+                                        <p className="text-xs text-gray-400 mb-1">Ou cole uma URL:</p>
+                                        <input type="url" value={thumbnailUrl} onChange={e => setThumbnailUrl(e.target.value)} className="w-48 px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none" placeholder="https://..." />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Categoria *</label>
