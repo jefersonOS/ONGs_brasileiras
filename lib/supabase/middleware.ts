@@ -32,12 +32,25 @@ export async function updateSession(request: NextRequest) {
     } = await supabase.auth.getUser()
 
     const url = request.nextUrl.clone()
-    const isInternalRoute = request.nextUrl.pathname.startsWith('/dashboard') ||
-        request.nextUrl.pathname.startsWith('/projetos') ||
-        request.nextUrl.pathname.startsWith('/planos-trabalho') ||
-        request.nextUrl.pathname.startsWith('/atividades') ||
-        request.nextUrl.pathname.startsWith('/cursos') ||
-        request.nextUrl.pathname.startsWith('/patrimonio')
+    const path = request.nextUrl.pathname
+
+    // Rotas que exigem autenticação (gestão interna)
+    // /cursos/[id] e /atividades/[id] são públicos no portal — não estão aqui
+    const isInternalRoute =
+        path.startsWith('/dashboard') ||
+        path.startsWith('/projetos') ||
+        path.startsWith('/planos-trabalho') ||
+        path.startsWith('/patrimonio') ||
+        path.startsWith('/configuracoes') ||
+        path.startsWith('/prestacoes-contas') ||
+        // Gestão de cursos (lista e criação são internas; /cursos/[id] é portal público)
+        path === '/cursos' ||
+        path.startsWith('/cursos/novo') ||
+        /^\/cursos\/[^/]+\/turmas/.test(path) ||
+        // Gestão de atividades (lista é interna; /atividades/[id] é portal público)
+        path === '/atividades' ||
+        path.startsWith('/atividades/nova') ||
+        path.startsWith('/atividades/novo')
 
     if (!user && isInternalRoute) {
         url.pathname = '/login'
@@ -84,7 +97,7 @@ export async function updateSession(request: NextRequest) {
             let requiredModule = ''
 
             if (path.startsWith('/planos-trabalho')) requiredModule = 'planos_trabalho'
-            else if (path.startsWith('/projetos') || path.startsWith('/atividades') || path.startsWith('/cursos')) requiredModule = 'atividades'
+            else if (path.startsWith('/projetos') || path === '/atividades' || path === '/cursos' || path.startsWith('/cursos/novo') || path.startsWith('/atividades/nova') || path.startsWith('/atividades/novo')) requiredModule = 'atividades'
             else if (path.startsWith('/patrimonio')) requiredModule = 'patrimonio'
             else if (path.startsWith('/configuracoes')) requiredModule = 'configuracoes'
             else if (path.startsWith('/prestacoes-contas')) requiredModule = 'prestacoes_contas'
