@@ -3,22 +3,38 @@ import { headers } from 'next/headers'
 
 export async function getTenant() {
     const supabase = createClient()
-    const host = headers().get('x-forwarded-host') || headers().get('host') || ''
+    const headersList = headers()
 
-    // 1. Busca pelo domínio customizado
-    const { data: tenantByDomain } = await supabase
-        .from('tenants')
-        .select('*')
-        .eq('dominio_custom', host)
-        .single()
+    // 1. Prioridade: slug injetado pelo middleware via subdomínio
+    const slug = headersList.get('x-tenant-slug')
+    if (slug) {
+        const { data: tenantBySlug } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('slug', slug)
+            .single()
 
-    if (tenantByDomain) return tenantByDomain
+        if (tenantBySlug) return tenantBySlug
+    }
 
-    // 2. Fallback: Busca pelo primeiro tenant (para desenvolvimento local)
-    // Em produção, isso seria substituído por uma lógica que identifica o subdomínio
+    // 2. Domínio customizado (ex: portal.institutoabc.org.br)
+    const host = headersList.get('x-forwarded-host') || headersList.get('host') || ''
+    const hostname = host.split(':')[0]
+    if (hostname) {
+        const { data: tenantByDomain } = await supabase
+            .from('tenants')
+            .select('*')
+            .eq('dominio_custom', hostname)
+            .single()
+
+        if (tenantByDomain) return tenantByDomain
+    }
+
+    // 3. Fallback: primeiro tenant ativo (desenvolvimento local)
     const { data: firstTenant } = await supabase
         .from('tenants')
         .select('*')
+        .eq('status', 'active')
         .limit(1)
         .single()
 

@@ -19,6 +19,8 @@ export default function ConfiguracoesPage() {
     // Aba Organização
     const [orgData, setOrgData] = useState({
         nome: '',
+        slug: '',
+        dominio_custom: '',
         cnpj: '',
         endereco: '',
         telefone: '',
@@ -75,6 +77,8 @@ export default function ConfiguracoesPage() {
             setTenant(data)
             setOrgData({
                 nome: data.nome || '',
+                slug: data.slug || '',
+                dominio_custom: data.dominio_custom || '',
                 cnpj: data.cnpj || '',
                 endereco: data.endereco || '',
                 telefone: data.telefone || '',
@@ -155,6 +159,8 @@ export default function ConfiguracoesPage() {
             .from('tenants')
             .update({
                 nome: orgData.nome,
+                slug: orgData.slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || null,
+                dominio_custom: orgData.dominio_custom.trim().toLowerCase() || null,
                 cnpj: orgData.cnpj,
                 endereco: orgData.endereco,
                 telefone: orgData.telefone,
@@ -250,6 +256,45 @@ export default function ConfiguracoesPage() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Nome da ONG</label>
                                         <input type="text" value={orgData.nome} onChange={e => setOrgData({ ...orgData, nome: e.target.value })} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all font-bold" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Slug do Portal</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                value={orgData.slug}
+                                                onChange={e => setOrgData({ ...orgData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                                                placeholder="sua-ong"
+                                                className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all font-bold pr-48"
+                                            />
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-400">.nexori.com.br</span>
+                                        </div>
+                                        {orgData.slug && (
+                                            <p className="text-[10px] text-[var(--secondary)] font-bold ml-1">
+                                                Portal: {orgData.slug}.nexori.com.br
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-2 md:col-span-2">
+                                        <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Domínio Personalizado <span className="text-gray-300">(opcional)</span></label>
+                                        <input
+                                            type="text"
+                                            value={orgData.dominio_custom}
+                                            onChange={e => setOrgData({ ...orgData, dominio_custom: e.target.value })}
+                                            placeholder="portal.suaong.org.br"
+                                            className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all font-bold"
+                                        />
+                                        <div className="ml-1 p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-2">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600">Como configurar seu domínio</p>
+                                            <ol className="text-[11px] text-blue-700 space-y-1 font-medium list-decimal list-inside">
+                                                <li>Digite o domínio desejado acima e salve.</li>
+                                                <li>No painel do seu DNS (Cloudflare, Registro.br, etc), crie um registro <strong>CNAME</strong>:</li>
+                                            </ol>
+                                            <div className="bg-white rounded-xl p-3 font-mono text-[11px] text-gray-700 border border-blue-100">
+                                                <span className="text-blue-500">CNAME</span> {orgData.dominio_custom || 'portal.suaong.org.br'} → <span className="text-green-600">cname.vercel-dns.com</span>
+                                            </div>
+                                            <p className="text-[10px] text-blue-500 font-medium">A propagação do DNS pode levar até 48h. Após isso, seu portal estará acessível no domínio próprio.</p>
+                                        </div>
                                     </div>
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">CNPJ</label>
