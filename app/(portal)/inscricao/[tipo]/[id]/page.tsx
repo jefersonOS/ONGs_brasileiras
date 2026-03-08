@@ -95,7 +95,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                 const { data: c } = await supabase.from('cursos').select('titulo, modalidade').eq('id', id).single()
                 setEntidade(c)
                 if (turmaId) {
-                    const { data: t } = await supabase.from('turmas').select('vagas, encontros, formulario_inscricao').eq('id', turmaId).single()
+                    const { data: t } = await supabase.from('turmas').select('vagas, data_inicio, data_fim, data_limite_inscricao, formulario_inscricao').eq('id', turmaId).single()
                     setTurma(t)
                     if (t?.formulario_inscricao?.length) {
                         setFormulario(t.formulario_inscricao)
@@ -227,9 +227,10 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     <div className="bg-[#1A3C4A] p-8 text-white">
                         <span className="text-xs font-bold uppercase tracking-wider text-[#2D9E6B] mb-2 block">Formulário de Inscrição</span>
                         <h1 className="text-2xl md:text-3xl font-bold">{entidade?.titulo || 'Carregando...'}</h1>
-                        {turma?.encontros?.[0] && (
+                        {turma?.data_inicio && (
                             <p className="text-white/60 text-sm mt-2">
-                                Início: {new Date(turma.encontros[0].data).toLocaleDateString('pt-BR')} às {turma.encontros[0].hora_inicio} — {turma.encontros[0].local || 'Local a confirmar'}
+                                {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                {turma.data_fim && ` até ${new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}`}
                             </p>
                         )}
                     </div>
@@ -272,9 +273,8 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                                 <ul className="text-sm text-gray-600 space-y-2">
                                     <li><strong>Modalidade:</strong> <span className="capitalize">{tipo}</span></li>
                                     {turma && <li><strong>Turma:</strong> #{turmaId?.split('-')[0]}</li>}
-                                    {turma?.encontros?.[0] && (
-                                        <li><strong>Início:</strong> {new Date(turma.encontros[0].data).toLocaleDateString('pt-BR')}</li>
-                                    )}
+                                    {turma?.data_inicio && <li><strong>Início:</strong> {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
+                                    {turma?.data_fim && <li><strong>Encerramento:</strong> {new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
                                 </ul>
                                 {user && (
                                     <p className="text-sm text-[#2E6B7A] mt-3">

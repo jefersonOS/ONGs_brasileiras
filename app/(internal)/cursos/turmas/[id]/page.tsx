@@ -183,13 +183,13 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
     const supabase = createClient()
 
     const [curso, setCurso] = useState<{ titulo: string } | null>(null)
-    const [turmas, setTurmas] = useState<{ id: string, status: string, vagas: number, encontros: any[], formulario_inscricao: CampoFormulario[] | null }[]>([])
+    const [turmas, setTurmas] = useState<{ id: string, status: string, vagas: number, data_inicio: string, data_fim: string, data_limite_inscricao: string, formulario_inscricao: CampoFormulario[] | null }[]>([])
 
     const [mostrarForm, setMostrarForm] = useState(false)
     const [vagas, setVagas] = useState(30)
-    const [encontros, setEncontros] = useState<{ data: string, hora_inicio: string, hora_fim: string, local: string }[]>([
-        { data: '', hora_inicio: '', hora_fim: '', local: '' }
-    ])
+    const [dataInicio, setDataInicio] = useState('')
+    const [dataFim, setDataFim] = useState('')
+    const [dataLimiteInscricao, setDataLimiteInscricao] = useState('')
     const [formularioInscricao, setFormularioInscricao] = useState<CampoFormulario[]>(CAMPOS_DEFAULT)
 
     const [loading, setLoading] = useState(false)
@@ -217,14 +217,18 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
             tenant_id: user?.user_metadata?.tenant_id,
             vagas,
             status: 'aberta',
-            encontros,
+            data_inicio: dataInicio || null,
+            data_fim: dataFim || null,
+            data_limite_inscricao: dataLimiteInscricao || null,
             formulario_inscricao: formularioInscricao,
         })
 
         if (!error) {
             setMostrarForm(false)
             setVagas(30)
-            setEncontros([{ data: '', hora_inicio: '', hora_fim: '', local: '' }])
+            setDataInicio('')
+            setDataFim('')
+            setDataLimiteInscricao('')
             setFormularioInscricao(CAMPOS_DEFAULT)
             fetchAll()
         }
@@ -262,20 +266,23 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                     </div>
 
                     {/* Cronograma */}
-                    <div className="space-y-4">
-                        <label className="block text-sm font-medium text-gray-700">Cronograma de Encontros</label>
-                        {encontros.map((enc, i) => (
-                            <div key={i} className="flex flex-col md:flex-row gap-3 items-center">
-                                <input type="date" required value={enc.data} onChange={e => { const ne = [...encontros]; ne[i].data = e.target.value; setEncontros(ne) }} className="w-full md:flex-1 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
-                                <span className="text-sm text-gray-500">das</span>
-                                <input type="time" required value={enc.hora_inicio} onChange={e => { const ne = [...encontros]; ne[i].hora_inicio = e.target.value; setEncontros(ne) }} className="w-full md:w-32 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
-                                <span className="text-sm text-gray-500">às</span>
-                                <input type="time" required value={enc.hora_fim} onChange={e => { const ne = [...encontros]; ne[i].hora_fim = e.target.value; setEncontros(ne) }} className="w-full md:w-28 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
-                                <input type="text" placeholder="Local" value={enc.local} onChange={e => { const ne = [...encontros]; ne[i].local = e.target.value; setEncontros(ne) }} className="w-full md:flex-1 px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
-                                <button type="button" onClick={() => setEncontros(encontros.filter((_, idx) => idx !== i))} className="text-gray-400 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
+                    <div>
+                        <h4 className="text-sm font-semibold text-gray-800 mb-3">Período do Curso</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Data de Início *</label>
+                                <input type="date" required value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
                             </div>
-                        ))}
-                        <button type="button" onClick={() => setEncontros([...encontros, { data: '', hora_inicio: '', hora_fim: '', local: '' }])} className="text-sm font-medium text-[#2E6B7A] hover:underline flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar Encontro</button>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Data de Encerramento *</label>
+                                <input type="date" required value={dataFim} min={dataInicio} onChange={e => setDataFim(e.target.value)} className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Limite de Inscrições</label>
+                                <input type="date" value={dataLimiteInscricao} max={dataInicio || undefined} onChange={e => setDataLimiteInscricao(e.target.value)} className="w-full px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
+                                <p className="text-[11px] text-gray-400 mt-1">Inscrições fecham nesta data</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Formulário de Inscrição */}
@@ -307,18 +314,18 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                             <div className="flex items-center gap-2 text-gray-600 text-sm">
                                 <Users className="w-4 h-4" /> {turma.vagas} Vagas ofertadas
                             </div>
-                            <div className="flex items-start gap-2 text-gray-600 text-sm">
-                                <Calendar className="w-4 h-4 mt-0.5" />
-                                <div>
-                                    <span className="font-medium text-gray-800">{turma.encontros?.length || 0} Encontros</span>
-                                    <ul className="mt-1 space-y-1 text-xs">
-                                        {turma.encontros?.slice(0, 3).map((e: { data: string, hora_inicio: string, hora_fim: string }, i: number) => (
-                                            <li key={i}>{new Date(e.data).toLocaleDateString()} ({e.hora_inicio} - {e.hora_fim})</li>
-                                        ))}
-                                        {turma.encontros?.length > 3 && <li>...</li>}
-                                    </ul>
+                            {turma.data_inicio && (
+                                <div className="flex items-start gap-2 text-gray-600 text-sm">
+                                    <Calendar className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                    <div className="space-y-0.5 text-xs">
+                                        <p><span className="font-medium text-gray-700">Início:</span> {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                                        {turma.data_fim && <p><span className="font-medium text-gray-700">Encerramento:</span> {new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}</p>}
+                                        {turma.data_limite_inscricao && (
+                                            <p className="text-amber-600"><span className="font-medium">Inscrições até:</span> {new Date(turma.data_limite_inscricao + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             {turma.formulario_inscricao && (
                                 <div className="flex items-center gap-2 text-gray-500 text-xs">
                                     <FileText className="w-3.5 h-3.5" />

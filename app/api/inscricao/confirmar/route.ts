@@ -32,11 +32,10 @@ export async function POST(req: Request) {
             const { data: curso } = await supabase.from('cursos').select('titulo').eq('id', id).single()
             titulo = curso?.titulo || ''
             if (turmaId) {
-                const { data: turma } = await supabase.from('turmas').select('encontros').eq('id', turmaId).single()
-                const primeiroEncontro = turma?.encontros?.[0]
-                if (primeiroEncontro) {
-                    data = new Date(primeiroEncontro.data).toLocaleDateString('pt-BR')
-                    local = primeiroEncontro.local || 'Sede da ONG'
+                const { data: turma } = await supabase.from('turmas').select('data_inicio, data_fim').eq('id', turmaId).single()
+                if (turma?.data_inicio) {
+                    data = new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')
+                    if (turma.data_fim) data += ` a ${new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}`
                 }
             }
         } else {

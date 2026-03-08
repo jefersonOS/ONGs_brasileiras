@@ -18,11 +18,14 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
 
     if (!curso) notFound()
 
+    const today = new Date().toISOString().split('T')[0]
+
     const { data: turmas } = await supabase
         .from('turmas')
         .select('*, inscricoes(id, cidadao_id)')
         .eq('curso_id', params.id)
         .eq('status', 'aberta')
+        .or(`data_limite_inscricao.is.null,data_limite_inscricao.gte.${today}`)
 
     return (
         <div className="bg-[#F5F7F8] min-h-screen pb-20 animate-in fade-in duration-500">
@@ -126,10 +129,21 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
                                                     </span>
                                                 </div>
 
-                                                {turma.encontros?.[0] && (
-                                                    <div className="mb-6">
-                                                        <p className="text-sm font-black text-[#1A3C4A] mb-1">Início das Aulas</p>
-                                                        <p className="text-xs font-bold text-gray-500">{new Date(turma.encontros[0].data).toLocaleDateString('pt-BR')}</p>
+                                                {turma.data_inicio && (
+                                                    <div className="mb-4 space-y-1">
+                                                        <p className="text-xs font-bold text-gray-500">
+                                                            <span className="text-[#1A3C4A]">Início:</span> {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                        </p>
+                                                        {turma.data_fim && (
+                                                            <p className="text-xs font-bold text-gray-500">
+                                                                <span className="text-[#1A3C4A]">Encerramento:</span> {new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                            </p>
+                                                        )}
+                                                        {turma.data_limite_inscricao && (
+                                                            <p className="text-xs font-bold text-amber-600">
+                                                                Inscrições até: {new Date(turma.data_limite_inscricao + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 )}
 
