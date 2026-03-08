@@ -411,7 +411,7 @@ function EditarPlanoForm() {
                                             </div>
                                             )
                                         })()
-                                        ) : secao.tipo === 'list' ? (
+                                        : secao.tipo === 'list' ? (
                                             <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-2">
                                                 {(Array.isArray(secao.valor) ? secao.valor : []).map((item: any, i: number) => (
                                                     <div key={i} className="flex gap-2">
