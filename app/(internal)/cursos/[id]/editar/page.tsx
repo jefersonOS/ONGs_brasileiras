@@ -38,6 +38,7 @@ export default function EditarCursoPage() {
             setConteudoProgramatico(data.conteudo_programatico?.length ? data.conteudo_programatico : [{ modulo: '', topicos: '' }])
             setFetching(false)
         })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
 
     const handleSave = async (e: React.FormEvent, statusOverride?: string) => {

@@ -75,7 +75,7 @@ export default async function AtividadePublicaPage({ params }: { params: { id: s
                                 O que é esta atividade?
                             </h2>
                             <p className="text-gray-500 font-medium whitespace-pre-wrap leading-relaxed text-lg italic">
-                                "{atividade.descricao || 'Nenhuma descrição detalhada fornecida.'}"
+                                &ldquo;{atividade.descricao || 'Nenhuma descrição detalhada fornecida.'}&rdquo;
                             </p>
                         </div>
                     </div>

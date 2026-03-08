@@ -2,13 +2,14 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import {
     Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
-    HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType,
+    AlignmentType, WidthType, BorderStyle, ShadingType,
     Header, VerticalAlign
 } from 'docx'
 
 const DARK = '1A3C4A'
 const LIGHT_GRAY = 'F2F2F2'
 const BORDER = { style: BorderStyle.SINGLE, size: 6, color: DARK }
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const NO_BORDER = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
 const TABLE_WIDTH = { size: 9638, type: WidthType.DXA }
 

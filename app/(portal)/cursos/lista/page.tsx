@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getTenant } from '@/lib/tenant-server'
 import Link from 'next/link'
-import { CalendarDays, GraduationCap, Users, Search } from 'lucide-react'
+import { CalendarDays, GraduationCap, Users } from 'lucide-react'
 
 export default async function CursosListaPublicaPage() {
     const supabase = createClient()
