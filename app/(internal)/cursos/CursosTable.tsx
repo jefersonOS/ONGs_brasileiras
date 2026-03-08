@@ -2,7 +2,7 @@
 
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
-import { Plus, Users } from 'lucide-react'
+import { Pencil, Plus, Users } from 'lucide-react'
 
 interface Curso extends Record<string, unknown> {
     id: string
@@ -46,12 +46,17 @@ export function CursosTable({ initialData }: CursosTableProps) {
             }
         },
         {
-            title: 'Turmas',
+            title: 'Ações',
             key: 'id',
             render: (row) => (
-                <Link href={`/cursos/turmas/${row.id}`} className="text-[#2D9E6B] hover:underline flex items-center gap-1 text-sm font-medium">
-                    <Users className="w-4 h-4" /> Gerenciar Turmas
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Link href={`/cursos/${row.id}/editar`} className="text-blue-600 hover:underline flex items-center gap-1 text-sm font-medium">
+                        <Pencil className="w-4 h-4" /> Editar
+                    </Link>
+                    <Link href={`/cursos/turmas/${row.id}`} className="text-[#2D9E6B] hover:underline flex items-center gap-1 text-sm font-medium">
+                        <Users className="w-4 h-4" /> Turmas
+                    </Link>
+                </div>
             )
         }
     ]
