@@ -252,10 +252,27 @@ function NovoPlanoForm() {
         setSecoesDinamicas(updated)
     }
 
+    const getFinancialCols = (colunas: string[]) => {
+        const c = colunas.map(s => s.toLowerCase())
+        const qtdeIdx = c.findIndex(s => s.includes('qtde') || s.includes('qtd') || s.includes('quantidade'))
+        const unitIdx = c.findIndex(s => s.includes('unit'))
+        const totalIdx = c.findLastIndex(s => s.includes('total'))
+        if (qtdeIdx >= 0 && unitIdx >= 0 && totalIdx >= 0) return { qtdeIdx, unitIdx, totalIdx }
+        return null
+    }
+
     const updateTableCell = (secaoIdx: number, rowIdx: number, colIdx: number, value: string) => {
         const updated = [...(secoesDinamicas || [])]
         const rows = updated[secaoIdx].valor.map((r: string[]) => [...r])
         rows[rowIdx][colIdx] = value
+
+        const fin = getFinancialCols(updated[secaoIdx].colunas || [])
+        if (fin && (colIdx === fin.qtdeIdx || colIdx === fin.unitIdx)) {
+            const qtde = parseFloat(colIdx === fin.qtdeIdx ? value : rows[rowIdx][fin.qtdeIdx]) || 0
+            const unit = parseFloat(colIdx === fin.unitIdx ? value : rows[rowIdx][fin.unitIdx]) || 0
+            rows[rowIdx][fin.totalIdx] = qtde * unit > 0 ? (qtde * unit).toFixed(2) : ''
+        }
+
         updated[secaoIdx] = { ...updated[secaoIdx], valor: rows }
         setSecoesDinamicas(updated)
     }
@@ -416,36 +433,59 @@ function NovoPlanoForm() {
                                             </div>
                                         ) : secao.tipo === 'table' ? (
                                             <div className="overflow-x-auto">
-                                                <table className="w-full text-sm border-collapse">
-                                                    <thead>
-                                                        <tr className="bg-gray-100">
-                                                            {(secao.colunas || []).map((col: string, ci: number) => (
-                                                                <th key={ci} className="border border-gray-200 px-2 py-2 text-left text-xs font-semibold text-gray-600">{col}</th>
-                                                            ))}
-                                                            <th className="border border-gray-200 px-2 py-2 w-8"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {(secao.valor || []).map((row: string[], ri: number) => (
-                                                            <tr key={ri}>
-                                                                {row.map((cell: string, ci: number) => (
-                                                                    <td key={ci} className="border border-gray-200 p-1">
-                                                                        <input
-                                                                            className="w-full px-2 py-1 text-xs border-none focus:outline-none"
-                                                                            value={cell}
-                                                                            onChange={e => updateTableCell(idx, ri, ci, e.target.value)}
-                                                                        />
-                                                                    </td>
+                                                {(() => {
+                                                    const fin = getFinancialCols(secao.colunas || [])
+                                                    const rows: string[][] = secao.valor || []
+                                                    const grandTotal = fin ? rows.reduce((sum, row) => sum + (parseFloat(row[fin.totalIdx]) || 0), 0) : 0
+                                                    return (
+                                                        <table className="w-full text-sm border-collapse">
+                                                            <thead>
+                                                                <tr className="bg-gray-100">
+                                                                    {(secao.colunas || []).map((col: string, ci: number) => (
+                                                                        <th key={ci} className="border border-gray-200 px-2 py-2 text-left text-xs font-semibold text-gray-600">{col}</th>
+                                                                    ))}
+                                                                    <th className="border border-gray-200 px-2 py-2 w-8"></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {rows.map((row: string[], ri: number) => (
+                                                                    <tr key={ri}>
+                                                                        {row.map((cell: string, ci: number) => {
+                                                                            const isNumeric = fin && (ci === fin.qtdeIdx || ci === fin.unitIdx)
+                                                                            const isTotal = fin && ci === fin.totalIdx
+                                                                            return (
+                                                                                <td key={ci} className="border border-gray-200 p-1">
+                                                                                    <input
+                                                                                        type={isNumeric || isTotal ? 'number' : 'text'}
+                                                                                        step={isNumeric || isTotal ? '0.01' : undefined}
+                                                                                        readOnly={isTotal}
+                                                                                        className={`w-full px-2 py-1 text-xs border-none focus:outline-none ${isTotal ? 'bg-gray-50 font-semibold text-right' : ''}`}
+                                                                                        value={cell}
+                                                                                        onChange={e => updateTableCell(idx, ri, ci, e.target.value)}
+                                                                                    />
+                                                                                </td>
+                                                                            )
+                                                                        })}
+                                                                        <td className="border border-gray-200 p-1 text-center">
+                                                                            <button type="button" onClick={() => removeTableRow(idx, ri)} className="text-gray-400 hover:text-red-500">
+                                                                                <Trash2 className="w-3.5 h-3.5" />
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
                                                                 ))}
-                                                                <td className="border border-gray-200 p-1 text-center">
-                                                                    <button type="button" onClick={() => removeTableRow(idx, ri)} className="text-gray-400 hover:text-red-500">
-                                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                                    </button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                                {fin && (
+                                                                    <tr className="bg-gray-50">
+                                                                        <td colSpan={fin.totalIdx} className="border border-gray-200 px-3 py-2 text-xs font-black text-right uppercase tracking-wider">TOTAL</td>
+                                                                        <td className="border border-gray-200 px-2 py-2 text-xs font-black text-right">
+                                                                            {grandTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                                                                        </td>
+                                                                        <td className="border border-gray-200"></td>
+                                                                    </tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    )
+                                                })()}
                                                 <button
                                                     type="button"
                                                     onClick={() => addTableRow(idx)}
