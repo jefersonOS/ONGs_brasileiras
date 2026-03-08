@@ -73,7 +73,7 @@ export default async function PublicLandingPage() {
                         </div>
                         <h2 className="text-4xl font-black text-[#1A3C4A]">Cursos Abertos</h2>
                     </div>
-                    <Link href="/cursos" className="text-sm font-black uppercase tracking-widest text-[#1A3C4A] border-b-2 border-[var(--secondary)] pb-1 hover:text-[var(--secondary)] transition-colors">
+                    <Link href="/cursos/lista" className="text-sm font-black uppercase tracking-widest text-[#1A3C4A] border-b-2 border-[var(--secondary)] pb-1 hover:text-[var(--secondary)] transition-colors">
                         Ver Todos os Cursos
                     </Link>
                 </div>
@@ -145,7 +145,7 @@ export default async function PublicLandingPage() {
                         </div>
                         <h2 className="text-4xl font-black text-[#1A3C4A]">Agenda Social</h2>
                     </div>
-                    <Link href="/atividades" className="text-sm font-black uppercase tracking-widest text-[var(--primary)] hover:text-[var(--secondary)] transition-colors">
+                    <Link href="/atividades/lista" className="text-sm font-black uppercase tracking-widest text-[var(--primary)] hover:text-[var(--secondary)] transition-colors">
                         Calendário Completo
                     </Link>
                 </div>
