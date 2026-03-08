@@ -458,7 +458,7 @@ function NovoPlanoForm() {
                                                                                     <input
                                                                                         type={isNumeric || isTotal ? 'number' : 'text'}
                                                                                         step={isNumeric || isTotal ? '0.01' : undefined}
-                                                                                        readOnly={isTotal}
+                                                                                        readOnly={!!isTotal}
                                                                                         className={`w-full px-2 py-1 text-xs border-none focus:outline-none ${isTotal ? 'bg-gray-50 font-semibold text-right' : ''}`}
                                                                                         value={cell}
                                                                                         onChange={e => updateTableCell(idx, ri, ci, e.target.value)}

@@ -257,11 +257,13 @@ function EditarPlanoForm() {
         </button>
     )
 
-    if (loadingData) return (
-        <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin w-8 h-8 border-4 border-[#2D9E6B] border-t-transparent rounded-full" />
-        </div>
-    )
+    if (loadingData) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <div className="animate-spin w-8 h-8 border-4 border-[#2D9E6B] border-t-transparent rounded-full" />
+            </div>
+        )
+    }
 
     return (
         <div className="max-w-4xl mx-auto space-y-6 pb-12">
@@ -358,72 +360,72 @@ function EditarPlanoForm() {
                                             const rows: string[][] = secao.valor || []
                                             const grandTotal = fin ? rows.reduce((sum, r) => sum + (parseFloat(r[fin.totalIdx]) || 0), 0) : 0
                                             return (
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-sm border-collapse">
-                                                    <thead>
-                                                        <tr className="bg-gray-100">
-                                                            {(secao.colunas || []).map((col: string, ci: number) => (
-                                                                <th key={ci} className="border border-gray-200 px-2 py-2 text-left text-xs font-semibold text-gray-600">{col}</th>
-                                                            ))}
-                                                            <th className="border border-gray-200 px-2 py-2 w-8"></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {rows.map((row: string[], ri: number) => (
-                                                            <tr key={ri}>
-                                                                {row.map((cell: string, ci: number) => {
-                                                                    const isTotal = fin && ci === fin.totalIdx
-                                                                    const isNum = fin && (ci === fin.qtdeIdx || ci === fin.unitIdx || ci === fin.totalIdx)
-                                                                    return (
-                                                                        <td key={ci} className={`border border-gray-200 p-1 ${isTotal ? 'bg-gray-50' : ''}`}>
-                                                                            <input
-                                                                                className="w-full px-2 py-1 text-xs border-none focus:outline-none bg-transparent"
-                                                                                type={isNum ? 'number' : 'text'}
-                                                                                value={cell}
-                                                                                onChange={e => updateTableCell(idx, ri, ci, e.target.value)}
-                                                                                readOnly={!!isTotal}
-                                                                            />
-                                                                        </td>
-                                                                    )
-                                                                })}
-                                                                <td className="border border-gray-200 p-1 text-center">
-                                                                    <button type="button" onClick={() => removeTableRow(idx, ri)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                        {fin && rows.length > 0 && (
-                                                            <tr className="bg-[#1A3C4A]/5 font-semibold">
-                                                                {(secao.colunas || []).map((_: string, ci: number) => (
-                                                                    <td key={ci} className="border border-gray-200 px-2 py-1.5 text-xs">
-                                                                        {ci === fin.totalIdx
-                                                                            ? `R$ ${grandTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-                                                                            : ci === 0 ? 'TOTAL GERAL' : ''}
-                                                                    </td>
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-sm border-collapse">
+                                                        <thead>
+                                                            <tr className="bg-gray-100">
+                                                                {(secao.colunas || []).map((col: string, ci: number) => (
+                                                                    <th key={ci} className="border border-gray-200 px-2 py-2 text-left text-xs font-semibold text-gray-600">{col}</th>
                                                                 ))}
-                                                                <td className="border border-gray-200" />
+                                                                <th className="border border-gray-200 px-2 py-2 w-8"></th>
                                                             </tr>
-                                                        )}
-                                                    </tbody>
-                                                </table>
-                                                <button type="button" onClick={() => addTableRow(idx)} className="mt-2 text-xs text-[#2D9E6B] font-semibold flex items-center gap-1">
-                                                    <Plus className="w-3 h-3" /> Adicionar linha
-                                                </button>
-                                            </div>
+                                                        </thead>
+                                                        <tbody>
+                                                            {rows.map((row: string[], ri: number) => (
+                                                                <tr key={ri}>
+                                                                    {row.map((cell: string, ci: number) => {
+                                                                        const isTotal = fin && ci === fin.totalIdx
+                                                                        const isNum = fin && (ci === fin.qtdeIdx || ci === fin.unitIdx || ci === fin.totalIdx)
+                                                                        return (
+                                                                            <td key={ci} className={`border border-gray-200 p-1 ${isTotal ? 'bg-gray-50' : ''}`}>
+                                                                                <input
+                                                                                    className="w-full px-2 py-1 text-xs border-none focus:outline-none bg-transparent"
+                                                                                    type={isNum ? 'number' : 'text'}
+                                                                                    value={cell}
+                                                                                    onChange={e => updateTableCell(idx, ri, ci, e.target.value)}
+                                                                                    readOnly={!!isTotal}
+                                                                                />
+                                                                            </td>
+                                                                        )
+                                                                    })}
+                                                                    <td className="border border-gray-200 p-1 text-center">
+                                                                        <button type="button" onClick={() => removeTableRow(idx, ri)} className="text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                            {fin && rows.length > 0 && (
+                                                                <tr className="bg-[#1A3C4A]/5 font-semibold">
+                                                                    {(secao.colunas || []).map((_: string, ci: number) => (
+                                                                        <td key={ci} className="border border-gray-200 px-2 py-1.5 text-xs">
+                                                                            {ci === fin.totalIdx
+                                                                                ? `R$ ${grandTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                                                                                : ci === 0 ? 'TOTAL GERAL' : ''}
+                                                                        </td>
+                                                                    ))}
+                                                                    <td className="border border-gray-200" />
+                                                                </tr>
+                                                            )}
+                                                        </tbody>
+                                                    </table>
+                                                    <button type="button" onClick={() => addTableRow(idx)} className="mt-2 text-xs text-[#2D9E6B] font-semibold flex items-center gap-1">
+                                                        <Plus className="w-3 h-3" /> Adicionar linha
+                                                    </button>
+                                                </div>
                                             )
                                         })()
-                                        : secao.tipo === 'list' ? (
-                                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-2">
-                                                {(Array.isArray(secao.valor) ? secao.valor : []).map((item: any, i: number) => (
-                                                    <div key={i} className="flex gap-2">
-                                                        <input type="text" value={typeof item === 'string' ? item : JSON.stringify(item)} onChange={e => { const newVal = [...secao.valor]; newVal[i] = e.target.value; updateSecao(idx, newVal) }} className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded" />
-                                                        <button type="button" onClick={() => updateSecao(idx, secao.valor.filter((_: any, fi: number) => fi !== i))} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
-                                                    </div>
-                                                ))}
-                                                <button type="button" onClick={() => updateSecao(idx, [...(secao.valor || []), ''])} className="text-xs text-[#2D9E6B] font-semibold flex items-center gap-1">
-                                                    <Plus className="w-3 h-3" /> Adicionar item
-                                                </button>
-                                            </div>
-                                        ) : null}
+                                            : secao.tipo === 'list' ? (
+                                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-2">
+                                                    {(Array.isArray(secao.valor) ? secao.valor : []).map((item: any, i: number) => (
+                                                        <div key={i} className="flex gap-2">
+                                                            <input type="text" value={typeof item === 'string' ? item : JSON.stringify(item)} onChange={e => { const newVal = [...secao.valor]; newVal[i] = e.target.value; updateSecao(idx, newVal) }} className="flex-1 text-sm px-2 py-1 border border-gray-200 rounded" />
+                                                            <button type="button" onClick={() => updateSecao(idx, secao.valor.filter((_: any, fi: number) => fi !== i))} className="text-gray-400 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                                                        </div>
+                                                    ))}
+                                                    <button type="button" onClick={() => updateSecao(idx, [...(secao.valor || []), ''])} className="text-xs text-[#2D9E6B] font-semibold flex items-center gap-1">
+                                                        <Plus className="w-3 h-3" /> Adicionar item
+                                                    </button>
+                                                </div>
+                                            ) : null}
                                     </div>
                                 ))}
                             </div>
