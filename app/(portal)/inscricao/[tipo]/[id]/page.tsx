@@ -6,6 +6,55 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react'
 
+interface CampoFormulario {
+    id: string
+    tipo: 'texto' | 'email' | 'telefone' | 'numero' | 'selecao' | 'textarea'
+    label: string
+    placeholder: string
+    obrigatorio: boolean
+    opcoes: string[]
+    is_whatsapp: boolean
+}
+
+function CampoInput({ campo, value, onChange }: { campo: CampoFormulario, value: string, onChange: (v: string) => void }) {
+    const base = "w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 focus:border-[var(--primary)] transition-all bg-white text-gray-800"
+
+    if (campo.tipo === 'selecao') {
+        return (
+            <select value={value} onChange={e => onChange(e.target.value)} required={campo.obrigatorio} className={base + " bg-white"}>
+                <option value="">Selecione uma opção...</option>
+                {campo.opcoes.map(op => <option key={op} value={op}>{op}</option>)}
+            </select>
+        )
+    }
+
+    if (campo.tipo === 'textarea') {
+        return (
+            <textarea
+                rows={3}
+                value={value}
+                onChange={e => onChange(e.target.value)}
+                required={campo.obrigatorio}
+                placeholder={campo.placeholder}
+                className={base + " resize-none"}
+            />
+        )
+    }
+
+    const inputType = campo.tipo === 'email' ? 'email' : campo.tipo === 'numero' ? 'number' : campo.tipo === 'telefone' ? 'tel' : 'text'
+
+    return (
+        <input
+            type={inputType}
+            value={value}
+            onChange={e => onChange(e.target.value)}
+            required={campo.obrigatorio}
+            placeholder={campo.placeholder}
+            className={base}
+        />
+    )
+}
+
 function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
     const { tipo, id } = params
     const searchParams = useSearchParams()
@@ -17,6 +66,9 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
     const [user, setUser] = useState<any>(null)
     const [entidade, setEntidade] = useState<any>(null)
     const [turma, setTurma] = useState<any>(null)
+    const [formulario, setFormulario] = useState<CampoFormulario[]>([])
+    const [respostas, setRespostas] = useState<Record<string, string>>({})
+
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [statusInscricao, setStatusInscricao] = useState<'idle' | 'sucesso' | 'erro' | 'ja_inscrito'>('idle')
@@ -26,16 +78,12 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
         const fetchContext = async () => {
             setLoading(true)
             const { data: { user: currentUser } } = await supabase.auth.getUser()
-
             if (currentUser) {
                 setUser(currentUser)
 
-                // Verifica se já está inscrito
                 let query = supabase.from('inscricoes').select('id').eq('cidadao_id', currentUser.id).eq('entidade_id', id)
                 if (turmaId) query = query.eq('turma_id', turmaId)
-
                 const { data: inscricaoExistente } = await query.single()
-
                 if (inscricaoExistente) {
                     setStatusInscricao('ja_inscrito')
                     setLoading(false)
@@ -43,13 +91,27 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                 }
             }
 
-            // Busca os detalhes do curso ou atividade
             if (tipo === 'curso') {
                 const { data: c } = await supabase.from('cursos').select('titulo, modalidade').eq('id', id).single()
                 setEntidade(c)
                 if (turmaId) {
-                    const { data: t } = await supabase.from('turmas').select('vagas, encontros').eq('id', turmaId).single()
+                    const { data: t } = await supabase.from('turmas').select('vagas, encontros, formulario_inscricao').eq('id', turmaId).single()
                     setTurma(t)
+                    if (t?.formulario_inscricao?.length) {
+                        setFormulario(t.formulario_inscricao)
+                        // Pré-preencher com dados do perfil do usuário
+                        if (currentUser) {
+                            const meta = currentUser.user_metadata || {}
+                            const initialRespostas: Record<string, string> = {}
+                            t.formulario_inscricao.forEach((campo: CampoFormulario) => {
+                                if (campo.tipo === 'email') initialRespostas[campo.id] = currentUser.email || ''
+                                else if (campo.tipo === 'texto' && campo.label.toLowerCase().includes('nome')) initialRespostas[campo.id] = meta.nome || ''
+                                else if (campo.is_whatsapp) initialRespostas[campo.id] = meta.whatsapp || ''
+                                else initialRespostas[campo.id] = ''
+                            })
+                            setRespostas(initialRespostas)
+                        }
+                    }
                 }
             } else if (tipo === 'atividade') {
                 const { data: a } = await supabase.from('atividades').select('titulo, tipo, exige_inscricao, vagas').eq('id', id).single()
@@ -63,13 +125,18 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tipo, id, turmaId])
 
-    const handleInscricao = async () => {
+    const handleInscricao = async (e: React.FormEvent) => {
+        e.preventDefault()
         setSubmitting(true)
 
         if (!user) {
             router.push(`/login?redirectTo=/inscricao/${tipo}/${id}${turmaId ? `?turma=${turmaId}` : ''}`)
             return
         }
+
+        // Extrair telefone WhatsApp do formulário
+        const campoWhatsApp = formulario.find(c => c.is_whatsapp)
+        const telefoneWhatsApp = campoWhatsApp ? (respostas[campoWhatsApp.id] || null) : null
 
         const { data: { user: currentUser } } = await supabase.auth.getUser()
 
@@ -81,7 +148,9 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                 id,
                 turmaId: turmaId || null,
                 cidadaoId: user.id,
-                tenantId: currentUser?.user_metadata?.tenant_id
+                tenantId: currentUser?.user_metadata?.tenant_id,
+                dadosFormulario: respostas,
+                telefoneWhatsApp,
             })
         })
 
@@ -102,7 +171,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
             <div className="min-h-screen bg-[#F5F7F8] flex items-center justify-center">
                 <div className="animate-pulse flex flex-col items-center">
                     <div className="w-12 h-12 border-4 border-[#2D9E6B] border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-[#1A3C4A] font-medium">Preparando ambiente seguro...</p>
+                    <p className="text-[#1A3C4A] font-medium">Carregando formulário...</p>
                 </div>
             </div>
         )
@@ -117,7 +186,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     </div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">Inscrição Confirmada!</h1>
                     <p className="text-gray-600 mb-8">
-                        Parabéns! Sua vaga em <strong>{entidade?.titulo}</strong> foi reservada com sucesso. Você receberá mais detalhes em breve.
+                        Sua vaga em <strong>{entidade?.titulo}</strong> foi reservada. Você receberá uma confirmação pelo WhatsApp em breve.
                     </p>
                     <Link href="/minha-area" className="block w-full py-3 bg-[#1A3C4A] text-white rounded-md font-bold hover:bg-[#2E6B7A] transition-colors">
                         Acessar Minha Área
@@ -135,9 +204,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                         <AlertTriangle className="w-10 h-10" />
                     </div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">Você já está inscrito</h1>
-                    <p className="text-gray-600 mb-8">
-                        O sistema detectou que você já possui uma inscription ativa para esta atividade ou turma.
-                    </p>
+                    <p className="text-gray-600 mb-8">Você já possui uma inscrição ativa para esta turma.</p>
                     <Link href="/minha-area" className="block w-full py-3 bg-[#1A3C4A] text-white rounded-md font-bold hover:bg-[#2E6B7A] transition-colors">
                         Ver Minhas Inscrições
                     </Link>
@@ -158,51 +225,70 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
 
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     <div className="bg-[#1A3C4A] p-8 text-white">
-                        <span className="text-xs font-bold uppercase tracking-wider text-[#2D9E6B] mb-2 block">
-                            Nova Inscrição
-                        </span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#2D9E6B] mb-2 block">Formulário de Inscrição</span>
                         <h1 className="text-2xl md:text-3xl font-bold">{entidade?.titulo || 'Carregando...'}</h1>
+                        {turma?.encontros?.[0] && (
+                            <p className="text-white/60 text-sm mt-2">
+                                Início: {new Date(turma.encontros[0].data).toLocaleDateString('pt-BR')} às {turma.encontros[0].hora_inicio} — {turma.encontros[0].local || 'Local a confirmar'}
+                            </p>
+                        )}
                     </div>
 
-                    <div className="p-8">
+                    <form onSubmit={handleInscricao} className="p-8 space-y-6">
                         {statusInscricao === 'erro' && (
-                            <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
-                                <strong>Erro ao processar inscrição:</strong> {errorMessage}
+                            <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
+                                <strong>Erro:</strong> {errorMessage}
                             </div>
                         )}
 
-                        <div className="space-y-6">
+                        {!user && (
+                            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+                                Para se inscrever você precisará fazer login primeiro.
+                            </div>
+                        )}
+
+                        {/* Campos do formulário dinâmico */}
+                        {formulario.length > 0 ? (
+                            <div className="space-y-5">
+                                {formulario.map(campo => (
+                                    <div key={campo.id}>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                            {campo.label}
+                                            {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
+                                            {campo.is_whatsapp && <span className="ml-2 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">usado para confirmação no WhatsApp</span>}
+                                        </label>
+                                        <CampoInput
+                                            campo={campo}
+                                            value={respostas[campo.id] || ''}
+                                            onChange={v => setRespostas(prev => ({ ...prev, [campo.id]: v }))}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            /* Sem formulário customizado: resumo simples */
                             <div className="border border-gray-100 rounded-lg p-5 bg-gray-50">
                                 <h3 className="font-semibold text-gray-800 mb-2">Resumo da Inscrição</h3>
                                 <ul className="text-sm text-gray-600 space-y-2">
                                     <li><strong>Modalidade:</strong> <span className="capitalize">{tipo}</span></li>
                                     {turma && <li><strong>Turma:</strong> #{turmaId?.split('-')[0]}</li>}
-                                    {turma && turma.encontros?.length > 0 && (
-                                        <li><strong>Início Previsto:</strong> {new Date(turma.encontros[0].data).toLocaleDateString()}</li>
+                                    {turma?.encontros?.[0] && (
+                                        <li><strong>Início:</strong> {new Date(turma.encontros[0].data).toLocaleDateString('pt-BR')}</li>
                                     )}
                                 </ul>
-                            </div>
-
-                            <div className="border border-teal-100 rounded-lg p-5 bg-teal-50">
-                                <h3 className="font-semibold text-[#1A3C4A] mb-2">Seus Dados</h3>
-                                {user ? (
-                                    <div className="text-sm text-[#2E6B7A]">
-                                        <p>Você está logado como: <strong>{user.user_metadata?.nome || user.email}</strong></p>
-                                        <p className="mt-1">A inscrição será vinculada permanentemente ao seu perfil.</p>
-                                    </div>
-                                ) : (
-                                    <div className="text-sm text-[#2E6B7A]">
-                                        <p>Para prosseguir com a inscrição de forma segura, você precisará fazer o seu login ou realizar um rápido cadastro (se for o primeiro acesso).</p>
-                                    </div>
+                                {user && (
+                                    <p className="text-sm text-[#2E6B7A] mt-3">
+                                        Inscrito como: <strong>{user.user_metadata?.nome || user.email}</strong>
+                                    </p>
                                 )}
                             </div>
-                        </div>
+                        )}
 
-                        <div className="mt-10">
+                        <div className="pt-2">
                             <button
-                                onClick={handleInscricao}
+                                type="submit"
                                 disabled={submitting}
-                                className="w-full py-4 bg-[#2D9E6B] text-white rounded-lg font-bold text-lg shadow-sm hover:bg-green-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                                className="w-full py-4 bg-[#2D9E6B] text-white rounded-xl font-bold text-lg shadow-sm hover:bg-green-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                             >
                                 {submitting ? (
                                     <>
@@ -210,12 +296,12 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                                         Processando...
                                     </>
                                 ) : (
-                                    user ? 'Confirmar Participação Agora' : 'Fazer Login para Continuar'
+                                    user ? 'Confirmar Inscrição' : 'Fazer Login para Continuar'
                                 )}
                             </button>
                             <p className="text-center text-xs text-gray-400 mt-4">Ao se inscrever você concorda com os termos de participação da instituição.</p>
                         </div>
-                    </div>
+                    </form>
                 </div>
             </div>
         </div>

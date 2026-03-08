@@ -3,10 +3,10 @@ import { WhatsAppService } from '@/lib/whatsapp-service'
 
 export async function POST(req: Request) {
     try {
-        const { tipo, id, turmaId, cidadaoId, tenantId } = await req.json()
+        const { tipo, id, turmaId, cidadaoId, tenantId, dadosFormulario, telefoneWhatsApp } = await req.json()
         const supabase = createClient()
 
-        // 1. Criar Inscrição
+        // 1. Criar Inscrição com dados do formulário
         const { data: inscricao, error: insError } = await supabase
             .from('inscricoes')
             .insert({
@@ -14,14 +14,16 @@ export async function POST(req: Request) {
                 entidade_id: id,
                 turma_id: turmaId || null,
                 cidadao_id: cidadaoId,
-                status: 'confirmada'
+                status: 'confirmada',
+                dados_formulario: dadosFormulario || null,
+                telefone_whatsapp: telefoneWhatsApp || null,
             })
             .select('*, users!cidadao_id(*)')
             .single()
 
         if (insError) throw insError
 
-        // 2. Buscar Dados do Evento/Curso para a mensagem
+        // 2. Buscar dados do curso/atividade para a mensagem
         let titulo = ''
         let data = 'A conferir'
         let local = 'A combinar'
@@ -31,10 +33,10 @@ export async function POST(req: Request) {
             titulo = curso?.titulo || ''
             if (turmaId) {
                 const { data: turma } = await supabase.from('turmas').select('encontros').eq('id', turmaId).single()
-                const primeiroIdx = turma?.encontros?.[0]
-                if (primeiroIdx) {
-                    data = new Date(primeiroIdx.data).toLocaleDateString('pt-BR')
-                    local = primeiroIdx.local || 'Sede da ONG'
+                const primeiroEncontro = turma?.encontros?.[0]
+                if (primeiroEncontro) {
+                    data = new Date(primeiroEncontro.data).toLocaleDateString('pt-BR')
+                    local = primeiroEncontro.local || 'Sede da ONG'
                 }
             }
         } else {
@@ -45,13 +47,17 @@ export async function POST(req: Request) {
         }
 
         // 3. Enviar WhatsApp
-        if (inscricao.users?.whatsapp) {
+        // Prioridade: telefone capturado no formulário → whatsapp do perfil
+        const whatsappDestino = telefoneWhatsApp || inscricao.users?.whatsapp
+        const nomeDestinatario = inscricao.users?.nome || (dadosFormulario ? Object.values(dadosFormulario)[0] as string : '') || 'Participante'
+
+        if (whatsappDestino) {
             await WhatsAppService.enviar(
                 tenantId,
-                inscricao.users.whatsapp,
+                whatsappDestino,
                 'inscricao_confirmada',
                 {
-                    nome: inscricao.users.nome,
+                    nome: nomeDestinatario,
                     evento: titulo,
                     data,
                     local
@@ -60,15 +66,16 @@ export async function POST(req: Request) {
         }
 
         // 4. Enviar E-mail via Resend
-        if (inscricao.users?.email) {
+        const emailDestino = inscricao.users?.email
+        if (emailDestino) {
             const { sendEmail } = await import('@/lib/resend')
             await sendEmail({
-                to: inscricao.users.email,
+                to: emailDestino,
                 subject: `Inscrição Confirmada: ${titulo}`,
                 html: `
                     <div style="font-family: sans-serif; color: #1A3C4A;">
-                        <h1 style="color: #2D9E6B;">Olá, ${inscricao.users.nome}!</h1>
-                        <p>Sua inscrição no curso/atividade <strong>${titulo}</strong> foi confirmada com sucesso.</p>
+                        <h1 style="color: #2D9E6B;">Olá, ${nomeDestinatario}!</h1>
+                        <p>Sua inscrição em <strong>${titulo}</strong> foi confirmada com sucesso.</p>
                         <div style="background: #f5f7f8; padding: 20px; border-radius: 10px;">
                             <p><strong>Data:</strong> ${data}</p>
                             <p><strong>Local:</strong> ${local}</p>
