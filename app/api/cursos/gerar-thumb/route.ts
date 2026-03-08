@@ -53,7 +53,6 @@ export async function POST(req: Request) {
         const imgBuffer = await imgRes.arrayBuffer()
 
         // 3. Upload para o Supabase Storage
-        const supabase = createAdminClient()
         const fileName = `thumb-${Date.now()}.png`
 
         const { error: uploadError } = await supabase.storage
