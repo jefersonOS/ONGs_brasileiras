@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Calendar, Clock, Users, ArrowLeft } from 'lucide-react'
-import Image from 'next/image'
+import { Calendar, Clock, Users, ArrowLeft, GraduationCap } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { BotaoInscricao } from '@/components/portal/BotaoInscricao'
 
@@ -59,15 +58,18 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
                             </div>
                         </div>
 
-                        {curso.thumbnail_url && (
-                            <div className="hidden md:block w-72 h-44 rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl">
-                                <Image
+                        {curso.thumbnail_url ? (
+                            <div className="hidden md:block w-72 h-44 rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl flex-shrink-0">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
                                     src={curso.thumbnail_url}
                                     alt={curso.titulo}
-                                    width={288}
-                                    height={176}
                                     className="w-full h-full object-cover"
                                 />
+                            </div>
+                        ) : (
+                            <div className="hidden md:block w-72 h-44 rounded-3xl border-4 border-white/10 flex items-center justify-center flex-shrink-0">
+                                <GraduationCap className="w-16 h-16 text-white/20" />
                             </div>
                         )}
                     </div>
