@@ -31,7 +31,7 @@ export default function NovoCursoPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const handleCreate = async (e: React.FormEvent) => {
+    const handleCreate = async (e: React.FormEvent, statusOverride?: string) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
@@ -49,7 +49,7 @@ export default function NovoCursoPage() {
             visibilidade,
             presenca_minima: presencaMinima,
             conteudo_programatico: conteudoProgramatico,
-            status
+            status: statusOverride || status
         })
 
         if (insertError) {
@@ -155,18 +155,14 @@ export default function NovoCursoPage() {
                     </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-200 flex items-center justify-between">
-                    <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]">
-                        <option value="rascunho">Salvar como Rascunho</option>
-                        <option value="ativo">Deixar Ativo</option>
-                    </select>
-
-                    <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => router.back()} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">Cancelar</button>
-                        <button type="submit" disabled={loading} className="px-4 py-2 text-sm bg-[#1A3C4A] text-white rounded-md hover:bg-[#2E6B7A] transition-colors disabled:opacity-50">
-                            {loading ? 'Salvando...' : 'Salvar Curso'}
-                        </button>
-                    </div>
+                <div className="pt-6 border-t border-gray-200 flex items-center justify-end gap-3">
+                    <button type="button" onClick={() => router.back()} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors">Cancelar</button>
+                    <button type="button" onClick={e => handleCreate(e, 'rascunho')} disabled={loading} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 disabled:opacity-50">
+                        {loading ? 'Salvando...' : 'Salvar Rascunho'}
+                    </button>
+                    <button type="button" onClick={e => handleCreate(e, 'ativo')} disabled={loading} className="px-4 py-2 text-sm bg-[#2D9E6B] text-white rounded-md hover:bg-green-600 disabled:opacity-50">
+                        {loading ? 'Publicando...' : 'Publicar Curso'}
+                    </button>
                 </div>
             </form>
         </div>
