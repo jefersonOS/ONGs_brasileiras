@@ -109,24 +109,24 @@ export default async function PublicLandingPage() {
                                     </div>
                                 </div>
                                 <div className="p-8 flex-1 flex flex-col">
-                                    <h3 className="text-2xl font-black text-[#1A3C4A] mb-4 leading-tight group-hover:text-[var(--primary)] transition-colors">{curso.titulo}</h3>
-                                    <p className="text-gray-500 text-sm line-clamp-2 mb-8 font-medium">{curso.descricao}</p>
+                                    <h3 className="text-2xl font-black text-[#1A3C4A] mb-3 leading-tight group-hover:text-[var(--primary)] transition-all tracking-tighter">{curso.titulo}</h3>
+                                    <p className="text-gray-400 text-sm line-clamp-2 mb-8 font-medium leading-relaxed">{curso.descricao}</p>
 
-                                    <div className="mt-auto space-y-6">
-                                        <div className="flex items-center justify-between text-xs font-bold uppercase tracking-widest">
+                                    <div className="mt-auto">
+                                        <div className="flex items-center justify-between py-4 border-t border-gray-50 text-[9px] font-black uppercase tracking-[0.2em]">
                                             <div className="flex items-center gap-2 text-gray-400">
-                                                <CalendarDays className="w-4 h-4" /> {curso.carga_horaria}h de carga
+                                                <CalendarDays className="w-3.5 h-3.5 text-[var(--secondary)]" /> {curso.carga_horaria}H Carga
                                             </div>
                                             <div className={`flex items-center gap-2 ${vagasDisponiveis > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                                                <Users className="w-4 h-4" /> {vagasDisponiveis > 0 ? `${vagasDisponiveis} vagas` : 'Esgotado'}
+                                                <Users className="w-3.5 h-3.5" /> {vagasDisponiveis > 0 ? `${vagasDisponiveis} vagas` : 'Esgotado'}
                                             </div>
                                         </div>
 
                                         <Link
                                             href={`/cursos/${curso.id}`}
-                                            className="w-full py-4 bg-gray-50 text-[#1A3C4A] rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] text-center group-hover:bg-[var(--primary)] group-hover:text-white transition-all shadow-sm"
+                                            className="block w-full py-4 bg-gray-50 text-[#1A3C4A] rounded-2xl font-black uppercase text-[10px] tracking-[0.2em] text-center group-hover:bg-[var(--primary)] group-hover:text-white transition-all shadow-sm group-hover:shadow-lg group-hover:shadow-[var(--primary)]/20"
                                         >
-                                            Ver Detalhes
+                                            Ver Detalhes do Curso
                                         </Link>
                                     </div>
                                 </div>
@@ -154,19 +154,28 @@ export default async function PublicLandingPage() {
                     {atividades?.map(ativ => {
                         const inscritos = ativ.inscricoes?.length || 0
                         const vagasDisp = ativ.vagas ? ativ.vagas - inscritos : null
+                        // Tentar obter a primeira data do array de datas
+                        const primeiraData = ativ.datas?.[0]?.data || null
 
                         return (
-                            <div key={ativ.id} className="flex flex-col lg:flex-row gap-8 items-start lg:items-center p-8 bg-gray-50 rounded-[40px] hover:bg-white hover:shadow-xl transition-all border border-transparent hover:border-gray-100 group">
-                                <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-[32px] bg-white border border-gray-100 flex flex-col items-center justify-center flex-shrink-0 text-[var(--primary)] shadow-sm group-hover:scale-105 transition-transform">
-                                    <span className="text-[10px] uppercase font-black text-gray-400 mb-1">Início</span>
-                                    <span className="text-4xl font-black">--</span>
+                            <div key={ativ.id} className="flex flex-col lg:flex-row gap-8 items-start lg:items-center p-8 bg-gray-50/50 rounded-[40px] hover:bg-white hover:shadow-2xl transition-all border border-transparent hover:border-gray-100 group ring-1 ring-black/[0.01]">
+                                <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-[32px] bg-white border border-gray-100 flex flex-col items-center justify-center flex-shrink-0 text-[var(--primary)] shadow-sm group-hover:scale-105 transition-transform group-hover:shadow-lg group-hover:shadow-black/5">
+                                    <span className="text-[10px] uppercase font-black text-gray-400 mb-1 tracking-widest">Início</span>
+                                    {primeiraData ? (
+                                        <>
+                                            <span className="text-3xl font-black leading-none">{new Date(primeiraData + 'T12:00:00').getDate()}</span>
+                                            <span className="text-[10px] uppercase font-black text-gray-400">{new Date(primeiraData + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '')}</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-4xl font-black">--</span>
+                                    )}
                                 </div>
 
                                 <div className="flex-1">
-                                    <div className="flex flex-wrap items-center gap-4 mb-3">
-                                        <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white bg-[var(--primary)] px-3 py-1 rounded-full">{ativ.tipo}</span>
+                                    <div className="flex flex-wrap items-center gap-4 mb-4">
+                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white bg-[var(--primary)] px-4 py-1.5 rounded-full shadow-lg shadow-[var(--primary)]/20">{ativ.tipo}</span>
                                         {ativ.exige_inscricao && (
-                                            <span className="text-[9px] uppercase font-black text-orange-600 bg-orange-50 border border-orange-100 px-3 py-1 rounded-full">Inscrição Prévia</span>
+                                            <span className="text-[9px] uppercase font-black tracking-[0.1em] text-orange-600 bg-orange-50 border border-orange-100 px-3 py-1 rounded-full">Inscrição Obrigatória</span>
                                         )}
                                         {vagasDisp !== null && (
                                             <span className={`text-[9px] font-black uppercase tracking-widest ${vagasDisp > 0 ? 'text-green-600' : 'text-red-500'}`}>
@@ -174,12 +183,12 @@ export default async function PublicLandingPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <h3 className="text-3xl font-black text-[#1A3C4A] mb-3 leading-tight">{ativ.titulo}</h3>
-                                    <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 font-medium">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="w-4 h-4 text-[var(--secondary)]" /> {ativ.locais?.[0]?.rua || 'Sede da ONG'}
+                                    <h3 className="text-3xl font-black text-[#1A3C4A] mb-4 leading-tight tracking-tighter group-hover:text-[var(--primary)] transition-all">{ativ.titulo}</h3>
+                                    <div className="flex flex-wrap items-center gap-8 text-xs text-gray-400 font-black uppercase tracking-widest">
+                                        <div className="flex items-center gap-2 group-hover:text-gray-600 transition-colors">
+                                            <MapPin className="w-4 h-4 text-[var(--secondary)]" /> {ativ.locais?.[0]?.rua || 'Sede da Organização'}
                                         </div>
-                                        <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-2 group-hover:text-gray-600 transition-colors">
                                             <Users className="w-4 h-4 text-[var(--secondary)]" /> {ativ.publico_alvo || 'Público Geral'}
                                         </div>
                                     </div>
@@ -187,9 +196,9 @@ export default async function PublicLandingPage() {
 
                                 <Link
                                     href={`/atividades/${ativ.id}`}
-                                    className="px-10 py-5 bg-[var(--primary)] text-white text-xs font-black uppercase tracking-widest rounded-[24px] hover:bg-[var(--secondary)] transition-all shadow-lg shadow-[var(--primary)]/20 hover:shadow-[var(--secondary)]/30"
+                                    className="w-full lg:w-auto px-12 py-5 bg-[var(--primary)] text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-[24px] hover:bg-[var(--secondary)] transition-all shadow-xl shadow-[var(--primary)]/20 hover:shadow-[var(--secondary)]/30 text-center"
                                 >
-                                    Participar
+                                    Participar Agora
                                 </Link>
                             </div>
                         )
