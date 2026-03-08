@@ -172,10 +172,44 @@ export default function ConfiguracoesPage() {
 
         if (error) {
             setMessage({ type: 'error', text: 'Erro ao salvar: ' + error.message })
-        } else {
-            setMessage({ type: 'success', text: 'Configurações salvas com sucesso!' })
-            setTenant({ ...tenant, config_portal: newConfig })
+            setSaving(false)
+            return
         }
+
+        setTenant({ ...tenant, config_portal: newConfig })
+
+        // Registra domínio personalizado na Vercel automaticamente
+        const novoDominio = orgData.dominio_custom.trim().toLowerCase()
+        const dominioAnterior = tenant.dominio_custom || ''
+
+        if (novoDominio && novoDominio !== dominioAnterior) {
+            if (dominioAnterior) {
+                await fetch('/api/admin/dominio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dominio: dominioAnterior, action: 'remove' }),
+                })
+            }
+            const vercelRes = await fetch('/api/admin/dominio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dominio: novoDominio }),
+            })
+            const vercelData = await vercelRes.json()
+            if (!vercelData.ok) {
+                setMessage({ type: 'success', text: 'Configurações salvas! Aviso: ' + (vercelData.error || 'Não foi possível registrar o domínio na Vercel automaticamente.') })
+                setSaving(false)
+                return
+            }
+        } else if (!novoDominio && dominioAnterior) {
+            await fetch('/api/admin/dominio', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ dominio: dominioAnterior, action: 'remove' }),
+            })
+        }
+
+        setMessage({ type: 'success', text: 'Configurações salvas com sucesso!' })
         setSaving(false)
     }
 

@@ -1,11 +1,12 @@
--- Adiciona coluna slug à tabela tenants para roteamento por subdomínio
+-- Adiciona colunas para roteamento por subdomínio e domínio personalizado
 -- Execute este script no Supabase SQL Editor
 
 ALTER TABLE tenants
 ADD COLUMN IF NOT EXISTS slug text UNIQUE;
 
--- Índice para busca rápida por slug
-CREATE INDEX IF NOT EXISTS idx_tenants_slug ON tenants(slug);
+ALTER TABLE tenants
+ADD COLUMN IF NOT EXISTS dominio_custom text UNIQUE;
 
--- Exemplo: defina o slug da sua ONG existente (ajuste o id)
--- UPDATE tenants SET slug = 'nome-da-sua-ong' WHERE id = 'SEU_TENANT_ID';
+-- Índices para busca rápida
+CREATE INDEX IF NOT EXISTS idx_tenants_slug ON tenants(slug);
+CREATE INDEX IF NOT EXISTS idx_tenants_dominio_custom ON tenants(dominio_custom);
