@@ -56,14 +56,12 @@ export default function NovoCursoPage() {
         setThumbLoading(true)
         setThumbError(null)
         try {
-            const ext = file.name.split('.').pop()
-            const fileName = `thumb-${Date.now()}.${ext}`
-            const { error: uploadError } = await supabase.storage
-                .from('thumbnails')
-                .upload(fileName, file, { contentType: file.type, upsert: false })
-            if (uploadError) throw uploadError
-            const { data: { publicUrl } } = supabase.storage.from('thumbnails').getPublicUrl(fileName)
-            setThumbnailUrl(publicUrl)
+            const form = new FormData()
+            form.append('file', file)
+            const res = await fetch('/api/cursos/upload-thumb', { method: 'POST', body: form })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.error)
+            setThumbnailUrl(data.url)
         } catch (e: any) {
             setThumbError(e.message || 'Erro ao fazer upload')
         } finally {
