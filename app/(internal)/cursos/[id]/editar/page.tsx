@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2, Sparkles, RefreshCw, ImageIcon } from 'lucide-react'
+import { Plus, Trash2, Sparkles, RefreshCw, ImageIcon, Upload } from 'lucide-react'
 
 export default function EditarCursoPage() {
     const router = useRouter()
@@ -15,6 +15,7 @@ export default function EditarCursoPage() {
     const [thumbnailUrl, setThumbnailUrl] = useState('')
     const [thumbLoading, setThumbLoading] = useState(false)
     const [thumbError, setThumbError] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement | null>(null)
     const [categoria, setCategoria] = useState('')
     const [descricao, setDescricao] = useState('')
     const [cargaHoraria, setCargaHoraria] = useState<number | ''>('')
@@ -45,6 +46,25 @@ export default function EditarCursoPage() {
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
+
+    const handleUploadImagem = async (file: File) => {
+        setThumbLoading(true)
+        setThumbError(null)
+        try {
+            const ext = file.name.split('.').pop()
+            const fileName = `thumb-${Date.now()}.${ext}`
+            const { error: uploadError } = await supabase.storage
+                .from('thumbnails')
+                .upload(fileName, file, { contentType: file.type, upsert: false })
+            if (uploadError) throw uploadError
+            const { data: { publicUrl } } = supabase.storage.from('thumbnails').getPublicUrl(fileName)
+            setThumbnailUrl(publicUrl)
+        } catch (e: any) {
+            setThumbError(e.message || 'Erro ao fazer upload')
+        } finally {
+            setThumbLoading(false)
+        }
+    }
 
     const gerarThumbnail = async (tituloParam?: string) => {
         const t = (tituloParam ?? titulo).trim()
@@ -157,6 +177,22 @@ export default function EditarCursoPage() {
                                         <Sparkles className="w-3 h-3" />
                                         {thumbLoading ? 'Gerando...' : 'Gerar com IA'}
                                     </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={thumbLoading}
+                                        className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200 rounded-md hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <Upload className="w-3 h-3" />
+                                        Fazer upload
+                                    </button>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadImagem(f) }}
+                                    />
                                     {thumbError && <p className="text-xs text-red-500">{thumbError}</p>}
                                     <div className="mt-1">
                                         <p className="text-xs text-gray-400 mb-1">Ou cole uma URL:</p>
