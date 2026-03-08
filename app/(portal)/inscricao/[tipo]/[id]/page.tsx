@@ -23,7 +23,7 @@ function CampoInput({ campo, value, onChange }: { campo: CampoFormulario, value:
         return (
             <select value={value} onChange={e => onChange(e.target.value)} required={campo.obrigatorio} className={base + " bg-white"}>
                 <option value="">Selecione uma opção...</option>
-                {campo.opcoes.map(op => <option key={op} value={op}>{op}</option>)}
+                {campo.opcoes.filter(Boolean).map(op => <option key={op} value={op}>{op}</option>)}
             </select>
         )
     }

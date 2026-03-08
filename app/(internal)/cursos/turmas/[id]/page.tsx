@@ -152,12 +152,14 @@ function FormBuilder({ campos, setCampos }: { campos: CampoFormulario[], setCamp
                                 <div>
                                     <label className="block text-xs font-medium text-gray-600 mb-1">Opções (uma por linha)</label>
                                     <textarea
-                                        rows={3}
+                                        rows={4}
                                         value={campo.opcoes.join('\n')}
-                                        onChange={e => updateCampo(campo.id, { opcoes: e.target.value.split('\n').filter(Boolean) })}
+                                        onChange={e => updateCampo(campo.id, { opcoes: e.target.value.split('\n') })}
+                                        onKeyDown={e => e.stopPropagation()}
                                         className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none"
                                         placeholder={"Opção 1\nOpção 2\nOpção 3"}
                                     />
+                                    <p className="text-[11px] text-gray-400 mt-1">Pressione Enter para adicionar uma nova opção</p>
                                 </div>
                             )}
                         </div>
