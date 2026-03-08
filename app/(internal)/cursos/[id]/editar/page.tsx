@@ -52,10 +52,11 @@ export default function EditarCursoPage() {
         setThumbLoading(true)
         setThumbError(null)
         try {
+            const { data: { user } } = await supabase.auth.getUser()
             const res = await fetch('/api/cursos/gerar-thumb', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ titulo: t }),
+                body: JSON.stringify({ titulo: t, tenantId: user?.user_metadata?.tenant_id }),
             })
             const data = await res.json()
             if (!res.ok) throw new Error(data.error)

@@ -1,24 +1,19 @@
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 
 export async function POST(req: Request) {
     try {
-        const { titulo } = await req.json()
+        const { titulo, tenantId } = await req.json()
         if (!titulo?.trim()) return Response.json({ error: 'Título obrigatório' }, { status: 400 })
 
-        // Busca a chave OpenAI da mesma forma que o ai-service.ts:
-        // 1. Chave do tenant (config_portal.ai_key_openai)
-        // 2. Fallback para variável de ambiente OPENAI_API_KEY
-        const supabaseAuth = createClient()
-        const { data: { user } } = await supabaseAuth.auth.getUser()
-
+        // Busca a chave via admin client (não depende de cookie de auth)
+        const supabase = createAdminClient()
         let apiKey = process.env.OPENAI_API_KEY
 
-        if (user?.user_metadata?.tenant_id) {
-            const { data: tenant } = await supabaseAuth
+        if (tenantId) {
+            const { data: tenant } = await supabase
                 .from('tenants')
                 .select('config_portal')
-                .eq('id', user.user_metadata.tenant_id)
+                .eq('id', tenantId)
                 .single()
 
             const tenantKey = tenant?.config_portal?.ai_key_openai
