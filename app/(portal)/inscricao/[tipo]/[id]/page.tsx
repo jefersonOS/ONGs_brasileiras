@@ -118,13 +118,14 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
 
             const p = perfilData || {}
             setPerfil(p)
-            setNome(p.nome || currentUser.user_metadata?.nome || '')
-            setEmail(p.email || currentUser.email || '')
-            setWhatsapp(p.whatsapp || currentUser.user_metadata?.whatsapp || '')
-            setCpf(p.cpf || '')
-            setRg(p.rg || '')
-            setDataNascimento(p.data_nascimento || '')
-            setEndereco(p.endereco || '')
+            // Campos iniciam vazios — usuário deve preencher tudo a cada matrícula
+            setNome('')
+            setEmail('')
+            setWhatsapp('')
+            setCpf('')
+            setRg('')
+            setDataNascimento('')
+            setEndereco('')
 
             // Buscar curso/turma
             if (tipo === 'curso') {
@@ -135,12 +136,10 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     setTurma(t)
                     if (t?.formulario_inscricao?.length) {
                         setFormulario(t.formulario_inscricao)
+                        // Todos os campos do formulário iniciam vazios
                         const initialRespostas: Record<string, string> = {}
                         t.formulario_inscricao.forEach((campo: CampoFormulario) => {
-                            if (campo.tipo === 'email') initialRespostas[campo.id] = currentUser.email || ''
-                            else if (campo.tipo === 'texto' && campo.label.toLowerCase().includes('nome')) initialRespostas[campo.id] = p.nome || currentUser.user_metadata?.nome || ''
-                            else if (campo.is_whatsapp) initialRespostas[campo.id] = p.whatsapp || currentUser.user_metadata?.whatsapp || ''
-                            else initialRespostas[campo.id] = ''
+                            initialRespostas[campo.id] = ''
                         })
                         setRespostas(initialRespostas)
                     }
