@@ -78,9 +78,10 @@ export function BotaoInscricao({
         )
     }
 
+    const inscricaoUrl = `/inscricao/${tipo}/${entidadeId}${turmaId ? `?turma=${turmaId}` : ''}`
     const href = isLogged
-        ? `/inscricao/${tipo}/${entidadeId}${turmaId ? `?turma=${turmaId}` : ''}`
-        : `/login?redirectTo=/cursos/${entidadeId}` // Simplificado
+        ? inscricaoUrl
+        : `/register?perfil=cidadao&redirect=${encodeURIComponent(inscricaoUrl)}`
 
     return (
         <Link
