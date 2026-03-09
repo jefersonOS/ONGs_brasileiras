@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2, Calendar, Users, FileText, ChevronDown, ChevronUp, GripVertical, Phone, ToggleLeft, ToggleRight } from 'lucide-react'
+import { Plus, Trash2, Calendar, Users, FileText, ChevronDown, ChevronUp, GripVertical, Phone, ToggleLeft, ToggleRight, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 
 type TipoCampo = 'texto' | 'email' | 'telefone' | 'numero' | 'selecao' | 'textarea'
@@ -244,6 +244,9 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
+                    <Link href="/cursos" className="text-xs font-black uppercase text-[#2D9E6B] hover:underline flex items-center gap-1 mb-2">
+                        <ArrowLeft className="w-3 h-3" /> Voltar para Cursos
+                    </Link>
                     <h1 className="text-2xl font-bold text-[#1A3C4A]">Turmas</h1>
                     <p className="text-gray-500 mt-1">Curso: {curso?.titulo || 'Carregando...'}</p>
                 </div>
