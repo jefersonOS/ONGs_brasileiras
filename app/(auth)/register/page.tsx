@@ -174,9 +174,15 @@ function RegisterForm() {
                     </button>
                 </form>
 
-                <p className="text-[10px] text-center text-gray-400 font-bold uppercase tracking-wider">
-                    Já possui acesso? <Link href="/login" className="text-[#2D9E6B] hover:underline">Entre por aqui</Link>
-                </p>
+                <div className="border-t border-gray-100 pt-6 space-y-2">
+                    <p className="text-sm font-bold text-center text-gray-700">Já possui cadastro?</p>
+                    <Link
+                        href={redirectAfter ? `/login?redirect=${encodeURIComponent(redirectAfter)}` : '/login'}
+                        className="block w-full text-center py-4 border-2 border-[#1A3C4A] text-[#1A3C4A] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[#1A3C4A] hover:text-white transition-all"
+                    >
+                        Entrar na minha conta
+                    </Link>
+                </div>
             </div>
         </div>
     )
