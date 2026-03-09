@@ -38,24 +38,55 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // Buscar os dados da entidade
     let tituloEntidade = 'Evento'
     let cargaHoraria = '0'
+    let tenantId: string | null = null
+    let certConfig: any = {}
+    let nomeInstituicao = 'Organização'
 
     if (certificado.inscricoes.entidade_tipo === 'curso') {
-        const { data: curso } = await supabase.from('cursos').select('titulo, carga_horaria').eq('id', certificado.inscricoes.entidade_id).single()
+        const { data: curso } = await supabase
+            .from('cursos')
+            .select('titulo, carga_horaria, tenant_id')
+            .eq('id', certificado.inscricoes.entidade_id)
+            .single()
         if (curso) {
             tituloEntidade = curso.titulo
             cargaHoraria = curso.carga_horaria?.toString() || '0'
+            tenantId = curso.tenant_id || null
         }
     } else {
-        const { data: atividade } = await supabase.from('atividades').select('titulo').eq('id', certificado.inscricoes.entidade_id).single()
+        const { data: atividade } = await supabase
+            .from('atividades')
+            .select('titulo, tenant_id')
+            .eq('id', certificado.inscricoes.entidade_id)
+            .single()
         if (atividade) {
             tituloEntidade = atividade.titulo
+            tenantId = atividade.tenant_id || null
         }
     }
 
-    // Nome Instituição - Para buscar o org precisariamos ler o Tenant. 
-    // Como o certificado tem tenant no top level (ou indiretamente pelo User/Entidade), 
-    // vamos fixar para MVP ou ler do primeiro tenant encontrado, já que o PDF rodará em multi-tenant isolado e aqui estamos simplificando
-    const nomeInstituicao = "Organização NGO Brasil"
+    if (tenantId) {
+        const { data: tenant } = await supabase
+            .from('tenants')
+            .select('nome, slug, dominio_custom, config_portal')
+            .eq('id', tenantId)
+            .single()
+        if (tenant) {
+            nomeInstituicao = tenant.nome || 'Organização'
+            const cfg = tenant.config_portal || {}
+            const siteValidacao = tenant.dominio_custom || (tenant.slug ? `${tenant.slug}.nexori.com.br` : 'nexori.com.br')
+            certConfig = {
+                nome_responsavel: cfg.cert_nome_responsavel || undefined,
+                cargo_responsavel: cfg.cert_cargo_responsavel || undefined,
+                site_validacao: siteValidacao,
+                cor_primaria: cfg.cor_primaria || undefined,
+                cor_secundaria: cfg.cor_secundaria || undefined,
+                titulo: cfg.cert_titulo || undefined,
+                texto_pre: cfg.cert_texto_pre || undefined,
+                texto_pos: cfg.cert_texto_pos || undefined,
+            }
+        }
+    }
 
     try {
         const pdfBytes = await PDFService.generateCertificate(
@@ -65,7 +96,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
             new Date(certificado.emitido_em),
             cargaHoraria,
             nomeInstituicao,
-            certificado.codigo_validacao
+            certificado.codigo_validacao,
+            certConfig
         )
 
         return new NextResponse(Buffer.from(pdfBytes), {

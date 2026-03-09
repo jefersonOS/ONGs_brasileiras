@@ -61,7 +61,11 @@ export default function ConfiguracoesPage() {
     const [certData, setCertData] = useState({
         nome_responsavel: '',
         cargo_responsavel: '',
-        assinatura_url: ''
+        assinatura_url: '',
+        titulo: '',
+        texto_pre: '',
+        texto_pos: '',
+        site_validacao: '',
     })
 
     const fetchData = useCallback(async () => {
@@ -116,7 +120,11 @@ export default function ConfiguracoesPage() {
             setCertData({
                 nome_responsavel: cfg.cert_nome_responsavel || '',
                 cargo_responsavel: cfg.cert_cargo_responsavel || '',
-                assinatura_url: cfg.cert_assinatura_url || ''
+                assinatura_url: cfg.cert_assinatura_url || '',
+                titulo: cfg.cert_titulo || '',
+                texto_pre: cfg.cert_texto_pre || '',
+                texto_pos: cfg.cert_texto_pos || '',
+                site_validacao: cfg.cert_site_validacao || '',
             })
         }
         setLoading(false)
@@ -152,7 +160,11 @@ export default function ConfiguracoesPage() {
             whatsapp_evolution_instance: whatsappData.evo_instance,
             cert_nome_responsavel: certData.nome_responsavel,
             cert_cargo_responsavel: certData.cargo_responsavel,
-            cert_assinatura_url: certData.assinatura_url
+            cert_assinatura_url: certData.assinatura_url,
+            cert_titulo: certData.titulo,
+            cert_texto_pre: certData.texto_pre,
+            cert_texto_pos: certData.texto_pos,
+            cert_site_validacao: certData.site_validacao,
         }
 
         const { error } = await supabase
@@ -492,21 +504,32 @@ export default function ConfiguracoesPage() {
                             <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
                                 <h3 className="text-xl font-black text-[#1A3C4A] mb-8">Configuração de Certificados</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="space-y-8">
+                                    <div className="space-y-6">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Responsável pela Assinatura</label>
-                                            <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({ ...certData, nome_responsavel: e.target.value })} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold" />
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Responsável pela Assinatura</label>
+                                            <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({ ...certData, nome_responsavel: e.target.value })} placeholder="Ex: Maria Silva" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1">Cargo do Responsável</label>
-                                            <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({ ...certData, cargo_responsavel: e.target.value })} className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold" />
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Cargo do Responsável</label>
+                                            <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({ ...certData, cargo_responsavel: e.target.value })} placeholder="Ex: Coordenadora Geral" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
                                         </div>
-                                        <div className="space-y-4">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Selo / Logo do Certificado</label>
-                                            <div className="w-full p-8 border-2 border-dashed border-gray-100 rounded-[32px] flex flex-col items-center justify-center gap-4 hover:border-[var(--secondary)] transition-all cursor-pointer group">
-                                                <Upload className="w-8 h-8 text-gray-300 group-hover:text-[var(--secondary)]" />
-                                                <span className="text-[10px] font-black uppercase text-gray-400">Clique para fazer upload</span>
-                                            </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Título do Certificado</label>
+                                            <input type="text" value={certData.titulo} onChange={e => setCertData({ ...certData, titulo: e.target.value })} placeholder="CERTIFICADO DE CONCLUSÃO" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                            <p className="text-[10px] text-gray-400 ml-1">Deixe em branco para usar o padrão conforme o tipo (certificado ou comprovante).</p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Texto antes do nome</label>
+                                            <input type="text" value={certData.texto_pre} onChange={e => setCertData({ ...certData, texto_pre: e.target.value })} placeholder="Certificamos que" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Texto após o nome</label>
+                                            <input type="text" value={certData.texto_pos} onChange={e => setCertData({ ...certData, texto_pos: e.target.value })} placeholder="concluiu com êxito o curso de" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Site de Validação <span className="normal-case text-gray-300 font-medium">(opcional)</span></label>
+                                            <input type="text" value={certData.site_validacao} onChange={e => setCertData({ ...certData, site_validacao: e.target.value })} placeholder="portal.suaong.org.br" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                            <p className="text-[10px] text-gray-400 ml-1">Se vazio, usa o domínio personalizado configurado na aba Organização ou o subdomínio padrão <span className="font-mono">slug.nexori.com.br</span>.</p>
                                         </div>
                                     </div>
 
@@ -518,15 +541,22 @@ export default function ConfiguracoesPage() {
                                                     <div className="w-12 h-12 bg-white/10 rounded-lg"></div>
                                                     <div className="w-16 h-16 border-2 border-white/5 rounded-full flex items-center justify-center text-[8px] opacity-20">SELO</div>
                                                 </div>
-                                                <h4 className="text-xl font-black mb-4 tracking-tight">CERTIFICADO</h4>
+                                                <h4 className="text-xl font-black mb-4 tracking-tight">{certData.titulo || 'CERTIFICADO DE CONCLUSÃO'}</h4>
                                                 <div className="h-1.5 w-1/2 bg-[var(--secondary)] mb-6"></div>
-                                                <p className="text-[8px] leading-relaxed opacity-60">Certificamos que [NOME] participou do curso [TÍTULO] com carga horária de [X] horas.</p>
+                                                <p className="text-[8px] leading-relaxed opacity-60">
+                                                    {certData.texto_pre || 'Certificamos que'} [NOME] {certData.texto_pos || 'concluiu com êxito o curso de'} [TÍTULO].
+                                                </p>
 
                                                 <div className="mt-12 pt-4 border-t border-white/10">
                                                     <p className="text-[10px] font-black">{certData.nome_responsavel || 'Nome do Responsável'}</p>
                                                     <p className="text-[8px] opacity-40 uppercase tracking-widest leading-none mt-1">{certData.cargo_responsavel || 'Cargo'}</p>
                                                 </div>
                                             </div>
+                                            {certData.site_validacao && (
+                                                <p className="mt-4 text-[8px] opacity-40 font-mono text-center">
+                                                    Verificável em: {certData.site_validacao}/validar/[CÓDIGO]
+                                                </p>
+                                            )}
                                         </div>
                                         <button type="button" className="w-full py-4 mt-8 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Ver PDF de Exemplo</button>
                                     </div>

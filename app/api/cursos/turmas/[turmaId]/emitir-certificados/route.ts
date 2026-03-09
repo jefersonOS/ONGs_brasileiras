@@ -19,6 +19,27 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
 
         if (!turma) return new Response('Turma não encontrada', { status: 404 })
 
+        // 2. Buscar dados do tenant para personalização do certificado
+        const { data: tenant } = await supabase
+            .from('tenants')
+            .select('nome, slug, dominio_custom, config_portal')
+            .eq('id', tenantId)
+            .single()
+
+        const cfg = tenant?.config_portal || {}
+        const siteValidacao = tenant?.dominio_custom || (tenant?.slug ? `${tenant.slug}.nexori.com.br` : 'nexori.com.br')
+        const certConfig = {
+            nome_responsavel: cfg.cert_nome_responsavel || undefined,
+            cargo_responsavel: cfg.cert_cargo_responsavel || undefined,
+            site_validacao: siteValidacao,
+            cor_primaria: cfg.cor_primaria || undefined,
+            cor_secundaria: cfg.cor_secundaria || undefined,
+            titulo: cfg.cert_titulo || undefined,
+            texto_pre: cfg.cert_texto_pre || undefined,
+            texto_pos: cfg.cert_texto_pos || undefined,
+        }
+        const nomeInstituicao = tenant?.nome || 'Organização'
+
         const results = []
 
         for (const inscricaoId of inscritosIds) {
@@ -40,8 +61,9 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
                 'certificado',
                 new Date(),
                 turma.curso.carga_horaria || 0,
-                'Organização NGO Brasil', // Idealmente viria do tenant
-                codigo
+                nomeInstituicao,
+                codigo,
+                certConfig
             )
 
             // Upload PDF via admin client (bypasses RLS)

@@ -1,5 +1,23 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 
+interface CertConfig {
+    titulo?: string
+    texto_pre?: string
+    texto_pos?: string
+    nome_responsavel?: string
+    cargo_responsavel?: string
+    site_validacao?: string
+    cor_primaria?: string
+    cor_secundaria?: string
+}
+
+function hexToRgb(hex: string) {
+    const r = parseInt(hex.slice(1, 3), 16) / 255
+    const g = parseInt(hex.slice(3, 5), 16) / 255
+    const b = parseInt(hex.slice(5, 7), 16) / 255
+    return rgb(r, g, b)
+}
+
 export class PDFService {
     static async generateCertificate(
         nomeCidadao: string,
@@ -8,7 +26,8 @@ export class PDFService {
         dataEmissao: Date,
         cargaHoraria: string | number,
         nomeInstituicao: string,
-        codigoValidacao: string
+        codigoValidacao: string,
+        config: CertConfig = {}
     ): Promise<Uint8Array> {
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
@@ -23,8 +42,8 @@ export class PDFService {
         const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique)
 
         // Cores
-        const primaryColor = rgb(0.10, 0.24, 0.29) // Equivalente aproximado ao #1A3C4A
-        const highlightColor = rgb(0.18, 0.62, 0.42) // Equivalente ao #2D9E6B
+        const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.29)
+        const highlightColor = config.cor_secundaria ? hexToRgb(config.cor_secundaria) : rgb(0.18, 0.62, 0.42)
         const textColor = rgb(0.3, 0.3, 0.3)
 
         // Bordas e Design Base
@@ -56,7 +75,7 @@ export class PDFService {
         })
 
         // Título Principal
-        const tituloDoc = tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO'
+        const tituloDoc = config.titulo || (tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO')
         page.drawText(tituloDoc, {
             x: width / 2 - (fontTitle.widthOfTextAtSize(tituloDoc, 36) / 2),
             y: height - 160,
@@ -66,9 +85,9 @@ export class PDFService {
         })
 
         // Corpo do Texto
-        const textPre = tipo === 'certificado'
+        const textPre = config.texto_pre || (tipo === 'certificado'
             ? 'Certificamos que'
-            : 'Comprovamos para os devidos fins que'
+            : 'Comprovamos para os devidos fins que')
 
         page.drawText(textPre, {
             x: width / 2 - (fontText.widthOfTextAtSize(textPre, 18) / 2),
@@ -88,9 +107,9 @@ export class PDFService {
         })
 
         // Continuação do Texto
-        const textPos = tipo === 'certificado'
+        const textPos = config.texto_pos || (tipo === 'certificado'
             ? `concluiu com êxito o curso de`
-            : `esteve presente na atividade de`
+            : `esteve presente na atividade de`)
 
         page.drawText(textPos, {
             x: width / 2 - (fontText.widthOfTextAtSize(textPos, 18) / 2),
@@ -138,13 +157,29 @@ export class PDFService {
             color: primaryColor,
         })
 
-        page.drawText('Assinatura Eletrônica / Coordenação', {
-            x: width - 285,
+        const nomeResponsavel = config.nome_responsavel || 'Assinatura Eletrônica / Coordenação'
+        const nomeResponsavelWidth = fontItalic.widthOfTextAtSize(nomeResponsavel, 12)
+        const sigX = width - 300 + ((200 - nomeResponsavelWidth) / 2)
+
+        page.drawText(nomeResponsavel, {
+            x: sigX,
             y: 100,
             size: 12,
             font: fontItalic,
             color: textColor,
         })
+
+        if (config.cargo_responsavel) {
+            const cargoWidth = fontText.widthOfTextAtSize(config.cargo_responsavel, 10)
+            const cargoX = width - 300 + ((200 - cargoWidth) / 2)
+            page.drawText(config.cargo_responsavel, {
+                x: cargoX,
+                y: 84,
+                size: 10,
+                font: fontText,
+                color: rgb(0.5, 0.5, 0.5),
+            })
+        }
 
         // Código de Validação
         const authStr = `Código de Autenticação: ${codigoValidacao}`
@@ -155,7 +190,8 @@ export class PDFService {
             font: fontText,
             color: rgb(0.5, 0.5, 0.5),
         })
-        const authRefStr = `Verificável em: ngobrasil.com/validar/${codigoValidacao}`
+        const siteValidacao = config.site_validacao || 'nexori.com.br'
+        const authRefStr = `Verificável em: ${siteValidacao}/validar/${codigoValidacao}`
         page.drawText(authRefStr, {
             x: width / 2 - (fontText.widthOfTextAtSize(authRefStr, 10) / 2),
             y: 30,
