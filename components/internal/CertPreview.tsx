@@ -29,6 +29,10 @@ interface CertData {
     nome_mediador: string
     cargo_mediador: string
     assinatura_mediador_url: string
+    off_x_mediador: number
+    off_y_mediador: number
+    off_x_responsavel: number
+    off_y_responsavel: number
 }
 
 interface CertPreviewProps {
@@ -70,6 +74,10 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
     const posYRodape = certData.pos_y_rodape || 0
     const posXConteudo = certData.pos_x_conteudo || 0
     const posXRodape = certData.pos_x_rodape || 0
+    const offXMed = certData.off_x_mediador || 0
+    const offYMed = certData.off_y_mediador || 0
+    const offXResp = certData.off_x_responsavel || 0
+    const offYResp = certData.off_y_responsavel || 0
 
     const outerW = Math.round(W * scale)
     const outerH = Math.round(H * scale)
@@ -215,61 +223,67 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                         )}
                     </div>
 
-                    {/* Rodapé: mediador (opcional) + data + assinatura */}
+                    {/* Rodapé: blocos posicionados individualmente */}
+                    {/* Data */}
                     <div style={{
                         position: 'absolute',
-                        bottom: 55 + posYRodape,
-                        left: 80 + posXRodape,
-                        right: 80 - posXRodape,
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-end',
+                        bottom: certData.nome_mediador ? 18 + posYRodape : 55 + posYRodape,
+                        left: 0, right: 0,
+                        textAlign: 'center',
+                        fontSize: certData.nome_mediador ? 10 : 13,
+                        color: textClr,
+                        transform: `translateX(${posXRodape}px)`,
                     }}>
-                        {/* Esquerda: mediador ou data */}
-                        {certData.nome_mediador ? (
-                            <div style={{ textAlign: 'center', minWidth: 200 }}>
-                                {certData.assinatura_mediador_url && (
-                                    <img
-                                        src={certData.assinatura_mediador_url}
-                                        alt="Assinatura mediador"
-                                        style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }}
-                                    />
-                                )}
-                                <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
-                                    <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{certData.nome_mediador}</div>
-                                    {certData.cargo_mediador && (
-                                        <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_mediador}</div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ fontSize: 13, color: textClr }}>
-                                Emitido em {new Date().toLocaleDateString('pt-BR')}
-                            </div>
-                        )}
+                        Emitido em {new Date().toLocaleDateString('pt-BR')}
+                    </div>
 
-                        {/* Centro: data (só quando há mediador) */}
-                        {certData.nome_mediador && (
-                            <div style={{ fontSize: 11, color: textClr, textAlign: 'center' }}>
-                                Emitido em {new Date().toLocaleDateString('pt-BR')}
-                            </div>
-                        )}
-
-                        {/* Direita: responsável */}
-                        <div style={{ textAlign: 'center', minWidth: 200 }}>
-                            {certData.assinatura_url && (
+                    {/* Mediador(a) — esquerda, só se preenchido */}
+                    {certData.nome_mediador && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: 55 + posYRodape,
+                            left: 80 + posXRodape,
+                            textAlign: 'center',
+                            minWidth: 200,
+                            transform: `translate(${offXMed}px, ${-offYMed}px)`,
+                        }}>
+                            {certData.assinatura_mediador_url && (
                                 <img
-                                    src={certData.assinatura_url}
-                                    alt="Assinatura"
+                                    src={certData.assinatura_mediador_url}
+                                    alt="Assinatura mediador"
                                     style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }}
                                 />
                             )}
                             <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
-                                <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{responsavel}</div>
-                                {certData.cargo_responsavel && (
-                                    <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_responsavel}</div>
+                                <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{certData.nome_mediador}</div>
+                                {certData.cargo_mediador && (
+                                    <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_mediador}</div>
                                 )}
                             </div>
+                        </div>
+                    )}
+
+                    {/* Responsável — direita */}
+                    <div style={{
+                        position: 'absolute',
+                        bottom: 55 + posYRodape,
+                        right: 80 - posXRodape,
+                        textAlign: 'center',
+                        minWidth: 200,
+                        transform: `translate(${-offXResp}px, ${-offYResp}px)`,
+                    }}>
+                        {certData.assinatura_url && (
+                            <img
+                                src={certData.assinatura_url}
+                                alt="Assinatura"
+                                style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }}
+                            />
+                        )}
+                        <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
+                            <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{responsavel}</div>
+                            {certData.cargo_responsavel && (
+                                <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_responsavel}</div>
+                            )}
                         </div>
                     </div>
 

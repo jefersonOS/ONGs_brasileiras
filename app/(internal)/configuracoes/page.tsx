@@ -88,6 +88,10 @@ export default function ConfiguracoesPage() {
         nome_mediador: '',
         cargo_mediador: '',
         assinatura_mediador_url: '',
+        off_x_mediador: 0,
+        off_y_mediador: 0,
+        off_x_responsavel: 0,
+        off_y_responsavel: 0,
     })
     const [uploadingFundo, setUploadingFundo] = useState(false)
     const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -172,6 +176,10 @@ export default function ConfiguracoesPage() {
                 nome_mediador: cfg.cert_nome_mediador || '',
                 cargo_mediador: cfg.cert_cargo_mediador || '',
                 assinatura_mediador_url: cfg.cert_assinatura_mediador_url || '',
+                off_x_mediador: cfg.cert_off_x_mediador ?? 0,
+                off_y_mediador: cfg.cert_off_y_mediador ?? 0,
+                off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
+                off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
             })
         }
         setLoading(false)
@@ -233,6 +241,10 @@ export default function ConfiguracoesPage() {
             cert_nome_mediador: certData.nome_mediador,
             cert_cargo_mediador: certData.cargo_mediador,
             cert_assinatura_mediador_url: certData.assinatura_mediador_url,
+            cert_off_x_mediador: certData.off_x_mediador,
+            cert_off_y_mediador: certData.off_y_mediador,
+            cert_off_x_responsavel: certData.off_x_responsavel,
+            cert_off_y_responsavel: certData.off_y_responsavel,
         }
 
         const { error } = await supabase
@@ -805,6 +817,30 @@ export default function ConfiguracoesPage() {
                                                 </label>
                                                 {certData.assinatura_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover</button>}
                                             </div>
+                                            {/* Posição individual */}
+                                            <div className="pt-2 border-t border-gray-200 space-y-3">
+                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">Posição</p>
+                                                {([
+                                                    { label: '↔ Horizontal', key: 'off_x_responsavel', negL: '←', posL: '→' },
+                                                    { label: '↕ Vertical', key: 'off_y_responsavel', negL: '↓', posL: '↑' },
+                                                ] as const).map(({ label, key, negL, posL }) => (
+                                                    <div key={key} className="flex items-center gap-2">
+                                                        <span className="text-[9px] text-gray-300 w-16 shrink-0">{label}</span>
+                                                        <span className="text-[9px] text-gray-300">{negL}</span>
+                                                        <input type="range" min={-300} max={300}
+                                                            value={certData[key as keyof typeof certData] as number}
+                                                            onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
+                                                            className="flex-1 accent-[#2D9E6B]" />
+                                                        <span className="text-[9px] text-gray-300">{posL}</span>
+                                                        <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
+                                                            {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
+                                                        </span>
+                                                        {(certData[key as keyof typeof certData] as number) !== 0 && (
+                                                            <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
 
                                         {/* Mediador(a) */}
@@ -843,6 +879,30 @@ export default function ConfiguracoesPage() {
                                                     }} />
                                                 </label>
                                                 {certData.assinatura_mediador_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_mediador_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover</button>}
+                                            </div>
+                                            {/* Posição individual */}
+                                            <div className="pt-2 border-t border-gray-200 space-y-3">
+                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">Posição</p>
+                                                {([
+                                                    { label: '↔ Horizontal', key: 'off_x_mediador', negL: '←', posL: '→' },
+                                                    { label: '↕ Vertical', key: 'off_y_mediador', negL: '↓', posL: '↑' },
+                                                ] as const).map(({ label, key, negL, posL }) => (
+                                                    <div key={key} className="flex items-center gap-2">
+                                                        <span className="text-[9px] text-gray-300 w-16 shrink-0">{label}</span>
+                                                        <span className="text-[9px] text-gray-300">{negL}</span>
+                                                        <input type="range" min={-300} max={300}
+                                                            value={certData[key as keyof typeof certData] as number}
+                                                            onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
+                                                            className="flex-1 accent-[#2D9E6B]" />
+                                                        <span className="text-[9px] text-gray-300">{posL}</span>
+                                                        <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
+                                                            {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
+                                                        </span>
+                                                        {(certData[key as keyof typeof certData] as number) !== 0 && (
+                                                            <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
                                         </div>
 

@@ -38,6 +38,10 @@ interface CertConfig {
     nome_mediador?: string
     cargo_mediador?: string
     assinatura_mediador_url?: string
+    off_x_mediador?: number
+    off_y_mediador?: number
+    off_x_responsavel?: number
+    off_y_responsavel?: number
 }
 
 function hexToRgb(hex: string) {
@@ -79,6 +83,10 @@ export class PDFService {
         const posYRodape = config.pos_y_rodape || 0
         const posXConteudo = config.pos_x_conteudo || 0
         const posXRodape = config.pos_x_rodape || 0
+        const offXMed = config.off_x_mediador || 0
+        const offYMed = config.off_y_mediador || 0
+        const offXResp = config.off_x_responsavel || 0
+        const offYResp = config.off_y_responsavel || 0
 
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
@@ -248,7 +256,8 @@ export class PDFService {
 
         // Bloco do Mediador(a) — lado esquerdo (só se preenchido)
         if (hasMediador) {
-            const medX = 80 + posXRodape        // âncora esquerda do bloco (200px de largura)
+            const medX = 80 + posXRodape + offXMed
+            const medY = baseY + offYMed
             const medBlockW = 200
 
             if (config.assinatura_mediador_url) {
@@ -259,15 +268,15 @@ export class PDFService {
                     const mImg = isJpg ? await pdfDoc.embedJpg(mBytes) : await pdfDoc.embedPng(mBytes)
                     const mH = 40
                     const mW = mImg.width * (mH / mImg.height)
-                    page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 125 + baseY, width: mW, height: mH })
+                    page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 125 + medY, width: mW, height: mH })
                 } catch (e) {
                     console.warn('Assinatura mediador não carregou:', e)
                 }
             }
 
             page.drawLine({
-                start: { x: medX, y: 120 + baseY },
-                end: { x: medX + medBlockW, y: 120 + baseY },
+                start: { x: medX, y: 120 + medY },
+                end: { x: medX + medBlockW, y: 120 + medY },
                 thickness: 1,
                 color: primaryColor,
             })
@@ -275,7 +284,7 @@ export class PDFService {
             const medNomeW = fontItalic.widthOfTextAtSize(config.nome_mediador!, 12)
             page.drawText(config.nome_mediador!, {
                 x: medX + (medBlockW - medNomeW) / 2,
-                y: 100 + baseY,
+                y: 100 + medY,
                 size: 12,
                 font: fontItalic,
                 color: textColor,
@@ -285,7 +294,7 @@ export class PDFService {
                 const medCargoW = fontText.widthOfTextAtSize(config.cargo_mediador, 10)
                 page.drawText(config.cargo_mediador, {
                     x: medX + (medBlockW - medCargoW) / 2,
-                    y: 84 + baseY,
+                    y: 84 + medY,
                     size: 10,
                     font: fontText,
                     color: rgb(0.5, 0.5, 0.5),
@@ -294,6 +303,9 @@ export class PDFService {
         }
 
         // Bloco do Responsável — lado direito
+        const respX = width - 300 + posXRodape + offXResp
+        const respY = baseY + offYResp
+
         if (config.assinatura_url) {
             try {
                 const sigRes = await fetch(config.assinatura_url)
@@ -302,26 +314,24 @@ export class PDFService {
                 const sigImg = isJpg ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
                 const sigH = 40
                 const sigW = sigImg.width * (sigH / sigImg.height)
-                page.drawImage(sigImg, { x: width - 300 + (200 - sigW) / 2 + posXRodape, y: 125 + baseY, width: sigW, height: sigH })
+                page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 125 + respY, width: sigW, height: sigH })
             } catch (e) {
                 console.warn('Assinatura do certificado não carregou:', e)
             }
         }
 
         page.drawLine({
-            start: { x: width - 300 + posXRodape, y: 120 + baseY },
-            end: { x: width - 100 + posXRodape, y: 120 + baseY },
+            start: { x: respX, y: 120 + respY },
+            end: { x: respX + 200, y: 120 + respY },
             thickness: 1,
             color: primaryColor,
         })
 
         const nomeResponsavel = config.nome_responsavel || 'Assinatura Eletrônica / Coordenação'
         const nomeResponsavelWidth = fontItalic.widthOfTextAtSize(nomeResponsavel, 12)
-        const sigX = width - 300 + ((200 - nomeResponsavelWidth) / 2)
-
         page.drawText(nomeResponsavel, {
-            x: sigX + posXRodape,
-            y: 100 + baseY,
+            x: respX + (200 - nomeResponsavelWidth) / 2,
+            y: 100 + respY,
             size: 12,
             font: fontItalic,
             color: textColor,
@@ -329,10 +339,9 @@ export class PDFService {
 
         if (config.cargo_responsavel) {
             const cargoWidth = fontText.widthOfTextAtSize(config.cargo_responsavel, 10)
-            const cargoX = width - 300 + ((200 - cargoWidth) / 2)
             page.drawText(config.cargo_responsavel, {
-                x: cargoX + posXRodape,
-                y: 84 + baseY,
+                x: respX + (200 - cargoWidth) / 2,
+                y: 84 + respY,
                 size: 10,
                 font: fontText,
                 color: rgb(0.5, 0.5, 0.5),

@@ -106,6 +106,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 nome_mediador: cfg.cert_nome_mediador || undefined,
                 cargo_mediador: cfg.cert_cargo_mediador || undefined,
                 assinatura_mediador_url: cfg.cert_assinatura_mediador_url || undefined,
+                off_x_mediador: cfg.cert_off_x_mediador ?? 0,
+                off_y_mediador: cfg.cert_off_y_mediador ?? 0,
+                off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
+                off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
             }
         }
     }
