@@ -7,6 +7,7 @@ import {
     FileText, Users, Upload, Eye,
     CheckCircle, AlertCircle, Loader2, LayoutTemplate, Trash2
 } from 'lucide-react'
+import { CertPreview } from '@/components/internal/CertPreview'
 
 export default function ConfiguracoesPage() {
     const supabase = createClient()
@@ -548,7 +549,20 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab === 'certificados' && (
-                            <div className="space-y-6 animate-in fade-in duration-500">
+                            <div className="animate-in fade-in duration-500">
+                            <div className="grid grid-cols-1 2xl:grid-cols-[1fr_390px] gap-6">
+                            <div className="space-y-6">
+                                {/* Preview mobile (oculto em telas grandes) */}
+                                <div className="2xl:hidden bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-x-auto">
+                                    <CertPreview
+                                        certData={certData}
+                                        corPrimaria={visualData.cor_primaria}
+                                        corSecundaria={visualData.cor_secundaria}
+                                        tenantNome={tenant?.nome || ''}
+                                        scale={0.38}
+                                    />
+                                </div>
+
                                 {/* Section: Textos */}
                                 <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
                                     <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Textos</h4>
@@ -790,6 +804,26 @@ export default function ConfiguracoesPage() {
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                            </div>
+
+                            {/* Preview sticky */}
+                            <div className="hidden 2xl:block">
+                                <div className="sticky top-6 space-y-4">
+                                    <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                        <CertPreview
+                                            certData={certData}
+                                            corPrimaria={visualData.cor_primaria}
+                                            corSecundaria={visualData.cor_secundaria}
+                                            tenantNome={tenant?.nome || ''}
+                                            scale={0.41}
+                                        />
+                                    </div>
+                                    <p className="text-[9px] text-gray-300 text-center font-bold uppercase tracking-widest">O preview é aproximado. O PDF final pode ter pequenas diferenças.</p>
+                                </div>
+                            </div>
+
+                            </div>
                             </div>
                         )}
 
