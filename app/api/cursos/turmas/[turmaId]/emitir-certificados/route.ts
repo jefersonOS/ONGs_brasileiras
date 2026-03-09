@@ -56,6 +56,9 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             pos_y_rodape: cfg.cert_pos_y_rodape ?? 0,
             pos_x_conteudo: cfg.cert_pos_x_conteudo ?? 0,
             pos_x_rodape: cfg.cert_pos_x_rodape ?? 0,
+            nome_mediador: cfg.cert_nome_mediador || undefined,
+            cargo_mediador: cfg.cert_cargo_mediador || undefined,
+            assinatura_mediador_url: cfg.cert_assinatura_mediador_url || undefined,
         }
         const nomeInstituicao = tenant?.nome || 'Organização'
 

@@ -85,10 +85,14 @@ export default function ConfiguracoesPage() {
         pos_y_rodape: 0,
         pos_x_conteudo: 0,
         pos_x_rodape: 0,
+        nome_mediador: '',
+        cargo_mediador: '',
+        assinatura_mediador_url: '',
     })
     const [uploadingFundo, setUploadingFundo] = useState(false)
     const [uploadingLogo, setUploadingLogo] = useState(false)
     const [uploadingAssinatura, setUploadingAssinatura] = useState(false)
+    const [uploadingMediador, setUploadingMediador] = useState(false)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -165,6 +169,9 @@ export default function ConfiguracoesPage() {
                 pos_y_rodape: cfg.cert_pos_y_rodape ?? 0,
                 pos_x_conteudo: cfg.cert_pos_x_conteudo ?? 0,
                 pos_x_rodape: cfg.cert_pos_x_rodape ?? 0,
+                nome_mediador: cfg.cert_nome_mediador || '',
+                cargo_mediador: cfg.cert_cargo_mediador || '',
+                assinatura_mediador_url: cfg.cert_assinatura_mediador_url || '',
             })
         }
         setLoading(false)
@@ -223,6 +230,9 @@ export default function ConfiguracoesPage() {
             cert_pos_y_rodape: certData.pos_y_rodape,
             cert_pos_x_conteudo: certData.pos_x_conteudo,
             cert_pos_x_rodape: certData.pos_x_rodape,
+            cert_nome_mediador: certData.nome_mediador,
+            cert_cargo_mediador: certData.cargo_mediador,
+            cert_assinatura_mediador_url: certData.assinatura_mediador_url,
         }
 
         const { error } = await supabase
@@ -753,46 +763,89 @@ export default function ConfiguracoesPage() {
                                     </div>
                                 </div>
 
-                                {/* Section: Assinatura */}
+                                {/* Section: Assinaturas */}
                                 <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Assinatura</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-5">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Assinaturas</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                                        {/* Responsável */}
+                                        <div className="space-y-5 p-5 bg-gray-50 rounded-2xl">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-[#1A3C4A]">Responsável (direita)</p>
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome do Responsável</label>
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome</label>
                                                 <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({...certData, nome_responsavel: e.target.value})} placeholder="Ex: Maria Silva" className={inputCls} />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cargo</label>
                                                 <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({...certData, cargo_responsavel: e.target.value})} placeholder="Ex: Coordenadora Geral" className={inputCls} />
                                             </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem da Assinatura</label>
+                                                <label className={`flex flex-col items-center justify-center gap-2 w-full p-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingAssinatura ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
+                                                    {certData.assinatura_url ? (
+                                                        <div className="w-full space-y-2">
+                                                            <img src={certData.assinatura_url} alt="Assinatura" className="h-14 mx-auto object-contain" />
+                                                            <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <Upload className="w-5 h-5 text-gray-300" />
+                                                            <span className="text-[10px] font-black uppercase text-gray-400">{uploadingAssinatura ? 'Enviando...' : 'Upload (PNG/JPG)'}</span>
+                                                        </>
+                                                    )}
+                                                    <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                        const file = e.target.files?.[0]; if (!file) return
+                                                        setUploadingAssinatura(true)
+                                                        const fd = new FormData(); fd.append('file', file)
+                                                        const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                        const data = await res.json()
+                                                        if (data.url) setCertData(prev => ({...prev, assinatura_url: data.url}))
+                                                        setUploadingAssinatura(false); e.target.value = ''
+                                                    }} />
+                                                </label>
+                                                {certData.assinatura_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover</button>}
+                                            </div>
                                         </div>
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem da Assinatura</label>
-                                            <label className={`flex flex-col items-center justify-center gap-2 w-full p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingAssinatura ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
-                                                {certData.assinatura_url ? (
-                                                    <div className="w-full space-y-2">
-                                                        <img src={certData.assinatura_url} alt="Assinatura" className="h-16 mx-auto object-contain" />
-                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <Upload className="w-6 h-6 text-gray-300" />
-                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingAssinatura ? 'Enviando...' : 'Upload assinatura (PNG/JPG)'}</span>
-                                                    </>
-                                                )}
-                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
-                                                    const file = e.target.files?.[0]; if (!file) return
-                                                    setUploadingAssinatura(true)
-                                                    const fd = new FormData(); fd.append('file', file)
-                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
-                                                    const data = await res.json()
-                                                    if (data.url) setCertData(prev => ({...prev, assinatura_url: data.url}))
-                                                    setUploadingAssinatura(false); e.target.value = ''
-                                                }} />
-                                            </label>
-                                            {certData.assinatura_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover assinatura</button>}
+
+                                        {/* Mediador(a) */}
+                                        <div className="space-y-5 p-5 bg-gray-50 rounded-2xl">
+                                            <p className="text-[10px] font-black uppercase tracking-widest text-[#1A3C4A]">Mediador(a) (esquerda) <span className="font-normal text-gray-400 normal-case tracking-normal">— opcional</span></p>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome</label>
+                                                <input type="text" value={certData.nome_mediador} onChange={e => setCertData({...certData, nome_mediador: e.target.value})} placeholder="Ex: João Oliveira" className={inputCls} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cargo</label>
+                                                <input type="text" value={certData.cargo_mediador} onChange={e => setCertData({...certData, cargo_mediador: e.target.value})} placeholder="Ex: Mediador(a)" className={inputCls} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem da Assinatura</label>
+                                                <label className={`flex flex-col items-center justify-center gap-2 w-full p-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingMediador ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
+                                                    {certData.assinatura_mediador_url ? (
+                                                        <div className="w-full space-y-2">
+                                                            <img src={certData.assinatura_mediador_url} alt="Assinatura mediador" className="h-14 mx-auto object-contain" />
+                                                            <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
+                                                        </div>
+                                                    ) : (
+                                                        <>
+                                                            <Upload className="w-5 h-5 text-gray-300" />
+                                                            <span className="text-[10px] font-black uppercase text-gray-400">{uploadingMediador ? 'Enviando...' : 'Upload (PNG/JPG)'}</span>
+                                                        </>
+                                                    )}
+                                                    <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                        const file = e.target.files?.[0]; if (!file) return
+                                                        setUploadingMediador(true)
+                                                        const fd = new FormData(); fd.append('file', file)
+                                                        const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                        const data = await res.json()
+                                                        if (data.url) setCertData(prev => ({...prev, assinatura_mediador_url: data.url}))
+                                                        setUploadingMediador(false); e.target.value = ''
+                                                    }} />
+                                                </label>
+                                                {certData.assinatura_mediador_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_mediador_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover</button>}
+                                            </div>
                                         </div>
+
                                     </div>
                                 </div>
 

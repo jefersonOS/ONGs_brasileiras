@@ -26,6 +26,9 @@ interface CertData {
     pos_y_rodape: number
     pos_x_conteudo: number
     pos_x_rodape: number
+    nome_mediador: string
+    cargo_mediador: string
+    assinatura_mediador_url: string
 }
 
 interface CertPreviewProps {
@@ -212,7 +215,7 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                         )}
                     </div>
 
-                    {/* Rodapé: data + assinatura */}
+                    {/* Rodapé: mediador (opcional) + data + assinatura */}
                     <div style={{
                         position: 'absolute',
                         bottom: 55 + posYRodape,
@@ -222,16 +225,43 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                         justifyContent: 'space-between',
                         alignItems: 'flex-end',
                     }}>
-                        <div style={{ fontSize: 13, color: textClr }}>
-                            Emitido em {new Date().toLocaleDateString('pt-BR')}
-                        </div>
+                        {/* Esquerda: mediador ou data */}
+                        {certData.nome_mediador ? (
+                            <div style={{ textAlign: 'center', minWidth: 200 }}>
+                                {certData.assinatura_mediador_url && (
+                                    <img
+                                        src={certData.assinatura_mediador_url}
+                                        alt="Assinatura mediador"
+                                        style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }}
+                                    />
+                                )}
+                                <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
+                                    <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{certData.nome_mediador}</div>
+                                    {certData.cargo_mediador && (
+                                        <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_mediador}</div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div style={{ fontSize: 13, color: textClr }}>
+                                Emitido em {new Date().toLocaleDateString('pt-BR')}
+                            </div>
+                        )}
 
+                        {/* Centro: data (só quando há mediador) */}
+                        {certData.nome_mediador && (
+                            <div style={{ fontSize: 11, color: textClr, textAlign: 'center' }}>
+                                Emitido em {new Date().toLocaleDateString('pt-BR')}
+                            </div>
+                        )}
+
+                        {/* Direita: responsável */}
                         <div style={{ textAlign: 'center', minWidth: 200 }}>
                             {certData.assinatura_url && (
                                 <img
                                     src={certData.assinatura_url}
                                     alt="Assinatura"
-                                    style={{ height: 36, objectFit: 'contain', marginBottom: 4, display: 'block', margin: '0 auto 4px' }}
+                                    style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }}
                                 />
                             )}
                             <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
