@@ -1,10 +1,28 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { WhatsAppService } from '@/lib/whatsapp-service'
 
 export async function POST(req: Request) {
     try {
         const { tipo, id, turmaId, cidadaoId, tenantId, dadosFormulario, telefoneWhatsApp } = await req.json()
         const supabase = createClient()
+        const adminSupabase = createAdminClient()
+
+        // Garantir que o usuário existe em public.users antes de inserir a inscrição
+        // (pode não existir ainda se o trigger do Supabase ainda não executou após o cadastro)
+        const { data: authUser } = await adminSupabase.auth.admin.getUserById(cidadaoId)
+        if (authUser?.user) {
+            const u = authUser.user
+            await adminSupabase.from('users').upsert({
+                id: u.id,
+                email: u.email,
+                nome: u.user_metadata?.nome || '',
+                tipo: u.user_metadata?.tipo || 'cidadao',
+                role: u.user_metadata?.role || 'cidadao',
+                tenant_id: u.user_metadata?.tenant_id || null,
+                ativo: true,
+            }, { onConflict: 'id', ignoreDuplicates: true })
+        }
 
         // 1. Criar Inscrição com dados do formulário
         const { data: inscricao, error: insError } = await supabase
