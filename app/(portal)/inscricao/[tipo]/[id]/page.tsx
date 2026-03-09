@@ -76,9 +76,6 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
     const [email, setEmail] = useState('')
     const [whatsapp, setWhatsapp] = useState('')
     const [cpf, setCpf] = useState('')
-    const [rg, setRg] = useState('')
-    const [dataNascimento, setDataNascimento] = useState('')
-    const [endereco, setEndereco] = useState('')
     const [savingPerfil, setSavingPerfil] = useState(false)
 
     const [loading, setLoading] = useState(true)
@@ -112,7 +109,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
             // Buscar perfil completo de public.users
             const { data: perfilData } = await supabase
                 .from('users')
-                .select('nome, email, whatsapp, cpf, rg, data_nascimento, endereco')
+                .select('nome, email, whatsapp, cpf')
                 .eq('id', currentUser.id)
                 .single()
 
@@ -122,9 +119,6 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
             setEmail('')
             setWhatsapp('')
             setCpf('')
-            setRg('')
-            setDataNascimento('')
-            setEndereco('')
 
             // Buscar curso/turma
             if (tipo === 'curso') {
@@ -168,9 +162,6 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     email,
                     whatsapp,
                     cpf,
-                    rg,
-                    data_nascimento: dataNascimento || null,
-                    endereco,
                 }).eq('id', user.id)
             }
             // Se não existe, o upsert na API de confirmar irá criar quando a inscrição for submetida
@@ -333,18 +324,6 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                                 <div>
                                     <label className={labelClass}>CPF</label>
                                     <input type="text" value={cpf} onChange={e => setCpf(e.target.value)} className={inputClass} placeholder="000.000.000-00" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>RG</label>
-                                    <input type="text" value={rg} onChange={e => setRg(e.target.value)} className={inputClass} placeholder="0000000" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Data de Nascimento</label>
-                                    <input type="date" value={dataNascimento} onChange={e => setDataNascimento(e.target.value)} className={inputClass} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Endereço</label>
-                                    <input type="text" value={endereco} onChange={e => setEndereco(e.target.value)} className={inputClass} placeholder="Rua, número, bairro..." />
                                 </div>
                             </div>
 
