@@ -11,12 +11,37 @@ export default async function MinhaAreaPage() {
 
     if (!user) redirect('/login')
 
-    // 1. Buscar Inscrições (Cursos + Atividades)
-    const { data: inscricoes } = await supabase
+    // 1. Buscar Inscrições de Cursos
+    const { data: inscricoesCursos } = await supabase
         .from('inscricoes')
-        .select('*, turmas(*, curso:cursos(*)), atividades(*)')
+        .select('*, turmas(*, curso:cursos(*))')
         .eq('cidadao_id', user.id)
+        .eq('entidade_tipo', 'curso')
         .order('created_at', { ascending: false })
+
+    // 2. Buscar Inscrições de Atividades separadamente
+    const { data: inscricoesAtividades } = await supabase
+        .from('inscricoes')
+        .select('*, entidade_id, created_at, status')
+        .eq('cidadao_id', user.id)
+        .eq('entidade_tipo', 'atividade')
+        .order('created_at', { ascending: false })
+
+    // Buscar títulos das atividades
+    let atividadesMap: Record<string, any> = {}
+    if (inscricoesAtividades?.length) {
+        const ids = inscricoesAtividades.map(i => i.entidade_id)
+        const { data: atividades } = await supabase
+            .from('atividades')
+            .select('id, titulo, tipo')
+            .in('id', ids)
+        atividades?.forEach(a => { atividadesMap[a.id] = a })
+    }
+
+    const inscricoes = [
+        ...(inscricoesCursos || []),
+        ...(inscricoesAtividades || []).map(i => ({ ...i, _atividade: atividadesMap[i.entidade_id] })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
     // 2. Buscar Certificados
     const { data: certificados } = await supabase
@@ -49,7 +74,7 @@ export default async function MinhaAreaPage() {
                             </h2>
                             <div className="grid grid-cols-1 gap-6">
                                 {inscricoes?.map(ins => {
-                                    const item = ins.turmas?.curso || ins.atividades
+                                    const item = ins.turmas?.curso || ins._atividade
                                     if (!item) return null
 
                                     return (
