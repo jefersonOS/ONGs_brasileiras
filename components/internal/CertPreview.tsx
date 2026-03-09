@@ -24,6 +24,8 @@ interface CertData {
     cor_nome: string
     pos_y_conteudo: number
     pos_y_rodape: number
+    pos_x_conteudo: number
+    pos_x_rodape: number
 }
 
 interface CertPreviewProps {
