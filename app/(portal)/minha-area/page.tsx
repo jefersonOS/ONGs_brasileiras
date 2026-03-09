@@ -43,10 +43,10 @@ export default async function MinhaAreaPage() {
         ...(inscricoesAtividades || []).map(i => ({ ...i, _atividade: atividadesMap[i.entidade_id] })),
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-    // 2. Buscar Certificados
+    // 2. Buscar Certificados (via inscricao → turma → curso)
     const { data: certificados } = await supabase
         .from('certificados')
-        .select('*, turmas(*, curso:cursos(*))')
+        .select('*, inscricoes(turma_id, turmas(*, curso:cursos(*)))')
         .eq('cidadao_id', user.id)
 
     return (
@@ -124,9 +124,9 @@ export default async function MinhaAreaPage() {
                             <div className="space-y-4">
                                 {certificados?.map(cert => (
                                     <div key={cert.id} className="bg-white rounded-3xl p-6 border border-gray-100 shadow-xl shadow-black/5 hover:scale-105 transition-transform">
-                                        <h4 className="text-sm font-black text-[#1A3C4A] mb-4">{cert.turmas?.curso?.titulo}</h4>
+                                        <h4 className="text-sm font-black text-[#1A3C4A] mb-4">{cert.inscricoes?.turmas?.curso?.titulo || 'Certificado'}</h4>
                                         <a
-                                            href={cert.pdf_url}
+                                            href={`/api/certificados/${cert.id}`}
                                             target="_blank"
                                             className="flex items-center justify-between w-full p-4 bg-teal-50 text-[var(--secondary)] rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-[var(--secondary)] hover:text-white transition-all"
                                         >

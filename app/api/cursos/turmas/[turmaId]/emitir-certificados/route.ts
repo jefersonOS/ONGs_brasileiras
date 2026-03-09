@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { PDFService } from '@/lib/pdf-service'
 import { WhatsAppService } from '@/lib/whatsapp-service'
 
@@ -7,6 +8,7 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
         const { turmaId } = params
         const { inscritosIds, tenantId } = await req.json()
         const supabase = createClient()
+        const adminSupabase = createAdminClient()
 
         // 1. Buscar dados da turma e curso
         const { data: turma } = await supabase
@@ -42,9 +44,9 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
                 codigo
             )
 
-            // Upload PDF
+            // Upload PDF via admin client (bypasses RLS)
             const fileName = `${tenantId}/certificados/${codigo}.pdf`
-            const { error: uploadError } = await supabase.storage
+            const { error: uploadError } = await adminSupabase.storage
                 .from('certificados')
                 .upload(fileName, pdfBytes, {
                     contentType: 'application/pdf',
@@ -56,10 +58,10 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
                 continue
             }
 
-            const { data: { publicUrl } } = supabase.storage.from('certificados').getPublicUrl(fileName)
+            const { data: { publicUrl } } = adminSupabase.storage.from('certificados').getPublicUrl(fileName)
 
             // Salvar no Banco
-            const { data: cert, error: certError } = await supabase.from('certificados').insert({
+            const { data: cert, error: certError } = await adminSupabase.from('certificados').insert({
                 inscricao_id: inscricao.id,
                 cidadao_id: inscricao.users.id,
                 tipo: 'certificado',

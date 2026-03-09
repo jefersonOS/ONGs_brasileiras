@@ -30,20 +30,25 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                 .select(`
                     id, 
                     users(id, nome, cpf, whatsapp, email),
-                    presencas(id, presente),
+                    presencas(id, presente, encontro_id),
                     certificados(id, status, codigo_validacao, url_pdf)
                 `)
                 .eq('turma_id', turmaId)
                 .eq('status', 'confirmada')
 
             if (inscritos) {
-                const totalEncontros = turmaData?.encontros?.length || 0
+                // Calcular total de encontros distintos a partir das presenças registradas
+                const allEncontroIds = new Set(
+                    inscritos.flatMap((ins: any) => ins.presencas?.map((p: any) => p.encontro_id) || [])
+                )
+                const totalEncontros = allEncontroIds.size || 0
                 const processed = inscritos.map((ins: any) => {
                     const presencasConfirmadas = ins.presencas?.filter((p: any) => p.presente).length || 0
-                    const percentual = totalEncontros > 0 ? Math.round((presencasConfirmadas / totalEncontros) * 100) : 0
+                    const percentual = totalEncontros > 0 ? Math.round((presencasConfirmadas / totalEncontros) * 100) : (presencasConfirmadas > 0 ? 100 : 0)
                     return {
                         ...ins,
                         presencas_count: presencasConfirmadas,
+                        totalEncontros,
                         percentual,
                         apto: percentual >= (cursoData?.presenca_minima || 75),
                         certificado: ins.certificados?.[0] || null
@@ -118,7 +123,7 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
                     { label: 'Total Inscrições', value: participantes.length, icon: FileText, color: 'text-blue-500' },
-                    { label: 'Encontros Totais', value: turma?.encontros?.length || 0, icon: AlertCircle, color: 'text-orange-500' },
+                    { label: 'Encontros Totais', value: participantes[0]?.totalEncontros || 0, icon: AlertCircle, color: 'text-orange-500' },
                     { label: 'Alunos Aptos', value: totalAptos, icon: CheckCircle2, color: 'text-green-500' },
                     { label: 'Certificados Emitidos', value: jaEmitidos, icon: Award, color: 'text-[#2D9E6B]' },
                 ].map((stat, i) => (
@@ -136,7 +141,7 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                     <thead>
                         <tr className="bg-gray-50/50 border-b border-gray-100">
                             <th className="px-8 py-6 text-[10px] font-black uppercase text-gray-400">Aluno</th>
-                            <th className="px-8 py-6 text-[10px] font-black uppercase text-gray-400">Presenças ({turma?.encontros?.length})</th>
+                            <th className="px-8 py-6 text-[10px] font-black uppercase text-gray-400">Presenças ({participantes[0]?.totalEncontros || 0})</th>
                             <th className="px-8 py-6 text-[10px] font-black uppercase text-gray-400 text-center">Desempenho</th>
                             <th className="px-8 py-6 text-[10px] font-black uppercase text-gray-400">Status</th>
                             <th className="px-8 py-6 text-[10px] font-black uppercase text-gray-400">Ações</th>
@@ -157,7 +162,7 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                                     </div>
                                 </td>
                                 <td className="px-8 py-6 text-sm font-bold text-gray-700">
-                                    {p.presencas_count} de {turma?.encontros?.length}
+                                    {p.presencas_count} de {p.totalEncontros}
                                 </td>
                                 <td className="px-8 py-6">
                                     <div className="flex flex-col items-center gap-1">
