@@ -805,7 +805,6 @@ export default function ConfiguracoesPage() {
                                     </div>
                                 </div>
                             </div>
-                            </div>
 
                             {/* Preview sticky */}
                             <div className="hidden 2xl:block">
