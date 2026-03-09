@@ -66,7 +66,9 @@ export default function ConfiguracoesPage() {
         texto_pre: '',
         texto_pos: '',
         site_validacao: '',
+        fundo_url: '',
     })
+    const [uploadingFundo, setUploadingFundo] = useState(false)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -125,6 +127,7 @@ export default function ConfiguracoesPage() {
                 texto_pre: cfg.cert_texto_pre || '',
                 texto_pos: cfg.cert_texto_pos || '',
                 site_validacao: cfg.cert_site_validacao || '',
+                fundo_url: cfg.cert_fundo_url || '',
             })
         }
         setLoading(false)
@@ -161,6 +164,7 @@ export default function ConfiguracoesPage() {
             cert_nome_responsavel: certData.nome_responsavel,
             cert_cargo_responsavel: certData.cargo_responsavel,
             cert_assinatura_url: certData.assinatura_url,
+            cert_fundo_url: certData.fundo_url || null,
             cert_titulo: certData.titulo,
             cert_texto_pre: certData.texto_pre,
             cert_texto_pos: certData.texto_pos,
@@ -531,25 +535,69 @@ export default function ConfiguracoesPage() {
                                             <input type="text" value={certData.site_validacao} onChange={e => setCertData({ ...certData, site_validacao: e.target.value })} placeholder="portal.suaong.org.br" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
                                             <p className="text-[10px] text-gray-400 ml-1">Se vazio, usa o domínio personalizado configurado na aba Organização ou o subdomínio padrão <span className="font-mono">slug.nexori.com.br</span>.</p>
                                         </div>
+
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Imagem de Fundo do Certificado</label>
+                                            <p className="text-[10px] text-gray-400 ml-1">Use PNG ou JPG no formato A4 paisagem (2480 × 1754 px recomendado). O texto será sobreposto.</p>
+                                            <label className={`flex flex-col items-center justify-center gap-3 w-full p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingFundo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[var(--secondary)]'}`}>
+                                                {certData.fundo_url ? (
+                                                    <div className="w-full space-y-3">
+                                                        <img src={certData.fundo_url} alt="Fundo do certificado" className="w-full rounded-xl object-cover aspect-video border border-gray-100" />
+                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Imagem carregada — clique para substituir</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-8 h-8 text-gray-300" />
+                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingFundo ? 'Enviando...' : 'Clique para fazer upload'}</span>
+                                                    </>
+                                                )}
+                                                <input
+                                                    type="file"
+                                                    accept="image/png,image/jpeg"
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (!file) return
+                                                        setUploadingFundo(true)
+                                                        const fd = new FormData()
+                                                        fd.append('file', file)
+                                                        const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                        const data = await res.json()
+                                                        if (data.url) setCertData(prev => ({ ...prev, fundo_url: data.url }))
+                                                        setUploadingFundo(false)
+                                                        e.target.value = ''
+                                                    }}
+                                                />
+                                            </label>
+                                            {certData.fundo_url && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCertData(prev => ({ ...prev, fundo_url: '' }))}
+                                                    className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest ml-1"
+                                                >
+                                                    Remover imagem de fundo
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="bg-[#1A3C4A] rounded-[40px] p-8 text-white flex flex-col justify-between shadow-2xl shadow-black/20">
                                         <div>
                                             <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Visualização do Certificado</span>
-                                            <div className="mt-8 border border-white/10 rounded-2xl p-6 relative overflow-hidden bg-white/5">
-                                                <div className="flex justify-between mb-10">
-                                                    <div className="w-12 h-12 bg-white/10 rounded-lg"></div>
-                                                    <div className="w-16 h-16 border-2 border-white/5 rounded-full flex items-center justify-center text-[8px] opacity-20">SELO</div>
-                                                </div>
-                                                <h4 className="text-xl font-black mb-4 tracking-tight">{certData.titulo || 'CERTIFICADO DE CONCLUSÃO'}</h4>
-                                                <div className="h-1.5 w-1/2 bg-[var(--secondary)] mb-6"></div>
-                                                <p className="text-[8px] leading-relaxed opacity-60">
-                                                    {certData.texto_pre || 'Certificamos que'} [NOME] {certData.texto_pos || 'concluiu com êxito o curso de'} [TÍTULO].
-                                                </p>
-
-                                                <div className="mt-12 pt-4 border-t border-white/10">
-                                                    <p className="text-[10px] font-black">{certData.nome_responsavel || 'Nome do Responsável'}</p>
-                                                    <p className="text-[8px] opacity-40 uppercase tracking-widest leading-none mt-1">{certData.cargo_responsavel || 'Cargo'}</p>
+                                            <div className="mt-8 border border-white/10 rounded-2xl p-6 relative overflow-hidden" style={{ background: certData.fundo_url ? 'transparent' : 'rgba(255,255,255,0.05)' }}>
+                                                {certData.fundo_url && (
+                                                    <img src={certData.fundo_url} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl opacity-80" />
+                                                )}
+                                                <div className="relative z-10">
+                                                    <h4 className="text-xl font-black mb-2 tracking-tight drop-shadow">{certData.titulo || 'CERTIFICADO DE CONCLUSÃO'}</h4>
+                                                    <div className="h-1 w-1/2 bg-[var(--secondary)] mb-4"></div>
+                                                    <p className="text-[8px] leading-relaxed opacity-80 drop-shadow">
+                                                        {certData.texto_pre || 'Certificamos que'} [NOME] {certData.texto_pos || 'concluiu com êxito o curso de'} [TÍTULO].
+                                                    </p>
+                                                    <div className="mt-10 pt-3 border-t border-white/20">
+                                                        <p className="text-[10px] font-black drop-shadow">{certData.nome_responsavel || 'Nome do Responsável'}</p>
+                                                        <p className="text-[8px] opacity-50 uppercase tracking-widest leading-none mt-1">{certData.cargo_responsavel || 'Cargo'}</p>
+                                                    </div>
                                                 </div>
                                             </div>
                                             {certData.site_validacao && (

@@ -37,6 +37,7 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             titulo: cfg.cert_titulo || undefined,
             texto_pre: cfg.cert_texto_pre || undefined,
             texto_pos: cfg.cert_texto_pos || undefined,
+            fundo_url: cfg.cert_fundo_url || undefined,
         }
         const nomeInstituicao = tenant?.nome || 'Organização'
 

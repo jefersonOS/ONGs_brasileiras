@@ -84,6 +84,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 titulo: cfg.cert_titulo || undefined,
                 texto_pre: cfg.cert_texto_pre || undefined,
                 texto_pos: cfg.cert_texto_pos || undefined,
+                fundo_url: cfg.cert_fundo_url || undefined,
             }
         }
     }

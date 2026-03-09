@@ -9,6 +9,7 @@ interface CertConfig {
     site_validacao?: string
     cor_primaria?: string
     cor_secundaria?: string
+    fundo_url?: string
 }
 
 function hexToRgb(hex: string) {
@@ -45,6 +46,21 @@ export class PDFService {
         const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.29)
         const highlightColor = config.cor_secundaria ? hexToRgb(config.cor_secundaria) : rgb(0.18, 0.62, 0.42)
         const textColor = rgb(0.3, 0.3, 0.3)
+
+        // Imagem de fundo (template da ONG)
+        if (config.fundo_url) {
+            try {
+                const imgRes = await fetch(config.fundo_url)
+                const imgBytes = await imgRes.arrayBuffer()
+                const isJpg = config.fundo_url.toLowerCase().match(/\.(jpg|jpeg)/)
+                const bgImage = isJpg
+                    ? await pdfDoc.embedJpg(imgBytes)
+                    : await pdfDoc.embedPng(imgBytes)
+                page.drawImage(bgImage, { x: 0, y: 0, width, height })
+            } catch (e) {
+                console.warn('Não foi possível carregar imagem de fundo do certificado:', e)
+            }
+        }
 
         // Bordas e Design Base
         page.drawRectangle({
