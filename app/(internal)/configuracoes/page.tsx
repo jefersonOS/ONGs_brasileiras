@@ -98,6 +98,13 @@ export default function ConfiguracoesPage() {
     const [uploadingAssinatura, setUploadingAssinatura] = useState(false)
     const [uploadingMediador, setUploadingMediador] = useState(false)
 
+    // Dados de exemplo para o preview (não são salvos)
+    const [preview, setPreview] = useState({
+        aluno: 'MARIA DA SILVA SANTOS',
+        curso: 'Capacitação em Gestão de Projetos',
+        ch: '40',
+    })
+
     const fetchData = useCallback(async () => {
         setLoading(true)
         const { data: { user } } = await supabase.auth.getUser()
@@ -587,14 +594,33 @@ export default function ConfiguracoesPage() {
                             <div className="grid grid-cols-1 2xl:grid-cols-[1fr_390px] gap-6">
                             <div className="space-y-6">
                                 {/* Preview mobile (oculto em telas grandes) */}
-                                <div className="2xl:hidden bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-x-auto">
-                                    <CertPreview
-                                        certData={certData}
-                                        corPrimaria={visualData.cor_primaria}
-                                        corSecundaria={visualData.cor_secundaria}
-                                        tenantNome={tenant?.nome || ''}
-                                        scale={0.38}
-                                    />
+                                <div className="2xl:hidden space-y-3">
+                                    <div className="bg-white p-4 rounded-[24px] shadow-xl shadow-black/5 border border-gray-50 grid grid-cols-3 gap-2">
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Aluno</label>
+                                            <input type="text" value={preview.aluno} onChange={e => setPreview(p => ({...p, aluno: e.target.value}))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Curso</label>
+                                            <input type="text" value={preview.curso} onChange={e => setPreview(p => ({...p, curso: e.target.value}))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">C.H. (h)</label>
+                                            <input type="text" value={preview.ch} onChange={e => setPreview(p => ({...p, ch: e.target.value}))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
+                                        </div>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-x-auto">
+                                        <CertPreview
+                                            certData={certData}
+                                            corPrimaria={visualData.cor_primaria}
+                                            corSecundaria={visualData.cor_secundaria}
+                                            tenantNome={tenant?.nome || ''}
+                                            scale={0.38}
+                                            exemploAluno={preview.aluno}
+                                            exemploCurso={preview.curso}
+                                            exemploCH={preview.ch}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Section: Textos */}
@@ -974,6 +1000,22 @@ export default function ConfiguracoesPage() {
                             {/* Preview sticky */}
                             <div className="hidden 2xl:block">
                                 <div className="sticky top-6 space-y-4">
+                                    {/* Campos de exemplo */}
+                                    <div className="bg-white p-5 rounded-[24px] shadow-xl shadow-black/5 border border-gray-50 space-y-3">
+                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dados do preview</p>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Nome do aluno</label>
+                                            <input type="text" value={preview.aluno} onChange={e => setPreview(p => ({...p, aluno: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Nome do curso</label>
+                                            <input type="text" value={preview.curso} onChange={e => setPreview(p => ({...p, curso: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20" />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Carga horária (h)</label>
+                                            <input type="text" value={preview.ch} onChange={e => setPreview(p => ({...p, ch: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20" />
+                                        </div>
+                                    </div>
                                     <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
                                         <CertPreview
                                             certData={certData}
@@ -981,6 +1023,9 @@ export default function ConfiguracoesPage() {
                                             corSecundaria={visualData.cor_secundaria}
                                             tenantNome={tenant?.nome || ''}
                                             scale={0.41}
+                                            exemploAluno={preview.aluno}
+                                            exemploCurso={preview.curso}
+                                            exemploCH={preview.ch}
                                         />
                                     </div>
                                     <p className="text-[9px] text-gray-300 text-center font-bold uppercase tracking-widest">O preview é aproximado. O PDF final pode ter pequenas diferenças.</p>

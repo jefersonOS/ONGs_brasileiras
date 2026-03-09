@@ -41,15 +41,19 @@ interface CertPreviewProps {
     corSecundaria: string
     tenantNome: string
     scale?: number
+    exemploAluno?: string
+    exemploCurso?: string
+    exemploCH?: string
 }
 
-// Valores de exemplo para o preview
-const EXEMPLO_ALUNO = 'MARIA DA SILVA SANTOS'
-const EXEMPLO_CURSO = '"Capacitação em Gestão de Projetos"'
+const DEFAULT_ALUNO = 'MARIA DA SILVA SANTOS'
+const DEFAULT_CURSO = 'Capacitação em Gestão de Projetos'
 const EXEMPLO_CODIGO = 'ABC12X45'
-const EXEMPLO_CH = '40'
 
-export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, scale = 0.42 }: CertPreviewProps) {
+export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, scale = 0.42, exemploAluno, exemploCurso, exemploCH }: CertPreviewProps) {
+    const EXEMPLO_ALUNO = exemploAluno || DEFAULT_ALUNO
+    const EXEMPLO_CURSO = `"${exemploCurso || DEFAULT_CURSO}"`
+    const EXEMPLO_CH = exemploCH || '40'
     const W = 841.89
     const H = 595.28
 
