@@ -116,8 +116,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                 .eq('id', currentUser.id)
                 .single()
 
-            const p = perfilData || {}
-            setPerfil(p)
+            setPerfil(perfilData || {})
             // Campos iniciam vazios — usuário deve preencher tudo a cada matrícula
             setNome('')
             setEmail('')

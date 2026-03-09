@@ -28,7 +28,7 @@ export default async function MinhaAreaPage() {
         .order('created_at', { ascending: false })
 
     // Buscar títulos das atividades
-    let atividadesMap: Record<string, any> = {}
+    const atividadesMap: Record<string, any> = {}
     if (inscricoesAtividades?.length) {
         const ids = inscricoesAtividades.map(i => i.entidade_id)
         const { data: atividades } = await supabase

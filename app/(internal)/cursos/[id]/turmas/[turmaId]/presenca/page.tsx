@@ -12,7 +12,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
 
     const [curso, setCurso] = useState<any>(null)
     const [turma, setTurma] = useState<any>(null)
-    const [encontroIndex, setEncontroIndex] = useState(0)
+    const [encontroIndex] = useState(0)
     const [inscritos, setInscritos] = useState<any[]>([])
     const [presencas, setPresencas] = useState<Record<string, boolean>>({})
     const [loading, setLoading] = useState(true)
