@@ -44,7 +44,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
             // 2. Inscritos
             const { data: inscritosData } = await supabase
                 .from('inscricoes')
-                .select('id, users(id, nome, cpf)')
+                .select('id, dados_formulario, telefone_whatsapp, users(id, nome, email, cpf, rg, whatsapp, data_nascimento, endereco, created_at)')
                 .eq('turma_id', turmaId)
                 .eq('status', 'confirmada')
 
@@ -171,17 +171,37 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
 
                 <div className="divide-y divide-gray-100">
                     {inscritos.map((inscrito) => {
-                        const nome = inscrito.users?.nome || 'Sem nome'
+                        const u = inscrito.users
+                        const nome = u?.nome || 'Sem nome'
                         const iniciais = nome.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                        const whatsapp = inscrito.telefone_whatsapp || u?.whatsapp
+                        const dadosExtra = inscrito.dados_formulario
+                            ? Object.entries(inscrito.dados_formulario as Record<string, string>)
+                                .filter(([, v]) => v)
+                            : []
                         return (
-                        <div key={inscrito.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-all">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center font-black text-[#1A3C4A] text-xs uppercase">
+                        <div key={inscrito.id} className="p-4 flex items-start justify-between gap-4 hover:bg-gray-50/50 transition-all">
+                            <div className="flex items-start gap-4 flex-1 min-w-0">
+                                <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center font-black text-[#1A3C4A] text-xs uppercase flex-shrink-0 mt-0.5">
                                     {iniciais}
                                 </div>
-                                <div>
+                                <div className="flex-1 min-w-0">
                                     <h4 className="font-bold text-[#1A3C4A] text-sm">{nome}</h4>
-                                    <p className="text-[10px] font-mono text-gray-400">{inscrito.users?.cpf ? `CPF: ***.${inscrito.users.cpf.substring(4, 7)}.***-**` : 'CPF não informado'}</p>
+                                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5">
+                                        {u?.email && <span className="text-[10px] text-gray-500">✉ {u.email}</span>}
+                                        {whatsapp && <span className="text-[10px] text-gray-500">📱 {whatsapp}</span>}
+                                        {u?.cpf && <span className="text-[10px] font-mono text-gray-400">CPF: {u.cpf}</span>}
+                                        {u?.rg && <span className="text-[10px] font-mono text-gray-400">RG: {u.rg}</span>}
+                                        {u?.data_nascimento && <span className="text-[10px] text-gray-400">Nasc: {new Date(u.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR')}</span>}
+                                        {u?.endereco && <span className="text-[10px] text-gray-400">📍 {u.endereco}</span>}
+                                    </div>
+                                    {dadosExtra.length > 0 && (
+                                        <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5">
+                                            {dadosExtra.map(([label, valor]) => (
+                                                <span key={label} className="text-[10px] text-gray-400"><span className="font-semibold text-gray-500">{label}:</span> {valor}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
