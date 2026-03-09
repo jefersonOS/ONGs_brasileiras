@@ -59,11 +59,6 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
         fetchData()
     }, [cursoId, turmaId, supabase, fetchPresencas])
 
-    const handleSwitchMeeting = async (index: number) => {
-        setEncontroIndex(index)
-        await fetchPresencas(index)
-    }
-
     const togglePresenca = (inscricaoId: string) => {
         setPresencas(prev => ({
             ...prev,
@@ -103,7 +98,6 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
 
     if (loading) return <div className="p-8 text-center text-gray-500">Carregando controle de presença...</div>
 
-    const encontroAtual = turma?.encontros?.[encontroIndex]
     const totalPresentes = Object.values(presencas).filter(v => v).length
     const porcentagemGeral = inscritos.length > 0 ? Math.round((totalPresentes / inscritos.length) * 100) : 0
 
@@ -132,36 +126,20 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                 </div>
             </div>
 
-            {/* Seletor de Encontro */}
+            {/* Info da Turma */}
             <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-6 overflow-x-auto pb-2 scrollbar-none">
-                    {turma?.encontros?.map((e: any, i: number) => (
-                        <button
-                            key={i}
-                            onClick={() => handleSwitchMeeting(i)}
-                            className={clsx(
-                                "px-4 py-2 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap border",
-                                encontroIndex === i
-                                    ? "bg-[#1A3C4A] text-white border-[#1A3C4A]"
-                                    : "bg-gray-50 text-gray-400 border-gray-100 hover:border-gray-300"
-                            )}
-                        >
-                            Encontro {i + 1}
-                        </button>
-                    ))}
-                </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="md:col-span-2 flex items-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                         <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-[#2D9E6B]">
                             <Calendar className="w-6 h-6" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black uppercase text-gray-400">Dados do Encontro Ativo</p>
+                            <p className="text-[10px] font-black uppercase text-gray-400">Período do Curso</p>
                             <h3 className="font-bold text-[#1A3C4A]">
-                                {encontroAtual ? `${new Date(encontroAtual.data).toLocaleDateString()} • ${encontroAtual.hora_inicio} às ${encontroAtual.hora_fim}` : 'Data não definida'}
+                                {turma?.data_inicio
+                                    ? `${new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}${turma.data_fim ? ` até ${new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}` : ''}`
+                                    : 'Datas não definidas'}
                             </h3>
-                            <p className="text-xs text-gray-500 mt-0.5">{encontroAtual?.local || 'Local não definido'}</p>
                         </div>
                     </div>
                     <div className="flex flex-col justify-center items-center p-4 bg-[#F0FDF4] rounded-2xl border border-green-100">
@@ -192,15 +170,18 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                 </div>
 
                 <div className="divide-y divide-gray-100">
-                    {inscritos.map((inscrito) => (
+                    {inscritos.map((inscrito) => {
+                        const nome = inscrito.users?.nome || 'Sem nome'
+                        const iniciais = nome.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+                        return (
                         <div key={inscrito.id} className="p-4 flex items-center justify-between hover:bg-gray-50/50 transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="w-10 h-10 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center font-black text-[#1A3C4A] text-xs uppercase">
-                                    {inscrito.users.nome.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
+                                    {iniciais}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-[#1A3C4A] text-sm">{inscrito.users.nome}</h4>
-                                    <p className="text-[10px] font-mono text-gray-400">CPF: ***.{inscrito.users.cpf?.substring(4, 7)}.***-**</p>
+                                    <h4 className="font-bold text-[#1A3C4A] text-sm">{nome}</h4>
+                                    <p className="text-[10px] font-mono text-gray-400">{inscrito.users?.cpf ? `CPF: ***.${inscrito.users.cpf.substring(4, 7)}.***-**` : 'CPF não informado'}</p>
                                 </div>
                             </div>
 
@@ -216,7 +197,8 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                                 {presencas[inscrito.id] ? <><Check className="w-3 h-3" /> Presente</> : <><X className="w-3 h-3" /> Ausente</>}
                             </button>
                         </div>
-                    ))}
+                        )
+                    })}
 
                     {inscritos.length === 0 && (
                         <div className="p-12 text-center text-gray-400 italic">
