@@ -22,6 +22,8 @@ interface CertData {
     tam_instituicao: number
     cor_texto: string
     cor_nome: string
+    pos_y_conteudo: number
+    pos_y_rodape: number
 }
 
 interface CertPreviewProps {
@@ -59,6 +61,8 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
     const alignItems = certData.alinhamento === 'esquerda' ? 'flex-start'
         : certData.alinhamento === 'direita' ? 'flex-end'
         : 'center'
+    const posYConteudo = certData.pos_y_conteudo || 0
+    const posYRodape = certData.pos_y_rodape || 0
 
     const outerW = Math.round(W * scale)
     const outerH = Math.round(H * scale)
@@ -120,10 +124,10 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                     <div
                         style={{
                             position: 'absolute',
-                            top: 50,
+                            top: 50 - posYConteudo,
                             left: 60,
                             right: 60,
-                            bottom: 130,
+                            bottom: 130 + posYConteudo,
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems,
@@ -207,7 +211,7 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                     {/* Rodapé: data + assinatura */}
                     <div style={{
                         position: 'absolute',
-                        bottom: 55,
+                        bottom: 55 + posYRodape,
                         left: 80,
                         right: 80,
                         display: 'flex',

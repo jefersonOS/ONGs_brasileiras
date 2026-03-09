@@ -29,6 +29,9 @@ interface CertConfig {
     cor_nome?: string
     // Mídia
     logo_url?: string
+    // Posição vertical (positivo = sobe, negativo = desce)
+    pos_y_conteudo?: number
+    pos_y_rodape?: number
 }
 
 function hexToRgb(hex: string) {
@@ -66,6 +69,8 @@ export class PDFService {
         const tamNome = config.tam_nome || 32
         const tamTexto = config.tam_texto || 18
         const tamInstituicao = config.tam_instituicao || 16
+        const posYConteudo = config.pos_y_conteudo || 0
+        const posYRodape = config.pos_y_rodape || 0
 
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
@@ -153,7 +158,7 @@ export class PDFService {
         const tituloDoc = config.titulo || (tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO')
         page.drawText(tituloDoc, {
             x: calcX(tituloDoc, fontTitle, tamTitulo, align, width),
-            y: height - 160,
+            y: height - 160 + posYConteudo,
             size: tamTitulo,
             font: fontTitle,
             color: primaryColor,
@@ -166,7 +171,7 @@ export class PDFService {
 
         page.drawText(textPre, {
             x: calcX(textPre, fontText, tamTexto, align, width),
-            y: height - 230,
+            y: height - 230 + posYConteudo,
             size: tamTexto,
             font: fontText,
             color: textColor,
@@ -176,7 +181,7 @@ export class PDFService {
         const nomeUpper = nomeCidadao.toUpperCase()
         page.drawText(nomeUpper, {
             x: calcX(nomeUpper, fontTitle, tamNome, align, width),
-            y: height - 280,
+            y: height - 280 + posYConteudo,
             size: tamNome,
             font: fontTitle,
             color: nameColor,
@@ -189,7 +194,7 @@ export class PDFService {
 
         page.drawText(textPos, {
             x: calcX(textPos, fontText, tamTexto, align, width),
-            y: height - 330,
+            y: height - 330 + posYConteudo,
             size: tamTexto,
             font: fontText,
             color: textColor,
@@ -199,7 +204,7 @@ export class PDFService {
         const cursoText = `"${tituloEntidade}"`
         page.drawText(cursoText, {
             x: calcX(cursoText, fontTitle, 24, align, width),
-            y: height - 370,
+            y: height - 370 + posYConteudo,
             size: 24,
             font: fontTitle,
             color: primaryColor,
@@ -210,7 +215,7 @@ export class PDFService {
             const extraText = `com carga horária total de ${cargaHoraria} horas.`
             page.drawText(extraText, {
                 x: calcX(extraText, fontText, 16, align, width),
-                y: height - 410,
+                y: height - 410 + posYConteudo,
                 size: 16,
                 font: fontText,
                 color: textColor,
@@ -221,7 +226,7 @@ export class PDFService {
         const dateStr = `Emitido em ${dataEmissao.toLocaleDateString('pt-BR')}`
         page.drawText(dateStr, {
             x: 100,
-            y: 100,
+            y: 100 + posYRodape,
             size: 14,
             font: fontText,
             color: textColor,
@@ -236,15 +241,15 @@ export class PDFService {
                 const sigImg = isJpg ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
                 const sigH = 40
                 const sigW = sigImg.width * (sigH / sigImg.height)
-                page.drawImage(sigImg, { x: width - 300 + (200 - sigW) / 2, y: 125, width: sigW, height: sigH })
+                page.drawImage(sigImg, { x: width - 300 + (200 - sigW) / 2, y: 125 + posYRodape, width: sigW, height: sigH })
             } catch (e) {
                 console.warn('Assinatura do certificado não carregou:', e)
             }
         }
 
         page.drawLine({
-            start: { x: width - 300, y: 120 },
-            end: { x: width - 100, y: 120 },
+            start: { x: width - 300, y: 120 + posYRodape },
+            end: { x: width - 100, y: 120 + posYRodape },
             thickness: 1,
             color: primaryColor,
         })
@@ -255,7 +260,7 @@ export class PDFService {
 
         page.drawText(nomeResponsavel, {
             x: sigX,
-            y: 100,
+            y: 100 + posYRodape,
             size: 12,
             font: fontItalic,
             color: textColor,
@@ -266,7 +271,7 @@ export class PDFService {
             const cargoX = width - 300 + ((200 - cargoWidth) / 2)
             page.drawText(config.cargo_responsavel, {
                 x: cargoX,
-                y: 84,
+                y: 84 + posYRodape,
                 size: 10,
                 font: fontText,
                 color: rgb(0.5, 0.5, 0.5),

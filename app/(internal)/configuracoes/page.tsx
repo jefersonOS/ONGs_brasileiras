@@ -81,6 +81,8 @@ export default function ConfiguracoesPage() {
         cor_texto: '#4D4D4D',
         cor_nome: '',
         logo_url: '',
+        pos_y_conteudo: 0,
+        pos_y_rodape: 0,
     })
     const [uploadingFundo, setUploadingFundo] = useState(false)
     const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -157,6 +159,8 @@ export default function ConfiguracoesPage() {
                 cor_texto: cfg.cert_cor_texto || '#4D4D4D',
                 cor_nome: cfg.cert_cor_nome || '',
                 logo_url: cfg.cert_logo_url || '',
+                pos_y_conteudo: cfg.cert_pos_y_conteudo ?? 0,
+                pos_y_rodape: cfg.cert_pos_y_rodape ?? 0,
             })
         }
         setLoading(false)
@@ -211,6 +215,8 @@ export default function ConfiguracoesPage() {
             cert_cor_texto: certData.cor_texto,
             cert_cor_nome: certData.cor_nome,
             cert_logo_url: certData.logo_url,
+            cert_pos_y_conteudo: certData.pos_y_conteudo,
+            cert_pos_y_rodape: certData.pos_y_rodape,
         }
 
         const { error } = await supabase
@@ -612,6 +618,41 @@ export default function ConfiguracoesPage() {
                                                         className="flex-1 accent-[#2D9E6B]"
                                                     />
                                                     <span className="text-sm font-black text-[#1A3C4A] w-8 text-right">{certData[key as keyof typeof certData]}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section: Posição Vertical */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Posição Vertical dos Elementos</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        {[
+                                            { label: 'Título / Textos / Nome do Aluno', key: 'pos_y_conteudo', desc: 'Move o bloco principal de conteúdo' },
+                                            { label: 'Responsável / Assinatura', key: 'pos_y_rodape', desc: 'Move a assinatura e nome do responsável' },
+                                        ].map(({ label, key, desc }) => (
+                                            <div key={key} className="space-y-3">
+                                                <div>
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
+                                                    <p className="text-[9px] text-gray-300 mt-0.5">{desc}</p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-[9px] font-bold text-gray-300">↓</span>
+                                                    <input
+                                                        type="range"
+                                                        min={-150} max={150}
+                                                        value={certData[key as keyof typeof certData] as number}
+                                                        onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
+                                                        className="flex-1 accent-[#2D9E6B]"
+                                                    />
+                                                    <span className="text-[9px] font-bold text-gray-300">↑</span>
+                                                    <span className="text-sm font-black text-[#1A3C4A] w-12 text-right">
+                                                        {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
+                                                    </span>
+                                                    {(certData[key as keyof typeof certData] as number) !== 0 && (
+                                                        <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] font-black text-gray-300 hover:text-red-400 uppercase">reset</button>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}

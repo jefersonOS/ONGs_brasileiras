@@ -52,6 +52,8 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             cor_texto: cfg.cert_cor_texto || undefined,
             cor_nome: cfg.cert_cor_nome || undefined,
             logo_url: cfg.cert_logo_url || undefined,
+            pos_y_conteudo: cfg.cert_pos_y_conteudo ?? 0,
+            pos_y_rodape: cfg.cert_pos_y_rodape ?? 0,
         }
         const nomeInstituicao = tenant?.nome || 'Organização'
 
