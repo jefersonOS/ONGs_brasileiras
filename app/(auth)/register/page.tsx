@@ -79,10 +79,18 @@ function RegisterForm() {
                     .update({ status: 'aceito' })
                     .eq('token', token)
             }
-            const dest = redirectAfter
-                ? `/login?redirect=${encodeURIComponent(redirectAfter)}&message=Cadastro realizado! Faça login para continuar.`
-                : '/login?message=Cadastro realizado com sucesso! Faça login para começar.'
+
+            // Login automático após cadastro
+            const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+            if (signInError) {
+                // Se falhar o login automático, manda pro login manual
+                router.push('/login?message=Cadastro realizado! Faça login para continuar.')
+                return
+            }
+
+            const dest = redirectAfter || (tipo === 'cidadao' ? '/minha-area' : '/dashboard')
             router.push(dest)
+            router.refresh()
         }
     }
 
