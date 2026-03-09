@@ -78,6 +78,13 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
         const fetchContext = async () => {
             setLoading(true)
             const { data: { user: currentUser } } = await supabase.auth.getUser()
+
+            if (!currentUser) {
+                const redirectUrl = `/inscricao/${tipo}/${id}${turmaId ? `?turma=${turmaId}` : ''}`
+                router.replace(`/register?perfil=cidadao&redirect=${encodeURIComponent(redirectUrl)}`)
+                return
+            }
+
             if (currentUser) {
                 setUser(currentUser)
 

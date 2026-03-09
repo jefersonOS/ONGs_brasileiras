@@ -1,16 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
-export default function LoginPage() {
+function LoginForm() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const redirectAfter = searchParams.get('redirect')
     const supabase = createClient()
 
     const handleLogin = async (e: React.FormEvent) => {
@@ -28,7 +31,7 @@ export default function LoginPage() {
 
         const { data: { user } } = await supabase.auth.getUser()
         const tenantId = user?.user_metadata?.tenant_id
-        const destPath = user?.user_metadata?.tipo === 'cidadao' ? '/minha-area' : '/dashboard'
+        const destPath = redirectAfter || (user?.user_metadata?.tipo === 'cidadao' ? '/minha-area' : '/dashboard')
 
         // Se o usuário pertence a um tenant, verificar se está no domínio correto
         if (tenantId) {
@@ -102,5 +105,13 @@ export default function LoginPage() {
                 </p>
             </div>
         </div>
+    )
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F5F7F8]" />}>
+            <LoginForm />
+        </Suspense>
     )
 }

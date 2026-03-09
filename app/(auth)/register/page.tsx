@@ -9,6 +9,9 @@ import { Sparkles, UserPlus, Info } from 'lucide-react'
 function RegisterForm() {
     const searchParams = useSearchParams()
     const token = searchParams.get('token')
+    const perfil = searchParams.get('perfil')
+    const redirectAfter = searchParams.get('redirect')
+    const forceCidadao = perfil === 'cidadao'
 
     const [nome, setNome] = useState('')
     const [email, setEmail] = useState('')
@@ -71,13 +74,15 @@ function RegisterForm() {
 
         if (data.user) {
             if (token) {
-                // Marcar convite como aceito
                 await supabase
                     .from('convites_equipe')
                     .update({ status: 'aceito' })
                     .eq('token', token)
             }
-            router.push('/login?message=Cadastro realizado com sucesso! Faça login para começar.')
+            const dest = redirectAfter
+                ? `/login?redirect=${encodeURIComponent(redirectAfter)}&message=Cadastro realizado! Faça login para continuar.`
+                : '/login?message=Cadastro realizado com sucesso! Faça login para começar.'
+            router.push(dest)
         }
     }
 
@@ -146,7 +151,7 @@ function RegisterForm() {
                         />
                     </div>
 
-                    {!token && (
+                    {!token && !forceCidadao && (
                         <div className="space-y-2">
                             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Tipo de Perfil</label>
                             <select
