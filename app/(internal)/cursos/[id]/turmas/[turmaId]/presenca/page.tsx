@@ -96,6 +96,35 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
         }
     }
 
+    const exportarCSV = () => {
+        const cabecalho = ['Nome', 'Email', 'WhatsApp', 'CPF', 'RG', 'Nascimento', 'Endereço', 'Presença']
+        const linhas = inscritos.map(inscrito => {
+            const u = inscrito.users
+            const whatsapp = inscrito.telefone_whatsapp || u?.whatsapp || ''
+            const nasc = u?.data_nascimento ? new Date(u.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR') : ''
+            const presente = presencas[inscrito.id] ? 'Presente' : 'Ausente'
+            return [
+                u?.nome || '',
+                u?.email || '',
+                whatsapp,
+                u?.cpf || '',
+                u?.rg || '',
+                nasc,
+                u?.endereco || '',
+                presente,
+            ].map(v => `"${String(v).replace(/"/g, '""')}"`)
+        })
+
+        const csv = [cabecalho.join(','), ...linhas.map(l => l.join(','))].join('\n')
+        const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `presenca-${curso?.titulo?.replace(/[^a-zA-Z0-9]/g, '-') || 'turma'}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+    }
+
     if (loading) return <div className="p-8 text-center text-gray-500">Carregando controle de presença...</div>
 
     const totalPresentes = Object.values(presencas).filter(v => v).length
@@ -113,7 +142,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                     <p className="text-gray-500 text-sm">Turma #{turmaId.split('-')[0]} • Controle de Frequência</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-50 transition-all">
+                    <button onClick={exportarCSV} className="bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-gray-50 transition-all">
                         <Printer className="w-4 h-4" /> Exportar Lista
                     </button>
                     <button
