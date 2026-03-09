@@ -8,6 +8,7 @@ interface BotaoInscricaoProps {
     tipo: 'curso' | 'atividade'
     entidadeId: string
     turmaId?: string
+    tenantId?: string
     isEnrolled: boolean
     inscricaoId?: string
     hasVacancies: boolean
@@ -18,6 +19,7 @@ export function BotaoInscricao({
     tipo,
     entidadeId,
     turmaId,
+    tenantId,
     isEnrolled,
     inscricaoId,
     hasVacancies,
@@ -79,9 +81,11 @@ export function BotaoInscricao({
     }
 
     const inscricaoUrl = `/inscricao/${tipo}/${entidadeId}${turmaId ? `?turma=${turmaId}` : ''}`
+    const registerParams = new URLSearchParams({ perfil: 'cidadao', redirect: inscricaoUrl })
+    if (tenantId) registerParams.set('tenantId', tenantId)
     const href = isLogged
         ? inscricaoUrl
-        : `/register?perfil=cidadao&redirect=${encodeURIComponent(inscricaoUrl)}`
+        : `/register?${registerParams.toString()}`
 
     return (
         <Link

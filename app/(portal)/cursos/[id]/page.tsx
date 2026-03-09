@@ -191,6 +191,7 @@ export default async function CursoPublicoPage({ params }: { params: { id: strin
                                                     tipo="curso"
                                                     entidadeId={curso.id}
                                                     turmaId={turma.id}
+                                                    tenantId={curso.tenant_id}
                                                     isLogged={!!user}
                                                     isEnrolled={!!myEnrol}
                                                     inscricaoId={myEnrol?.id}

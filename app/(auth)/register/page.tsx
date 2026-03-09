@@ -11,6 +11,7 @@ function RegisterForm() {
     const token = searchParams.get('token')
     const perfil = searchParams.get('perfil')
     const redirectAfter = searchParams.get('redirect')
+    const tenantIdParam = searchParams.get('tenantId')
     const forceCidadao = perfil === 'cidadao'
 
     const [nome, setNome] = useState('')
@@ -49,7 +50,7 @@ function RegisterForm() {
         setError(null)
 
         const finalRole = token ? 'colaborador' : (tipo === 'cidadao' ? 'cidadao' : 'proprietario')
-        const finalTenantId = token ? inviteData?.tenant_id : null
+        const finalTenantId = token ? inviteData?.tenant_id : (tenantIdParam || null)
         const finalPermissions = token ? inviteData?.permissoes : {}
 
         const { error: signUpError, data } = await supabase.auth.signUp({
