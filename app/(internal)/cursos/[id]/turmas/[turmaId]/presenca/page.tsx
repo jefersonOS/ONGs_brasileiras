@@ -44,7 +44,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
             // 2. Inscritos
             const { data: inscritosData } = await supabase
                 .from('inscricoes')
-                .select('id, dados_formulario, telefone_whatsapp, users(id, nome, email, cpf, whatsapp)')
+                .select('id, dados_formulario, telefone_whatsapp, users(id, nome, email, cpf, whatsapp, rg, data_nascimento, endereco)')
                 .eq('turma_id', turmaId)
                 .eq('status', 'confirmada')
 
@@ -97,7 +97,7 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
     }
 
     const exportarCSV = () => {
-        const cabecalho = ['Nome', 'Email', 'WhatsApp', 'CPF', 'Presença']
+        const cabecalho = ['Nome', 'Email', 'WhatsApp', 'CPF', 'RG', 'Data Nascimento', 'Endereço', 'Presença']
         const linhas = inscritos.map(inscrito => {
             const u = inscrito.users
             const whatsapp = inscrito.telefone_whatsapp || u?.whatsapp || ''
@@ -107,6 +107,9 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                 u?.email || '',
                 whatsapp,
                 u?.cpf || '',
+                u?.rg || '',
+                u?.data_nascimento || '',
+                u?.endereco || '',
                 presente,
             ].map(v => `"${String(v).replace(/"/g, '""')}"`)
         })
@@ -216,6 +219,9 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
                                         {u?.email && <span className="text-[10px] text-gray-500">✉ {u.email}</span>}
                                         {whatsapp && <span className="text-[10px] text-gray-500">📱 {whatsapp}</span>}
                                         {u?.cpf && <span className="text-[10px] font-mono text-gray-400">CPF: {u.cpf}</span>}
+                                        {u?.rg && <span className="text-[10px] font-mono text-gray-400">RG: {u.rg}</span>}
+                                        {u?.data_nascimento && <span className="text-[10px] text-gray-400">Nasc: {new Date(u.data_nascimento + 'T12:00:00').toLocaleDateString('pt-BR')}</span>}
+                                        {u?.endereco && <span className="text-[10px] text-gray-400">End: {u.endereco}</span>}
                                     </div>
                                     {dadosExtra.length > 0 && (
                                         <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-0.5">
