@@ -78,6 +78,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
             certConfig = {
                 nome_responsavel: cfg.cert_nome_responsavel || undefined,
                 cargo_responsavel: cfg.cert_cargo_responsavel || undefined,
+                assinatura_url: cfg.cert_assinatura_url || undefined,
                 site_validacao: siteValidacao,
                 cor_primaria: cfg.cor_primaria || undefined,
                 cor_secundaria: cfg.cor_secundaria || undefined,
@@ -85,6 +86,19 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 texto_pre: cfg.cert_texto_pre || undefined,
                 texto_pos: cfg.cert_texto_pos || undefined,
                 fundo_url: cfg.cert_fundo_url || undefined,
+                nome_instituicao: cfg.cert_nome_instituicao || undefined,
+                alinhamento: cfg.cert_alinhamento || undefined,
+                mostrar_borda: cfg.cert_mostrar_borda !== false,
+                mostrar_codigo: cfg.cert_mostrar_codigo !== false,
+                mostrar_carga_horaria: cfg.cert_mostrar_carga_horaria !== false,
+                mostrar_instituicao: cfg.cert_mostrar_instituicao !== false,
+                tam_titulo: cfg.cert_tam_titulo || undefined,
+                tam_nome: cfg.cert_tam_nome || undefined,
+                tam_texto: cfg.cert_tam_texto || undefined,
+                tam_instituicao: cfg.cert_tam_instituicao || undefined,
+                cor_texto: cfg.cert_cor_texto || undefined,
+                cor_nome: cfg.cert_cor_nome || undefined,
+                logo_url: cfg.cert_logo_url || undefined,
             }
         }
     }

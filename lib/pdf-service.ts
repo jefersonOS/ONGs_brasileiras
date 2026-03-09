@@ -6,10 +6,29 @@ interface CertConfig {
     texto_pos?: string
     nome_responsavel?: string
     cargo_responsavel?: string
+    assinatura_url?: string
     site_validacao?: string
     cor_primaria?: string
     cor_secundaria?: string
     fundo_url?: string
+    nome_instituicao?: string
+    // Visibilidade
+    mostrar_borda?: boolean
+    mostrar_codigo?: boolean
+    mostrar_carga_horaria?: boolean
+    mostrar_instituicao?: boolean
+    // Alinhamento global
+    alinhamento?: 'esquerda' | 'centro' | 'direita'
+    // Tamanhos de fonte
+    tam_titulo?: number
+    tam_nome?: number
+    tam_texto?: number
+    tam_instituicao?: number
+    // Cores individuais
+    cor_texto?: string
+    cor_nome?: string
+    // Mídia
+    logo_url?: string
 }
 
 function hexToRgb(hex: string) {
@@ -17,6 +36,13 @@ function hexToRgb(hex: string) {
     const g = parseInt(hex.slice(3, 5), 16) / 255
     const b = parseInt(hex.slice(5, 7), 16) / 255
     return rgb(r, g, b)
+}
+
+function calcX(text: string, font: any, size: number, align: string, width: number, margin = 60): number {
+    const tw = font.widthOfTextAtSize(text, size)
+    if (align === 'esquerda') return margin
+    if (align === 'direita') return width - margin - tw
+    return width / 2 - tw / 2
 }
 
 export class PDFService {
@@ -30,6 +56,17 @@ export class PDFService {
         codigoValidacao: string,
         config: CertConfig = {}
     ): Promise<Uint8Array> {
+        // Derivar todas as opções de configuração
+        const align = config.alinhamento || 'centro'
+        const showBorda = config.mostrar_borda !== false
+        const showCodigo = config.mostrar_codigo !== false
+        const showCarga = config.mostrar_carga_horaria !== false
+        const showInstituicao = config.mostrar_instituicao !== false
+        const tamTitulo = config.tam_titulo || 36
+        const tamNome = config.tam_nome || 32
+        const tamTexto = config.tam_texto || 18
+        const tamInstituicao = config.tam_instituicao || 16
+
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
 
@@ -45,7 +82,8 @@ export class PDFService {
         // Cores
         const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.29)
         const highlightColor = config.cor_secundaria ? hexToRgb(config.cor_secundaria) : rgb(0.18, 0.62, 0.42)
-        const textColor = rgb(0.3, 0.3, 0.3)
+        const textColor = config.cor_texto ? hexToRgb(config.cor_texto) : rgb(0.3, 0.3, 0.3)
+        const nameColor = config.cor_nome ? hexToRgb(config.cor_nome) : highlightColor
 
         // Imagem de fundo (template da ONG)
         if (config.fundo_url) {
@@ -62,40 +100,61 @@ export class PDFService {
             }
         }
 
-        // Bordas e Design Base
-        page.drawRectangle({
-            x: 20,
-            y: 20,
-            width: width - 40,
-            height: height - 40,
-            borderColor: primaryColor,
-            borderWidth: 4,
-        })
+        // Logo da instituição (canto superior esquerdo)
+        if (config.logo_url) {
+            try {
+                const logoRes = await fetch(config.logo_url)
+                const logoBytes = await logoRes.arrayBuffer()
+                const isJpg = config.logo_url.toLowerCase().match(/\.(jpg|jpeg)/)
+                const logoImg = isJpg ? await pdfDoc.embedJpg(logoBytes) : await pdfDoc.embedPng(logoBytes)
+                const logoH = 60
+                const logoW = logoImg.width * (logoH / logoImg.height)
+                page.drawImage(logoImg, { x: 60, y: height - 80, width: logoW, height: logoH })
+            } catch (e) {
+                console.warn('Logo do certificado não carregou:', e)
+            }
+        }
 
-        page.drawRectangle({
-            x: 30,
-            y: 30,
-            width: width - 60,
-            height: height - 60,
-            borderColor: highlightColor,
-            borderWidth: 1,
-        })
+        // Bordas e Design Base
+        if (showBorda) {
+            page.drawRectangle({
+                x: 20,
+                y: 20,
+                width: width - 40,
+                height: height - 40,
+                borderColor: primaryColor,
+                borderWidth: 4,
+            })
+
+            page.drawRectangle({
+                x: 30,
+                y: 30,
+                width: width - 60,
+                height: height - 60,
+                borderColor: highlightColor,
+                borderWidth: 1,
+            })
+        }
 
         // Cabeçalho / Instituição
-        page.drawText(nomeInstituicao.toUpperCase(), {
-            x: width / 2 - (fontTitle.widthOfTextAtSize(nomeInstituicao.toUpperCase(), 16) / 2),
-            y: height - 80,
-            size: 16,
-            font: fontTitle,
-            color: primaryColor,
-        })
+        if (showInstituicao) {
+            const nomeInstit = config.nome_instituicao || nomeInstituicao
+            const instText = nomeInstit.toUpperCase()
+            page.drawText(instText, {
+                x: calcX(instText, fontTitle, tamInstituicao, align, width),
+                y: height - 80,
+                size: tamInstituicao,
+                font: fontTitle,
+                color: primaryColor,
+            })
+        }
 
         // Título Principal
         const tituloDoc = config.titulo || (tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO')
         page.drawText(tituloDoc, {
-            x: width / 2 - (fontTitle.widthOfTextAtSize(tituloDoc, 36) / 2),
+            x: calcX(tituloDoc, fontTitle, tamTitulo, align, width),
             y: height - 160,
-            size: 36,
+            size: tamTitulo,
             font: fontTitle,
             color: primaryColor,
         })
@@ -106,20 +165,21 @@ export class PDFService {
             : 'Comprovamos para os devidos fins que')
 
         page.drawText(textPre, {
-            x: width / 2 - (fontText.widthOfTextAtSize(textPre, 18) / 2),
+            x: calcX(textPre, fontText, tamTexto, align, width),
             y: height - 230,
-            size: 18,
+            size: tamTexto,
             font: fontText,
             color: textColor,
         })
 
         // Nome do Participante (Destaque)
-        page.drawText(nomeCidadao.toUpperCase(), {
-            x: width / 2 - (fontTitle.widthOfTextAtSize(nomeCidadao.toUpperCase(), 32) / 2),
+        const nomeUpper = nomeCidadao.toUpperCase()
+        page.drawText(nomeUpper, {
+            x: calcX(nomeUpper, fontTitle, tamNome, align, width),
             y: height - 280,
-            size: 32,
+            size: tamNome,
             font: fontTitle,
-            color: highlightColor,
+            color: nameColor,
         })
 
         // Continuação do Texto
@@ -128,16 +188,17 @@ export class PDFService {
             : `esteve presente na atividade de`)
 
         page.drawText(textPos, {
-            x: width / 2 - (fontText.widthOfTextAtSize(textPos, 18) / 2),
+            x: calcX(textPos, fontText, tamTexto, align, width),
             y: height - 330,
-            size: 18,
+            size: tamTexto,
             font: fontText,
             color: textColor,
         })
 
         // Nome do Curso/Atividade
-        page.drawText(`"${tituloEntidade}"`, {
-            x: width / 2 - (fontTitle.widthOfTextAtSize(`"${tituloEntidade}"`, 24) / 2),
+        const cursoText = `"${tituloEntidade}"`
+        page.drawText(cursoText, {
+            x: calcX(cursoText, fontTitle, 24, align, width),
             y: height - 370,
             size: 24,
             font: fontTitle,
@@ -145,10 +206,10 @@ export class PDFService {
         })
 
         // Carga Horária (se houver)
-        if (cargaHoraria && cargaHoraria !== '0') {
+        if (showCarga && cargaHoraria && cargaHoraria !== '0') {
             const extraText = `com carga horária total de ${cargaHoraria} horas.`
             page.drawText(extraText, {
-                x: width / 2 - (fontText.widthOfTextAtSize(extraText, 16) / 2),
+                x: calcX(extraText, fontText, 16, align, width),
                 y: height - 410,
                 size: 16,
                 font: fontText,
@@ -165,6 +226,21 @@ export class PDFService {
             font: fontText,
             color: textColor,
         })
+
+        // Imagem da assinatura (acima da linha)
+        if (config.assinatura_url) {
+            try {
+                const sigRes = await fetch(config.assinatura_url)
+                const sigBytes = await sigRes.arrayBuffer()
+                const isJpg = config.assinatura_url.toLowerCase().match(/\.(jpg|jpeg)/)
+                const sigImg = isJpg ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
+                const sigH = 40
+                const sigW = sigImg.width * (sigH / sigImg.height)
+                page.drawImage(sigImg, { x: width - 300 + (200 - sigW) / 2, y: 125, width: sigW, height: sigH })
+            } catch (e) {
+                console.warn('Assinatura do certificado não carregou:', e)
+            }
+        }
 
         page.drawLine({
             start: { x: width - 300, y: 120 },
@@ -198,23 +274,25 @@ export class PDFService {
         }
 
         // Código de Validação
-        const authStr = `Código de Autenticação: ${codigoValidacao}`
-        page.drawText(authStr, {
-            x: width / 2 - (fontText.widthOfTextAtSize(authStr, 10) / 2),
-            y: 45,
-            size: 10,
-            font: fontText,
-            color: rgb(0.5, 0.5, 0.5),
-        })
-        const siteValidacao = config.site_validacao || 'nexori.com.br'
-        const authRefStr = `Verificável em: ${siteValidacao}/validar/${codigoValidacao}`
-        page.drawText(authRefStr, {
-            x: width / 2 - (fontText.widthOfTextAtSize(authRefStr, 10) / 2),
-            y: 30,
-            size: 10,
-            font: fontText,
-            color: rgb(0.5, 0.5, 0.5),
-        })
+        if (showCodigo) {
+            const authStr = `Código de Autenticação: ${codigoValidacao}`
+            page.drawText(authStr, {
+                x: width / 2 - (fontText.widthOfTextAtSize(authStr, 10) / 2),
+                y: 45,
+                size: 10,
+                font: fontText,
+                color: rgb(0.5, 0.5, 0.5),
+            })
+            const siteValidacao = config.site_validacao || 'nexori.com.br'
+            const authRefStr = `Verificável em: ${siteValidacao}/validar/${codigoValidacao}`
+            page.drawText(authRefStr, {
+                x: width / 2 - (fontText.widthOfTextAtSize(authRefStr, 10) / 2),
+                y: 30,
+                size: 10,
+                font: fontText,
+                color: rgb(0.5, 0.5, 0.5),
+            })
+        }
 
         const pdfBytes = await pdfDoc.save()
         return pdfBytes

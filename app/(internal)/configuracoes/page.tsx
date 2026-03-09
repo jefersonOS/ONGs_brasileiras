@@ -67,8 +67,23 @@ export default function ConfiguracoesPage() {
         texto_pos: '',
         site_validacao: '',
         fundo_url: '',
+        nome_instituicao: '',
+        alinhamento: 'centro',
+        mostrar_borda: true,
+        mostrar_codigo: true,
+        mostrar_carga_horaria: true,
+        mostrar_instituicao: true,
+        tam_titulo: 36,
+        tam_nome: 32,
+        tam_texto: 18,
+        tam_instituicao: 16,
+        cor_texto: '#4D4D4D',
+        cor_nome: '',
+        logo_url: '',
     })
     const [uploadingFundo, setUploadingFundo] = useState(false)
+    const [uploadingLogo, setUploadingLogo] = useState(false)
+    const [uploadingAssinatura, setUploadingAssinatura] = useState(false)
 
     const fetchData = useCallback(async () => {
         setLoading(true)
@@ -128,6 +143,19 @@ export default function ConfiguracoesPage() {
                 texto_pos: cfg.cert_texto_pos || '',
                 site_validacao: cfg.cert_site_validacao || '',
                 fundo_url: cfg.cert_fundo_url || '',
+                nome_instituicao: cfg.cert_nome_instituicao || '',
+                alinhamento: cfg.cert_alinhamento || 'centro',
+                mostrar_borda: cfg.cert_mostrar_borda !== false,
+                mostrar_codigo: cfg.cert_mostrar_codigo !== false,
+                mostrar_carga_horaria: cfg.cert_mostrar_carga_horaria !== false,
+                mostrar_instituicao: cfg.cert_mostrar_instituicao !== false,
+                tam_titulo: cfg.cert_tam_titulo || 36,
+                tam_nome: cfg.cert_tam_nome || 32,
+                tam_texto: cfg.cert_tam_texto || 18,
+                tam_instituicao: cfg.cert_tam_instituicao || 16,
+                cor_texto: cfg.cert_cor_texto || '#4D4D4D',
+                cor_nome: cfg.cert_cor_nome || '',
+                logo_url: cfg.cert_logo_url || '',
             })
         }
         setLoading(false)
@@ -169,6 +197,19 @@ export default function ConfiguracoesPage() {
             cert_texto_pre: certData.texto_pre,
             cert_texto_pos: certData.texto_pos,
             cert_site_validacao: certData.site_validacao,
+            cert_nome_instituicao: certData.nome_instituicao,
+            cert_alinhamento: certData.alinhamento,
+            cert_mostrar_borda: certData.mostrar_borda,
+            cert_mostrar_codigo: certData.mostrar_codigo,
+            cert_mostrar_carga_horaria: certData.mostrar_carga_horaria,
+            cert_mostrar_instituicao: certData.mostrar_instituicao,
+            cert_tam_titulo: certData.tam_titulo,
+            cert_tam_nome: certData.tam_nome,
+            cert_tam_texto: certData.tam_texto,
+            cert_tam_instituicao: certData.tam_instituicao,
+            cert_cor_texto: certData.cor_texto,
+            cert_cor_nome: certData.cor_nome,
+            cert_logo_url: certData.logo_url,
         }
 
         const { error } = await supabase
@@ -228,6 +269,8 @@ export default function ConfiguracoesPage() {
         setMessage({ type: 'success', text: 'Configurações salvas com sucesso!' })
         setSaving(false)
     }
+
+    const inputCls = "w-full px-5 py-3 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all"
 
     const tabs = [
         { id: 'organizacao', label: 'Organização', icon: Building },
@@ -505,108 +548,246 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab === 'certificados' && (
-                            <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
-                                <h3 className="text-xl font-black text-[#1A3C4A] mb-8">Configuração de Certificados</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                    <div className="space-y-6">
+                            <div className="space-y-6 animate-in fade-in duration-500">
+                                {/* Section: Textos */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Textos</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Responsável pela Assinatura</label>
-                                            <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({ ...certData, nome_responsavel: e.target.value })} placeholder="Ex: Maria Silva" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Título do Certificado</label>
+                                            <input type="text" value={certData.titulo} onChange={e => setCertData({...certData, titulo: e.target.value})} placeholder="CERTIFICADO DE CONCLUSÃO" className={inputCls} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Cargo do Responsável</label>
-                                            <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({ ...certData, cargo_responsavel: e.target.value })} placeholder="Ex: Coordenadora Geral" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome da Instituição <span className="normal-case font-normal text-gray-300">(deixe vazio para usar o nome da ONG)</span></label>
+                                            <input type="text" value={certData.nome_instituicao || ''} onChange={e => setCertData({...certData, nome_instituicao: e.target.value})} placeholder="Nome oficial da ONG" className={inputCls} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Título do Certificado</label>
-                                            <input type="text" value={certData.titulo} onChange={e => setCertData({ ...certData, titulo: e.target.value })} placeholder="CERTIFICADO DE CONCLUSÃO" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
-                                            <p className="text-[10px] text-gray-400 ml-1">Deixe em branco para usar o padrão conforme o tipo (certificado ou comprovante).</p>
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Texto antes do nome</label>
+                                            <input type="text" value={certData.texto_pre} onChange={e => setCertData({...certData, texto_pre: e.target.value})} placeholder="Certificamos que" className={inputCls} />
                                         </div>
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Texto antes do nome</label>
-                                            <input type="text" value={certData.texto_pre} onChange={e => setCertData({ ...certData, texto_pre: e.target.value })} placeholder="Certificamos que" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Texto após o nome</label>
+                                            <input type="text" value={certData.texto_pos} onChange={e => setCertData({...certData, texto_pos: e.target.value})} placeholder="concluiu com êxito o curso de" className={inputCls} />
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Texto após o nome</label>
-                                            <input type="text" value={certData.texto_pos} onChange={e => setCertData({ ...certData, texto_pos: e.target.value })} placeholder="concluiu com êxito o curso de" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
+                                        <div className="md:col-span-2 space-y-2">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Site de Validação</label>
+                                            <input type="text" value={certData.site_validacao} onChange={e => setCertData({...certData, site_validacao: e.target.value})} placeholder="portal.suaong.org.br" className={inputCls} />
+                                            <p className="text-[10px] text-gray-400">Se vazio, usa o domínio personalizado da aba Organização.</p>
                                         </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Site de Validação <span className="normal-case text-gray-300 font-medium">(opcional)</span></label>
-                                            <input type="text" value={certData.site_validacao} onChange={e => setCertData({ ...certData, site_validacao: e.target.value })} placeholder="portal.suaong.org.br" className="w-full px-6 py-4 bg-gray-50 border-none rounded-2xl text-sm font-bold focus:ring-2 focus:ring-[var(--secondary)]/20 transition-all" />
-                                            <p className="text-[10px] text-gray-400 ml-1">Se vazio, usa o domínio personalizado configurado na aba Organização ou o subdomínio padrão <span className="font-mono">slug.nexori.com.br</span>.</p>
-                                        </div>
+                                    </div>
+                                </div>
 
+                                {/* Section: Tipografia */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Tipografia e Tamanhos</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                                        {[
+                                            { label: 'Título', key: 'tam_titulo', min: 20, max: 60 },
+                                            { label: 'Nome do Aluno', key: 'tam_nome', min: 16, max: 56 },
+                                            { label: 'Texto do Corpo', key: 'tam_texto', min: 10, max: 30 },
+                                            { label: 'Nome da Inst.', key: 'tam_instituicao', min: 8, max: 28 },
+                                        ].map(({ label, key, min, max }) => (
+                                            <div key={key} className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
+                                                <div className="flex items-center gap-3">
+                                                    <input
+                                                        type="range"
+                                                        min={min} max={max}
+                                                        value={certData[key as keyof typeof certData] as number}
+                                                        onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
+                                                        className="flex-1 accent-[#2D9E6B]"
+                                                    />
+                                                    <span className="text-sm font-black text-[#1A3C4A] w-8 text-right">{certData[key as keyof typeof certData]}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section: Cores */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Cores</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                        {[
+                                            { label: 'Cor Primária', stateKey: 'cor_primaria', isVisual: true },
+                                            { label: 'Cor Secundária', stateKey: 'cor_secundaria', isVisual: true },
+                                            { label: 'Cor do Texto', stateKey: 'cor_texto', isVisual: false },
+                                            { label: 'Cor do Nome', stateKey: 'cor_nome', isVisual: false, placeholder: 'Usa Cor Secundária' },
+                                        ].map(({ label, stateKey, isVisual, placeholder }) => (
+                                            <div key={stateKey} className="space-y-3">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
+                                                <div className="flex gap-3 items-center">
+                                                    <input
+                                                        type="color"
+                                                        value={isVisual
+                                                            ? (visualData[stateKey as keyof typeof visualData] || '#000000')
+                                                            : (certData[stateKey as keyof typeof certData] as string || '#4D4D4D')}
+                                                        onChange={e => isVisual
+                                                            ? setVisualData({...visualData, [stateKey]: e.target.value})
+                                                            : setCertData({...certData, [stateKey]: e.target.value})}
+                                                        className="w-12 h-12 rounded-xl border-none p-1 cursor-pointer bg-gray-50"
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        value={isVisual
+                                                            ? (visualData[stateKey as keyof typeof visualData] || '')
+                                                            : (certData[stateKey as keyof typeof certData] as string || '')}
+                                                        onChange={e => isVisual
+                                                            ? setVisualData({...visualData, [stateKey]: e.target.value})
+                                                            : setCertData({...certData, [stateKey]: e.target.value})}
+                                                        placeholder={placeholder || '#000000'}
+                                                        className="flex-1 px-3 py-2 bg-gray-50 rounded-xl text-xs font-mono"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Section: Layout */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Layout e Visibilidade</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-4">
+                                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Alinhamento do Texto</p>
+                                            <div className="flex bg-gray-100 p-1 rounded-2xl w-fit gap-1">
+                                                {(['esquerda', 'centro', 'direita'] as const).map(a => (
+                                                    <button
+                                                        key={a} type="button"
+                                                        onClick={() => setCertData({...certData, alinhamento: a})}
+                                                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-white shadow-md text-[#1A3C4A]' : 'text-gray-400 hover:text-gray-600'}`}
+                                                    >
+                                                        {a === 'esquerda' ? '⬅ Esq.' : a === 'centro' ? '↔ Centro' : 'Dir. ➡'}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                         <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 ml-1 tracking-widest">Imagem de Fundo do Certificado</label>
-                                            <p className="text-[10px] text-gray-400 ml-1">Use PNG ou JPG no formato A4 paisagem (2480 × 1754 px recomendado). O texto será sobreposto.</p>
-                                            <label className={`flex flex-col items-center justify-center gap-3 w-full p-6 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingFundo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[var(--secondary)]'}`}>
-                                                {certData.fundo_url ? (
-                                                    <div className="w-full space-y-3">
-                                                        <img src={certData.fundo_url} alt="Fundo do certificado" className="w-full rounded-xl object-cover aspect-video border border-gray-100" />
-                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Imagem carregada — clique para substituir</p>
+                                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Mostrar / Ocultar Elementos</p>
+                                            {[
+                                                { key: 'mostrar_borda', label: 'Borda decorativa' },
+                                                { key: 'mostrar_instituicao', label: 'Nome da Instituição' },
+                                                { key: 'mostrar_carga_horaria', label: 'Carga Horária' },
+                                                { key: 'mostrar_codigo', label: 'Código de Validação' },
+                                            ].map(({ key, label }) => (
+                                                <label key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all">
+                                                    <span className="text-sm font-bold text-[#1A3C4A]">{label}</span>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={certData[key as keyof typeof certData] as boolean}
+                                                            onChange={e => setCertData({...certData, [key]: e.target.checked})}
+                                                            className="sr-only peer"
+                                                        />
+                                                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2D9E6B]"></div>
+                                                    </div>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Section: Assinatura */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Assinatura</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div className="space-y-5">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome do Responsável</label>
+                                                <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({...certData, nome_responsavel: e.target.value})} placeholder="Ex: Maria Silva" className={inputCls} />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cargo</label>
+                                                <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({...certData, cargo_responsavel: e.target.value})} placeholder="Ex: Coordenadora Geral" className={inputCls} />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem da Assinatura</label>
+                                            <label className={`flex flex-col items-center justify-center gap-2 w-full p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingAssinatura ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
+                                                {certData.assinatura_url ? (
+                                                    <div className="w-full space-y-2">
+                                                        <img src={certData.assinatura_url} alt="Assinatura" className="h-16 mx-auto object-contain" />
+                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
                                                     </div>
                                                 ) : (
                                                     <>
-                                                        <Upload className="w-8 h-8 text-gray-300" />
-                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingFundo ? 'Enviando...' : 'Clique para fazer upload'}</span>
+                                                        <Upload className="w-6 h-6 text-gray-300" />
+                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingAssinatura ? 'Enviando...' : 'Upload assinatura (PNG/JPG)'}</span>
                                                     </>
                                                 )}
-                                                <input
-                                                    type="file"
-                                                    accept="image/png,image/jpeg"
-                                                    className="hidden"
-                                                    onChange={async (e) => {
-                                                        const file = e.target.files?.[0]
-                                                        if (!file) return
-                                                        setUploadingFundo(true)
-                                                        const fd = new FormData()
-                                                        fd.append('file', file)
-                                                        const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
-                                                        const data = await res.json()
-                                                        if (data.url) setCertData(prev => ({ ...prev, fundo_url: data.url }))
-                                                        setUploadingFundo(false)
-                                                        e.target.value = ''
-                                                    }}
-                                                />
+                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                    const file = e.target.files?.[0]; if (!file) return
+                                                    setUploadingAssinatura(true)
+                                                    const fd = new FormData(); fd.append('file', file)
+                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                    const data = await res.json()
+                                                    if (data.url) setCertData(prev => ({...prev, assinatura_url: data.url}))
+                                                    setUploadingAssinatura(false); e.target.value = ''
+                                                }} />
                                             </label>
-                                            {certData.fundo_url && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCertData(prev => ({ ...prev, fundo_url: '' }))}
-                                                    className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase tracking-widest ml-1"
-                                                >
-                                                    Remover imagem de fundo
-                                                </button>
-                                            )}
+                                            {certData.assinatura_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover assinatura</button>}
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div className="bg-[#1A3C4A] rounded-[40px] p-8 text-white flex flex-col justify-between shadow-2xl shadow-black/20">
-                                        <div>
-                                            <span className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40">Visualização do Certificado</span>
-                                            <div className="mt-8 border border-white/10 rounded-2xl p-6 relative overflow-hidden" style={{ background: certData.fundo_url ? 'transparent' : 'rgba(255,255,255,0.05)' }}>
-                                                {certData.fundo_url && (
-                                                    <img src={certData.fundo_url} alt="" className="absolute inset-0 w-full h-full object-cover rounded-2xl opacity-80" />
-                                                )}
-                                                <div className="relative z-10">
-                                                    <h4 className="text-xl font-black mb-2 tracking-tight drop-shadow">{certData.titulo || 'CERTIFICADO DE CONCLUSÃO'}</h4>
-                                                    <div className="h-1 w-1/2 bg-[var(--secondary)] mb-4"></div>
-                                                    <p className="text-[8px] leading-relaxed opacity-80 drop-shadow">
-                                                        {certData.texto_pre || 'Certificamos que'} [NOME] {certData.texto_pos || 'concluiu com êxito o curso de'} [TÍTULO].
-                                                    </p>
-                                                    <div className="mt-10 pt-3 border-t border-white/20">
-                                                        <p className="text-[10px] font-black drop-shadow">{certData.nome_responsavel || 'Nome do Responsável'}</p>
-                                                        <p className="text-[8px] opacity-50 uppercase tracking-widest leading-none mt-1">{certData.cargo_responsavel || 'Cargo'}</p>
+                                {/* Section: Logo e Fundo */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Logo e Fundo</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Logo da Instituição no Certificado</label>
+                                            <p className="text-[10px] text-gray-400">Aparece no canto superior esquerdo. Use PNG com fundo transparente.</p>
+                                            <label className={`flex flex-col items-center justify-center gap-2 w-full p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingLogo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
+                                                {certData.logo_url ? (
+                                                    <div className="w-full space-y-2">
+                                                        <img src={certData.logo_url} alt="Logo" className="h-16 mx-auto object-contain" />
+                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
                                                     </div>
-                                                </div>
-                                            </div>
-                                            {certData.site_validacao && (
-                                                <p className="mt-4 text-[8px] opacity-40 font-mono text-center">
-                                                    Verificável em: {certData.site_validacao}/validar/[CÓDIGO]
-                                                </p>
-                                            )}
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-6 h-6 text-gray-300" />
+                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingLogo ? 'Enviando...' : 'Upload logo (PNG/JPG)'}</span>
+                                                    </>
+                                                )}
+                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                    const file = e.target.files?.[0]; if (!file) return
+                                                    setUploadingLogo(true)
+                                                    const fd = new FormData(); fd.append('file', file)
+                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                    const data = await res.json()
+                                                    if (data.url) setCertData(prev => ({...prev, logo_url: data.url}))
+                                                    setUploadingLogo(false); e.target.value = ''
+                                                }} />
+                                            </label>
+                                            {certData.logo_url && <button type="button" onClick={() => setCertData(prev => ({...prev, logo_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover logo</button>}
                                         </div>
-                                        <button type="button" className="w-full py-4 mt-8 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all">Ver PDF de Exemplo</button>
+                                        <div className="space-y-3">
+                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem de Fundo</label>
+                                            <p className="text-[10px] text-gray-400">A4 paisagem — 2480×1754 px recomendado. O texto é sobreposto.</p>
+                                            <label className={`flex flex-col items-center justify-center gap-2 w-full p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingFundo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
+                                                {certData.fundo_url ? (
+                                                    <div className="w-full space-y-2">
+                                                        <img src={certData.fundo_url} alt="Fundo" className="w-full h-24 object-cover rounded-xl" />
+                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
+                                                    </div>
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-6 h-6 text-gray-300" />
+                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingFundo ? 'Enviando...' : 'Upload fundo (PNG/JPG)'}</span>
+                                                    </>
+                                                )}
+                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                    const file = e.target.files?.[0]; if (!file) return
+                                                    setUploadingFundo(true)
+                                                    const fd = new FormData(); fd.append('file', file)
+                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                    const data = await res.json()
+                                                    if (data.url) setCertData(prev => ({...prev, fundo_url: data.url}))
+                                                    setUploadingFundo(false); e.target.value = ''
+                                                }} />
+                                            </label>
+                                            {certData.fundo_url && <button type="button" onClick={() => setCertData(prev => ({...prev, fundo_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover fundo</button>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
