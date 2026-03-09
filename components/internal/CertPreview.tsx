@@ -22,6 +22,7 @@ interface CertData {
     tam_instituicao: number
     cor_texto: string
     cor_nome: string
+    texto_complementar: string
     pos_y_conteudo: number
     pos_y_rodape: number
     pos_x_conteudo: number
@@ -214,10 +215,17 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                             fontSize: Math.min(certData.tam_texto + 6, 26),
                             fontWeight: 700,
                             color: primary,
-                            marginBottom: certData.mostrar_carga_horaria ? 8 : 0,
+                            marginBottom: 8,
                         }}>
                             {EXEMPLO_CURSO}
                         </div>
+
+                        {/* Texto complementar livre */}
+                        {certData.texto_complementar && (
+                            <div style={{ fontSize: certData.tam_texto - 2, color: textClr, marginBottom: 6, fontStyle: 'italic' }}>
+                                {certData.texto_complementar}
+                            </div>
+                        )}
 
                         {/* Carga horária */}
                         {certData.mostrar_carga_horaria && (

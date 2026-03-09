@@ -27,6 +27,8 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             .single()
 
         const cfg = tenant?.config_portal || {}
+        // Configurações por curso sobrescrevem o global
+        const cursoCfg: Record<string, string> = turma.curso?.cert_config || {}
         const siteValidacao = tenant?.dominio_custom || (tenant?.slug ? `${tenant.slug}.nexori.com.br` : 'nexori.com.br')
         const certConfig = {
             nome_responsavel: cfg.cert_nome_responsavel || undefined,
@@ -35,9 +37,10 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             site_validacao: siteValidacao,
             cor_primaria: cfg.cor_primaria || undefined,
             cor_secundaria: cfg.cor_secundaria || undefined,
-            titulo: cfg.cert_titulo || undefined,
-            texto_pre: cfg.cert_texto_pre || undefined,
-            texto_pos: cfg.cert_texto_pos || undefined,
+            titulo: cursoCfg.titulo || cfg.cert_titulo || undefined,
+            texto_pre: cursoCfg.texto_pre || cfg.cert_texto_pre || undefined,
+            texto_pos: cursoCfg.texto_pos || cfg.cert_texto_pos || undefined,
+            texto_complementar: cursoCfg.texto_complementar || undefined,
             fundo_url: cfg.cert_fundo_url || undefined,
             nome_instituicao: cfg.cert_nome_instituicao || undefined,
             alinhamento: cfg.cert_alinhamento || undefined,

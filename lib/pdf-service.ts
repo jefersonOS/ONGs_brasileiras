@@ -34,6 +34,8 @@ interface CertConfig {
     pos_y_rodape?: number
     pos_x_conteudo?: number
     pos_x_rodape?: number
+    // Texto complementar livre (por curso)
+    texto_complementar?: string
     // Mediador(a)
     nome_mediador?: string
     cargo_mediador?: string
@@ -226,12 +228,23 @@ export class PDFService {
             color: primaryColor,
         })
 
+        // Texto complementar livre (por curso)
+        if (config.texto_complementar) {
+            page.drawText(config.texto_complementar, {
+                x: calcX(config.texto_complementar, fontText, tamTexto - 2, align, width) + posXConteudo,
+                y: height - 405 + posYConteudo,
+                size: tamTexto - 2,
+                font: fontText,
+                color: textColor,
+            })
+        }
+
         // Carga Horária (se houver)
         if (showCarga && cargaHoraria && cargaHoraria !== '0') {
             const extraText = `com carga horária total de ${cargaHoraria} horas.`
             page.drawText(extraText, {
                 x: calcX(extraText, fontText, 16, align, width) + posXConteudo,
-                y: height - 410 + posYConteudo,
+                y: config.texto_complementar ? height - 425 + posYConteudo : height - 410 + posYConteudo,
                 size: 16,
                 font: fontText,
                 color: textColor,

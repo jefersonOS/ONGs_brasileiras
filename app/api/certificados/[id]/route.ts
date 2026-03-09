@@ -41,17 +41,19 @@ export async function GET(request: Request, { params }: { params: { id: string }
     let tenantId: string | null = null
     let certConfig: any = {}
     let nomeInstituicao = 'Organização'
+    let cursoCertConfig: Record<string, string> = {}
 
     if (certificado.inscricoes.entidade_tipo === 'curso') {
         const { data: curso } = await supabase
             .from('cursos')
-            .select('titulo, carga_horaria, tenant_id')
+            .select('titulo, carga_horaria, tenant_id, cert_config')
             .eq('id', certificado.inscricoes.entidade_id)
             .single()
         if (curso) {
             tituloEntidade = curso.titulo
             cargaHoraria = curso.carga_horaria?.toString() || '0'
             tenantId = curso.tenant_id || null
+            cursoCertConfig = curso.cert_config || {}
         }
     } else {
         const { data: atividade } = await supabase
@@ -82,9 +84,10 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 site_validacao: siteValidacao,
                 cor_primaria: cfg.cor_primaria || undefined,
                 cor_secundaria: cfg.cor_secundaria || undefined,
-                titulo: cfg.cert_titulo || undefined,
-                texto_pre: cfg.cert_texto_pre || undefined,
-                texto_pos: cfg.cert_texto_pos || undefined,
+                titulo: cursoCertConfig.titulo || cfg.cert_titulo || undefined,
+                texto_pre: cursoCertConfig.texto_pre || cfg.cert_texto_pre || undefined,
+                texto_pos: cursoCertConfig.texto_pos || cfg.cert_texto_pos || undefined,
+                texto_complementar: cursoCertConfig.texto_complementar || undefined,
                 fundo_url: cfg.cert_fundo_url || undefined,
                 nome_instituicao: cfg.cert_nome_instituicao || undefined,
                 alinhamento: cfg.cert_alinhamento || undefined,

@@ -25,6 +25,13 @@ export default function EditarCursoPage() {
     const [presencaMinima, setPresencaMinima] = useState(75)
     const [conteudoProgramatico, setConteudoProgramatico] = useState<{ modulo: string, topicos: string }[]>([])
 
+    const [certConfig, setCertConfig] = useState({
+        titulo: '',
+        texto_pre: '',
+        texto_pos: '',
+        texto_complementar: '',
+    })
+
     const [loading, setLoading] = useState(false)
     const [fetching, setFetching] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -42,6 +49,13 @@ export default function EditarCursoPage() {
             setPresencaMinima(data.presenca_minima ?? 75)
             setConteudoProgramatico(data.conteudo_programatico?.length ? data.conteudo_programatico : [{ modulo: '', topicos: '' }])
             setThumbnailUrl(data.thumbnail_url || '')
+            const cc = data.cert_config || {}
+            setCertConfig({
+                titulo: cc.titulo || '',
+                texto_pre: cc.texto_pre || '',
+                texto_pos: cc.texto_pos || '',
+                texto_complementar: cc.texto_complementar || '',
+            })
             setFetching(false)
         })
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,6 +113,12 @@ export default function EditarCursoPage() {
         setLoading(true)
         setError(null)
 
+        const certConfigToSave: Record<string, string> = {}
+        if (certConfig.titulo.trim()) certConfigToSave.titulo = certConfig.titulo.trim()
+        if (certConfig.texto_pre.trim()) certConfigToSave.texto_pre = certConfig.texto_pre.trim()
+        if (certConfig.texto_pos.trim()) certConfigToSave.texto_pos = certConfig.texto_pos.trim()
+        if (certConfig.texto_complementar.trim()) certConfigToSave.texto_complementar = certConfig.texto_complementar.trim()
+
         const updateData: Record<string, unknown> = {
             titulo,
             descricao,
@@ -110,6 +130,7 @@ export default function EditarCursoPage() {
             presenca_minima: presencaMinima,
             conteudo_programatico: conteudoProgramatico,
             thumbnail_url: thumbnailUrl || null,
+            cert_config: certConfigToSave,
         }
         if (statusOverride) updateData.status = statusOverride
 
@@ -269,6 +290,60 @@ export default function EditarCursoPage() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Presença Mínima para Certificado (%)</label>
                             <input type="number" min="0" max="100" value={presencaMinima} onChange={e => setPresencaMinima(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]" />
+                        </div>
+                    </div>
+                </div>
+
+                {/* Texto do Certificado */}
+                <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-1 pb-2 border-b border-gray-100">Texto do Certificado</h3>
+                    <p className="text-xs text-gray-400 mb-4">
+                        Deixe em branco para usar o texto padrão definido em Configurações.
+                        Os dados como <span className="font-mono bg-gray-100 px-1 rounded">nome do aluno</span>, <span className="font-mono bg-gray-100 px-1 rounded">nome do curso</span> e <span className="font-mono bg-gray-100 px-1 rounded">carga horária</span> são inseridos automaticamente.
+                    </p>
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Título do Certificado</label>
+                            <input
+                                type="text"
+                                value={certConfig.titulo}
+                                onChange={e => setCertConfig(c => ({...c, titulo: e.target.value}))}
+                                placeholder="Ex: CERTIFICADO DE CONCLUSÃO (padrão se vazio)"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] text-sm"
+                            />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Texto antes do nome do aluno</label>
+                                <input
+                                    type="text"
+                                    value={certConfig.texto_pre}
+                                    onChange={e => setCertConfig(c => ({...c, texto_pre: e.target.value}))}
+                                    placeholder='Ex: "Certificamos que" (padrão se vazio)'
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] text-sm"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Texto entre o nome e o curso</label>
+                                <input
+                                    type="text"
+                                    value={certConfig.texto_pos}
+                                    onChange={e => setCertConfig(c => ({...c, texto_pos: e.target.value}))}
+                                    placeholder='Ex: "concluiu com êxito o curso de" (padrão se vazio)'
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] text-sm"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Texto complementar livre <span className="text-gray-400 font-normal">(aparece após o nome do curso)</span></label>
+                            <textarea
+                                rows={3}
+                                value={certConfig.texto_complementar}
+                                onChange={e => setCertConfig(c => ({...c, texto_complementar: e.target.value}))}
+                                placeholder="Ex: realizado no período de Janeiro a Março de 2025, promovido pela parceria com o SENAC e a Prefeitura Municipal."
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] text-sm"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">Espaço livre para adicionar qualquer informação extra — período, parceiros, observações, etc.</p>
                         </div>
                     </div>
                 </div>
