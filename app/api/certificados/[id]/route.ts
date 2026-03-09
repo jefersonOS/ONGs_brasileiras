@@ -101,6 +101,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 logo_url: cfg.cert_logo_url || undefined,
                 pos_y_conteudo: cfg.cert_pos_y_conteudo ?? 0,
                 pos_y_rodape: cfg.cert_pos_y_rodape ?? 0,
+                pos_x_conteudo: cfg.cert_pos_x_conteudo ?? 0,
+                pos_x_rodape: cfg.cert_pos_x_rodape ?? 0,
             }
         }
     }

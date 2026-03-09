@@ -83,6 +83,8 @@ export default function ConfiguracoesPage() {
         logo_url: '',
         pos_y_conteudo: 0,
         pos_y_rodape: 0,
+        pos_x_conteudo: 0,
+        pos_x_rodape: 0,
     })
     const [uploadingFundo, setUploadingFundo] = useState(false)
     const [uploadingLogo, setUploadingLogo] = useState(false)
@@ -161,6 +163,8 @@ export default function ConfiguracoesPage() {
                 logo_url: cfg.cert_logo_url || '',
                 pos_y_conteudo: cfg.cert_pos_y_conteudo ?? 0,
                 pos_y_rodape: cfg.cert_pos_y_rodape ?? 0,
+                pos_x_conteudo: cfg.cert_pos_x_conteudo ?? 0,
+                pos_x_rodape: cfg.cert_pos_x_rodape ?? 0,
             })
         }
         setLoading(false)
@@ -217,6 +221,8 @@ export default function ConfiguracoesPage() {
             cert_logo_url: certData.logo_url,
             cert_pos_y_conteudo: certData.pos_y_conteudo,
             cert_pos_y_rodape: certData.pos_y_rodape,
+            cert_pos_x_conteudo: certData.pos_x_conteudo,
+            cert_pos_x_rodape: certData.pos_x_rodape,
         }
 
         const { error } = await supabase
@@ -624,36 +630,41 @@ export default function ConfiguracoesPage() {
                                     </div>
                                 </div>
 
-                                {/* Section: Posição Vertical */}
+                                {/* Section: Posição */}
                                 <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Posição Vertical dos Elementos</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        {[
-                                            { label: 'Título / Textos / Nome do Aluno', key: 'pos_y_conteudo', desc: 'Move o bloco principal de conteúdo' },
-                                            { label: 'Responsável / Assinatura', key: 'pos_y_rodape', desc: 'Move a assinatura e nome do responsável' },
-                                        ].map(({ label, key, desc }) => (
-                                            <div key={key} className="space-y-3">
-                                                <div>
-                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
-                                                    <p className="text-[9px] text-gray-300 mt-0.5">{desc}</p>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-[9px] font-bold text-gray-300">↓</span>
-                                                    <input
-                                                        type="range"
-                                                        min={-150} max={150}
-                                                        value={certData[key as keyof typeof certData] as number}
-                                                        onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
-                                                        className="flex-1 accent-[#2D9E6B]"
-                                                    />
-                                                    <span className="text-[9px] font-bold text-gray-300">↑</span>
-                                                    <span className="text-sm font-black text-[#1A3C4A] w-12 text-right">
-                                                        {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
-                                                    </span>
-                                                    {(certData[key as keyof typeof certData] as number) !== 0 && (
-                                                        <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] font-black text-gray-300 hover:text-red-400 uppercase">reset</button>
-                                                    )}
-                                                </div>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Posição dos Elementos</h4>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                        {([
+                                            { label: 'Título / Textos / Nome do Aluno', keyY: 'pos_y_conteudo', keyX: 'pos_x_conteudo' },
+                                            { label: 'Responsável / Assinatura', keyY: 'pos_y_rodape', keyX: 'pos_x_rodape' },
+                                        ] as const).map(({ label, keyY, keyX }) => (
+                                            <div key={keyY} className="space-y-4">
+                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
+                                                {([
+                                                    { axis: 'Vertical', key: keyY, negLabel: '↓', posLabel: '↑' },
+                                                    { axis: 'Horizontal', key: keyX, negLabel: '←', posLabel: '→' },
+                                                ] as const).map(({ axis, key, negLabel, posLabel }) => (
+                                                    <div key={key} className="space-y-1">
+                                                        <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">{axis}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-[9px] font-bold text-gray-300 w-4 text-center">{negLabel}</span>
+                                                            <input
+                                                                type="range"
+                                                                min={-300} max={300}
+                                                                value={certData[key as keyof typeof certData] as number}
+                                                                onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
+                                                                className="flex-1 accent-[#2D9E6B]"
+                                                            />
+                                                            <span className="text-[9px] font-bold text-gray-300 w-4 text-center">{posLabel}</span>
+                                                            <span className="text-xs font-black text-[#1A3C4A] w-12 text-right">
+                                                                {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
+                                                            </span>
+                                                            {(certData[key as keyof typeof certData] as number) !== 0 && (
+                                                                <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] font-black text-gray-300 hover:text-red-400 uppercase">0</button>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </div>
                                         ))}
                                     </div>

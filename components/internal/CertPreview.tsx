@@ -63,6 +63,8 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
         : 'center'
     const posYConteudo = certData.pos_y_conteudo || 0
     const posYRodape = certData.pos_y_rodape || 0
+    const posXConteudo = certData.pos_x_conteudo || 0
+    const posXRodape = certData.pos_x_rodape || 0
 
     const outerW = Math.round(W * scale)
     const outerH = Math.round(H * scale)
@@ -125,8 +127,8 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                         style={{
                             position: 'absolute',
                             top: 50 - posYConteudo,
-                            left: 60,
-                            right: 60,
+                            left: 60 + posXConteudo,
+                            right: 60 - posXConteudo,
                             bottom: 130 + posYConteudo,
                             display: 'flex',
                             flexDirection: 'column',
@@ -212,8 +214,8 @@ export function CertPreview({ certData, corPrimaria, corSecundaria, tenantNome, 
                     <div style={{
                         position: 'absolute',
                         bottom: 55 + posYRodape,
-                        left: 80,
-                        right: 80,
+                        left: 80 + posXRodape,
+                        right: 80 - posXRodape,
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'flex-end',
