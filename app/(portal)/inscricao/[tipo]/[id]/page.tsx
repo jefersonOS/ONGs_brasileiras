@@ -161,17 +161,21 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
         e.preventDefault()
         setSavingPerfil(true)
         try {
-            // Salvar dados atualizados no perfil
-            await supabase.from('users').upsert({
-                id: user.id,
-                nome,
-                email,
-                whatsapp,
-                cpf,
-                rg,
-                data_nascimento: dataNascimento || null,
-                endereco,
-            }, { onConflict: 'id' })
+            // Verificar se registro existe antes de atualizar
+            const { data: userExists } = await supabase.from('users').select('id').eq('id', user.id).single()
+            if (userExists) {
+                // Atualizar apenas os campos editados, preservando tenant_id, ativo, role, etc.
+                await supabase.from('users').update({
+                    nome,
+                    email,
+                    whatsapp,
+                    cpf,
+                    rg,
+                    data_nascimento: dataNascimento || null,
+                    endereco,
+                }).eq('id', user.id)
+            }
+            // Se não existe, o upsert na API de confirmar irá criar quando a inscrição for submetida
 
             await supabase.auth.updateUser({ data: { nome, whatsapp } })
         } finally {
