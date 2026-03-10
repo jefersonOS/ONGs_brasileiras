@@ -217,8 +217,8 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
 
                     {certData.nome_mediador && (
                         <div style={{
-                            position: 'absolute', bottom: 55 + posYRodape,
-                            left: 80 + posXRodape, textAlign: 'center', minWidth: 200,
+                            position: 'absolute', bottom: 55,
+                            left: 80, textAlign: 'center', minWidth: 200,
                             transform: `translate(${offXMed}px, ${-offYMed}px)`,
                         }}>
                             {certData.assinatura_mediador_url && (
@@ -233,8 +233,8 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                     )}
 
                     <div style={{
-                        position: 'absolute', bottom: 55 + posYRodape,
-                        right: 80 - posXRodape, textAlign: 'center', minWidth: 200,
+                        position: 'absolute', bottom: 55,
+                        right: 80, textAlign: 'center', minWidth: 200,
                         transform: `translate(${-offXResp}px, ${-offYResp}px)`,
                     }}>
                         {certData.assinatura_url && (

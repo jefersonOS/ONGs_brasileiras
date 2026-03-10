@@ -692,7 +692,7 @@ export default function ConfiguracoesPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         {([
                                             { label: 'Título / Textos / Nome do Aluno', keyY: 'pos_y_conteudo', keyX: 'pos_x_conteudo' },
-                                            { label: 'Responsável / Assinatura', keyY: 'pos_y_rodape', keyX: 'pos_x_rodape' },
+                                            { label: 'Data de Emissão', keyY: 'pos_y_rodape', keyX: 'pos_x_rodape' },
                                         ] as const).map(({ label, keyY, keyX }) => (
                                             <div key={keyY} className="space-y-4">
                                                 <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>

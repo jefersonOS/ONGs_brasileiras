@@ -313,8 +313,8 @@ export class PDFService {
 
         // Mediador
         if (hasMediador) {
-            const medX = 80 + posXRodape + offXMed
-            const medY = baseY + offYMed
+            const medX = 80 + offXMed
+            const medY = offYMed
             const medBlockW = 200
             if (config.assinatura_mediador_url) {
                 try {
@@ -335,8 +335,8 @@ export class PDFService {
         }
 
         // Responsável
-        const respX = width - 300 + posXRodape + offXResp
-        const respY = baseY + offYResp
+        const respX = width - 300 + offXResp
+        const respY = offYResp
         if (config.assinatura_url) {
             try {
                 const sigRes = await fetch(config.assinatura_url)
