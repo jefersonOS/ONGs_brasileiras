@@ -811,7 +811,25 @@ export default function ConfiguracoesPage() {
 
                                 {/* Section: Assinaturas */}
                                 <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Assinaturas</h4>
+                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Assinaturas</h4>
+                                    {/* Vertical compartilhado */}
+                                    <div className="mb-6 p-4 bg-gray-50 rounded-2xl space-y-2">
+                                        <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">↕ Vertical — Ambas as Assinaturas</p>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-[9px] text-gray-300">↓</span>
+                                            <input type="range" min={-300} max={300}
+                                                value={certData.off_y_responsavel}
+                                                onChange={e => setCertData({...certData, off_y_responsavel: Number(e.target.value)})}
+                                                className="flex-1 accent-[#2D9E6B]" />
+                                            <span className="text-[9px] text-gray-300">↑</span>
+                                            <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
+                                                {certData.off_y_responsavel > 0 ? '+' : ''}{certData.off_y_responsavel}
+                                            </span>
+                                            {certData.off_y_responsavel !== 0 && (
+                                                <button type="button" onClick={() => setCertData({...certData, off_y_responsavel: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
+                                            )}
+                                        </div>
+                                    </div>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 
                                         {/* Responsável */}
@@ -853,27 +871,21 @@ export default function ConfiguracoesPage() {
                                             </div>
                                             {/* Posição individual */}
                                             <div className="pt-2 border-t border-gray-200 space-y-3">
-                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">Posição</p>
-                                                {([
-                                                    { label: '↔ Horizontal', key: 'off_x_responsavel', negL: '←', posL: '→' },
-                                                    { label: '↕ Vertical', key: 'off_y_responsavel', negL: '↓', posL: '↑' },
-                                                ] as const).map(({ label, key, negL, posL }) => (
-                                                    <div key={key} className="flex items-center gap-2">
-                                                        <span className="text-[9px] text-gray-300 w-16 shrink-0">{label}</span>
-                                                        <span className="text-[9px] text-gray-300">{negL}</span>
-                                                        <input type="range" min={-300} max={300}
-                                                            value={certData[key as keyof typeof certData] as number}
-                                                            onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
-                                                            className="flex-1 accent-[#2D9E6B]" />
-                                                        <span className="text-[9px] text-gray-300">{posL}</span>
-                                                        <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
-                                                            {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
-                                                        </span>
-                                                        {(certData[key as keyof typeof certData] as number) !== 0 && (
-                                                            <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">↔ Horizontal</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] text-gray-300">←</span>
+                                                    <input type="range" min={-300} max={300}
+                                                        value={certData.off_x_responsavel}
+                                                        onChange={e => setCertData({...certData, off_x_responsavel: Number(e.target.value)})}
+                                                        className="flex-1 accent-[#2D9E6B]" />
+                                                    <span className="text-[9px] text-gray-300">→</span>
+                                                    <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
+                                                        {certData.off_x_responsavel > 0 ? '+' : ''}{certData.off_x_responsavel}
+                                                    </span>
+                                                    {certData.off_x_responsavel !== 0 && (
+                                                        <button type="button" onClick={() => setCertData({...certData, off_x_responsavel: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 
@@ -916,27 +928,21 @@ export default function ConfiguracoesPage() {
                                             </div>
                                             {/* Posição individual */}
                                             <div className="pt-2 border-t border-gray-200 space-y-3">
-                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">Posição</p>
-                                                {([
-                                                    { label: '↔ Horizontal', key: 'off_x_mediador', negL: '←', posL: '→' },
-                                                    { label: '↕ Vertical', key: 'off_y_mediador', negL: '↓', posL: '↑' },
-                                                ] as const).map(({ label, key, negL, posL }) => (
-                                                    <div key={key} className="flex items-center gap-2">
-                                                        <span className="text-[9px] text-gray-300 w-16 shrink-0">{label}</span>
-                                                        <span className="text-[9px] text-gray-300">{negL}</span>
-                                                        <input type="range" min={-300} max={300}
-                                                            value={certData[key as keyof typeof certData] as number}
-                                                            onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
-                                                            className="flex-1 accent-[#2D9E6B]" />
-                                                        <span className="text-[9px] text-gray-300">{posL}</span>
-                                                        <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
-                                                            {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
-                                                        </span>
-                                                        {(certData[key as keyof typeof certData] as number) !== 0 && (
-                                                            <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">↔ Horizontal</p>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[9px] text-gray-300">←</span>
+                                                    <input type="range" min={-300} max={300}
+                                                        value={certData.off_x_mediador}
+                                                        onChange={e => setCertData({...certData, off_x_mediador: Number(e.target.value)})}
+                                                        className="flex-1 accent-[#2D9E6B]" />
+                                                    <span className="text-[9px] text-gray-300">→</span>
+                                                    <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
+                                                        {certData.off_x_mediador > 0 ? '+' : ''}{certData.off_x_mediador}
+                                                    </span>
+                                                    {certData.off_x_mediador !== 0 && (
+                                                        <button type="button" onClick={() => setCertData({...certData, off_x_mediador: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
 

@@ -172,7 +172,6 @@ export class PDFService {
         const posXConteudo = config.pos_x_conteudo || 0
         const posXRodape = config.pos_x_rodape || 0
         const offXMed = config.off_x_mediador || 0
-        const offYMed = config.off_y_mediador || 0
         const offXResp = config.off_x_responsavel || 0
         const offYResp = config.off_y_responsavel || 0
 
@@ -314,7 +313,7 @@ export class PDFService {
         // Mediador
         if (hasMediador) {
             const medX = 80 + offXMed
-            const medY = offYMed
+            const medY = offYResp
             const medBlockW = 200
             if (config.assinatura_mediador_url) {
                 try {

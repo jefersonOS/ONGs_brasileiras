@@ -219,7 +219,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                         <div style={{
                             position: 'absolute', bottom: 55,
                             left: 80, textAlign: 'center', minWidth: 200,
-                            transform: `translate(${offXMed}px, ${-offYMed}px)`,
+                            transform: `translate(${offXMed}px, ${-offYResp}px)`,
                         }}>
                             {certData.assinatura_mediador_url && (
                                 <img src={certData.assinatura_mediador_url} alt="Assinatura mediador"
