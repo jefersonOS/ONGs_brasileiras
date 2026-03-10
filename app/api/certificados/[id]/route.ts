@@ -113,6 +113,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 off_y_mediador: cfg.cert_off_y_mediador ?? 0,
                 off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
                 off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
+                blocos: cfg.cert_blocos?.length ? cfg.cert_blocos : undefined,
             }
         }
     }

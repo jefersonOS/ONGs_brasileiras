@@ -66,6 +66,10 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             off_y_mediador: cfg.cert_off_y_mediador ?? 0,
             off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
             off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
+            blocos: cfg.cert_blocos?.length ? cfg.cert_blocos : undefined,
+            periodo: turma.data_inicio && turma.data_fim
+                ? `${new Date(turma.data_inicio).toLocaleDateString('pt-BR')} a ${new Date(turma.data_fim).toLocaleDateString('pt-BR')}`
+                : undefined,
         }
         const nomeInstituicao = tenant?.nome || 'Organização'
 

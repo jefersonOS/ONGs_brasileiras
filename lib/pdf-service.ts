@@ -1,5 +1,17 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 
+export interface BlocoCert {
+    id: string
+    texto: string
+    x: number       // distância da esquerda (0–841); ignorado quando alinhamento='centro'
+    y: number       // distância do topo (0–595)
+    tam: number     // tamanho da fonte
+    negrito: boolean
+    italico: boolean
+    cor: string     // hex, ex: '#1A3C4A'
+    alinhamento: 'esquerda' | 'centro' | 'direita'
+}
+
 interface CertConfig {
     titulo?: string
     texto_pre?: string
@@ -44,6 +56,10 @@ interface CertConfig {
     off_y_mediador?: number
     off_x_responsavel?: number
     off_y_responsavel?: number
+    // Blocos de texto posicionáveis com tokens
+    blocos?: BlocoCert[]
+    // Período (para token {{periodo}})
+    periodo?: string
 }
 
 function hexToRgb(hex: string) {
@@ -58,6 +74,10 @@ function calcX(text: string, font: any, size: number, align: string, width: numb
     if (align === 'esquerda') return margin
     if (align === 'direita') return width - margin - tw
     return width / 2 - tw / 2
+}
+
+function resolveTokens(texto: string, vals: Record<string, string>): string {
+    return texto.replace(/\{\{(\w+)\}\}/g, (_, k) => vals[k] ?? '')
 }
 
 export class PDFService {
@@ -101,6 +121,7 @@ export class PDFService {
         const fontTitle = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
         const fontText = await pdfDoc.embedFont(StandardFonts.Helvetica)
         const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique)
+        const fontBoldItalic = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique)
 
         // Cores
         const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.29)
@@ -159,96 +180,139 @@ export class PDFService {
             })
         }
 
-        // Cabeçalho / Instituição
-        if (showInstituicao) {
-            const nomeInstit = config.nome_instituicao || nomeInstituicao
-            const instText = nomeInstit.toUpperCase()
-            page.drawText(instText, {
-                x: calcX(instText, fontTitle, tamInstituicao, align, width),
-                y: height - 80,
-                size: tamInstituicao,
+        // ── MODO BLOCOS ── se houver blocos configurados, usa renderização por blocos
+        if (config.blocos && config.blocos.length > 0) {
+            const tokenVals: Record<string, string> = {
+                nome: nomeCidadao.toUpperCase(),
+                curso: tituloEntidade,
+                carga_horaria: String(cargaHoraria),
+                data_emissao: dataEmissao.toLocaleDateString('pt-BR'),
+                instituicao: config.nome_instituicao || nomeInstituicao,
+                codigo: codigoValidacao,
+                periodo: config.periodo || '',
+            }
+
+            for (const bloco of config.blocos) {
+                const resolvedText = resolveTokens(bloco.texto, tokenVals)
+                const font = bloco.negrito && bloco.italico ? fontBoldItalic
+                    : bloco.negrito ? fontTitle
+                    : bloco.italico ? fontItalic
+                    : fontText
+                const color = bloco.cor ? hexToRgb(bloco.cor) : textColor
+                const lines = resolvedText.split('\n')
+                const lineHeight = bloco.tam * 1.4
+
+                lines.forEach((line, i) => {
+                    if (!line.trim()) return
+                    const tw = font.widthOfTextAtSize(line, bloco.tam)
+                    let px: number
+                    if (bloco.alinhamento === 'centro') {
+                        px = width / 2 - tw / 2
+                    } else if (bloco.alinhamento === 'direita') {
+                        px = width - bloco.x - tw
+                    } else {
+                        px = bloco.x
+                    }
+                    // Converte y (do topo) para coord PDF (da base)
+                    const py = height - bloco.y - bloco.tam - (i * lineHeight)
+                    if (py > 0 && py < height) {
+                        page.drawText(line, { x: px, y: py, size: bloco.tam, font, color })
+                    }
+                })
+            }
+        } else {
+            // ── MODO CLÁSSICO ── layout padrão
+            // Cabeçalho / Instituição
+            if (showInstituicao) {
+                const nomeInstit = config.nome_instituicao || nomeInstituicao
+                const instText = nomeInstit.toUpperCase()
+                page.drawText(instText, {
+                    x: calcX(instText, fontTitle, tamInstituicao, align, width),
+                    y: height - 80,
+                    size: tamInstituicao,
+                    font: fontTitle,
+                    color: primaryColor,
+                })
+            }
+
+            // Título Principal
+            const tituloDoc = config.titulo || (tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO')
+            page.drawText(tituloDoc, {
+                x: calcX(tituloDoc, fontTitle, tamTitulo, align, width) + posXConteudo,
+                y: height - 160 + posYConteudo,
+                size: tamTitulo,
                 font: fontTitle,
                 color: primaryColor,
             })
-        }
 
-        // Título Principal
-        const tituloDoc = config.titulo || (tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO')
-        page.drawText(tituloDoc, {
-            x: calcX(tituloDoc, fontTitle, tamTitulo, align, width) + posXConteudo,
-            y: height - 160 + posYConteudo,
-            size: tamTitulo,
-            font: fontTitle,
-            color: primaryColor,
-        })
+            // Corpo do Texto
+            const textPre = config.texto_pre || (tipo === 'certificado'
+                ? 'Certificamos que'
+                : 'Comprovamos para os devidos fins que')
 
-        // Corpo do Texto
-        const textPre = config.texto_pre || (tipo === 'certificado'
-            ? 'Certificamos que'
-            : 'Comprovamos para os devidos fins que')
-
-        page.drawText(textPre, {
-            x: calcX(textPre, fontText, tamTexto, align, width) + posXConteudo,
-            y: height - 230 + posYConteudo,
-            size: tamTexto,
-            font: fontText,
-            color: textColor,
-        })
-
-        // Nome do Participante (Destaque)
-        const nomeUpper = nomeCidadao.toUpperCase()
-        page.drawText(nomeUpper, {
-            x: calcX(nomeUpper, fontTitle, tamNome, align, width) + posXConteudo,
-            y: height - 280 + posYConteudo,
-            size: tamNome,
-            font: fontTitle,
-            color: nameColor,
-        })
-
-        // Continuação do Texto
-        const textPos = config.texto_pos || (tipo === 'certificado'
-            ? `concluiu com êxito o curso de`
-            : `esteve presente na atividade de`)
-
-        page.drawText(textPos, {
-            x: calcX(textPos, fontText, tamTexto, align, width) + posXConteudo,
-            y: height - 330 + posYConteudo,
-            size: tamTexto,
-            font: fontText,
-            color: textColor,
-        })
-
-        // Nome do Curso/Atividade
-        const cursoText = `"${tituloEntidade}"`
-        page.drawText(cursoText, {
-            x: calcX(cursoText, fontTitle, 24, align, width) + posXConteudo,
-            y: height - 370 + posYConteudo,
-            size: 24,
-            font: fontTitle,
-            color: primaryColor,
-        })
-
-        // Texto complementar livre (por curso)
-        if (config.texto_complementar) {
-            page.drawText(config.texto_complementar, {
-                x: calcX(config.texto_complementar, fontText, tamTexto - 2, align, width) + posXConteudo,
-                y: height - 405 + posYConteudo,
-                size: tamTexto - 2,
+            page.drawText(textPre, {
+                x: calcX(textPre, fontText, tamTexto, align, width) + posXConteudo,
+                y: height - 230 + posYConteudo,
+                size: tamTexto,
                 font: fontText,
                 color: textColor,
             })
-        }
 
-        // Carga Horária (se houver)
-        if (showCarga && cargaHoraria && cargaHoraria !== '0') {
-            const extraText = `com carga horária total de ${cargaHoraria} horas.`
-            page.drawText(extraText, {
-                x: calcX(extraText, fontText, 16, align, width) + posXConteudo,
-                y: config.texto_complementar ? height - 425 + posYConteudo : height - 410 + posYConteudo,
-                size: 16,
+            // Nome do Participante (Destaque)
+            const nomeUpper = nomeCidadao.toUpperCase()
+            page.drawText(nomeUpper, {
+                x: calcX(nomeUpper, fontTitle, tamNome, align, width) + posXConteudo,
+                y: height - 280 + posYConteudo,
+                size: tamNome,
+                font: fontTitle,
+                color: nameColor,
+            })
+
+            // Continuação do Texto
+            const textPos = config.texto_pos || (tipo === 'certificado'
+                ? `concluiu com êxito o curso de`
+                : `esteve presente na atividade de`)
+
+            page.drawText(textPos, {
+                x: calcX(textPos, fontText, tamTexto, align, width) + posXConteudo,
+                y: height - 330 + posYConteudo,
+                size: tamTexto,
                 font: fontText,
                 color: textColor,
             })
+
+            // Nome do Curso/Atividade
+            const cursoText = `"${tituloEntidade}"`
+            page.drawText(cursoText, {
+                x: calcX(cursoText, fontTitle, 24, align, width) + posXConteudo,
+                y: height - 370 + posYConteudo,
+                size: 24,
+                font: fontTitle,
+                color: primaryColor,
+            })
+
+            // Texto complementar livre (por curso)
+            if (config.texto_complementar) {
+                page.drawText(config.texto_complementar, {
+                    x: calcX(config.texto_complementar, fontText, tamTexto - 2, align, width) + posXConteudo,
+                    y: height - 405 + posYConteudo,
+                    size: tamTexto - 2,
+                    font: fontText,
+                    color: textColor,
+                })
+            }
+
+            // Carga Horária (se houver)
+            if (showCarga && cargaHoraria && cargaHoraria !== '0') {
+                const extraText = `com carga horária total de ${cargaHoraria} horas.`
+                page.drawText(extraText, {
+                    x: calcX(extraText, fontText, 16, align, width) + posXConteudo,
+                    y: config.texto_complementar ? height - 425 + posYConteudo : height - 410 + posYConteudo,
+                    size: 16,
+                    font: fontText,
+                    color: textColor,
+                })
+            }
         }
 
         const hasMediador = !!(config.nome_mediador)

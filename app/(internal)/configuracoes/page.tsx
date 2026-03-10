@@ -8,6 +8,8 @@ import {
     CheckCircle, AlertCircle, Loader2, LayoutTemplate, Trash2
 } from 'lucide-react'
 import { CertPreview } from '@/components/internal/CertPreview'
+import { CertBlocosEditor } from '@/components/internal/CertBlocosEditor'
+import { BlocoCert } from '@/lib/pdf-service'
 
 export default function ConfiguracoesPage() {
     const supabase = createClient()
@@ -98,6 +100,7 @@ export default function ConfiguracoesPage() {
     const [uploadingLogo, setUploadingLogo] = useState(false)
     const [uploadingAssinatura, setUploadingAssinatura] = useState(false)
     const [uploadingMediador, setUploadingMediador] = useState(false)
+    const [certBlocos, setCertBlocos] = useState<BlocoCert[]>([])
 
     // Dados de exemplo para o preview (não são salvos)
     const [preview, setPreview] = useState({
@@ -190,6 +193,7 @@ export default function ConfiguracoesPage() {
                 off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
                 off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
             })
+            setCertBlocos(cfg.cert_blocos || [])
         }
         setLoading(false)
     }, [supabase])
@@ -254,6 +258,7 @@ export default function ConfiguracoesPage() {
             cert_off_y_mediador: certData.off_y_mediador,
             cert_off_x_responsavel: certData.off_x_responsavel,
             cert_off_y_responsavel: certData.off_y_responsavel,
+            cert_blocos: certBlocos,
         }
 
         const { error } = await supabase
@@ -614,6 +619,7 @@ export default function ConfiguracoesPage() {
                                     <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-x-auto">
                                         <CertPreview
                                             certData={certData}
+                                            blocos={certBlocos}
                                             corPrimaria={visualData.cor_primaria}
                                             corSecundaria={visualData.cor_secundaria}
                                             tenantNome={tenant?.nome || ''}
@@ -997,6 +1003,20 @@ export default function ConfiguracoesPage() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Section: Blocos de Texto */}
+                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                    <div className="flex items-start justify-between mb-6">
+                                        <div>
+                                            <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Blocos de Texto Personalizados</h4>
+                                            <p className="text-[10px] text-gray-400 mt-1">
+                                                Posicione cada elemento livremente. Se houver blocos, eles substituem o layout padrão (Título, Nome, Textos).
+                                                O rodapé (assinaturas, data, código) é sempre mantido.
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <CertBlocosEditor blocos={certBlocos} onChange={setCertBlocos} />
+                                </div>
                             </div>
 
                             {/* Preview sticky */}
@@ -1021,6 +1041,7 @@ export default function ConfiguracoesPage() {
                                     <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
                                         <CertPreview
                                             certData={certData}
+                                            blocos={certBlocos}
                                             corPrimaria={visualData.cor_primaria}
                                             corSecundaria={visualData.cor_secundaria}
                                             tenantNome={tenant?.nome || ''}
