@@ -598,470 +598,553 @@ export default function ConfiguracoesPage() {
 
                         {activeTab === 'certificados' && (
                             <div className="animate-in fade-in duration-500">
-                            <div className="grid grid-cols-1 2xl:grid-cols-[1fr_390px] gap-6">
-                            <div className="space-y-6">
-                                {/* Preview mobile (oculto em telas grandes) */}
-                                <div className="2xl:hidden space-y-3">
-                                    <div className="bg-white p-4 rounded-[24px] shadow-xl shadow-black/5 border border-gray-50 grid grid-cols-3 gap-2">
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Aluno</label>
-                                            <input type="text" value={preview.aluno} onChange={e => setPreview(p => ({...p, aluno: e.target.value}))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Curso</label>
-                                            <input type="text" value={preview.curso} onChange={e => setPreview(p => ({...p, curso: e.target.value}))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
-                                        </div>
-                                        <div className="space-y-1">
-                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">C.H. (h)</label>
-                                            <input type="text" value={preview.ch} onChange={e => setPreview(p => ({...p, ch: e.target.value}))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-x-auto">
-                                        <CertPreview
-                                            certData={certData}
-                                            blocos={certBlocos}
-                                            corPrimaria={visualData.cor_primaria}
-                                            corSecundaria={visualData.cor_secundaria}
-                                            tenantNome={tenant?.nome || ''}
-                                            scale={0.38}
-                                            exemploAluno={preview.aluno}
-                                            exemploCurso={preview.curso}
-                                            exemploCH={preview.ch}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Section: Textos */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Textos</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Título do Certificado</label>
-                                            <input type="text" value={certData.titulo} onChange={e => setCertData({...certData, titulo: e.target.value})} placeholder="CERTIFICADO DE CONCLUSÃO" className={inputCls} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome da Instituição <span className="normal-case font-normal text-gray-300">(deixe vazio para usar o nome da ONG)</span></label>
-                                            <input type="text" value={certData.nome_instituicao || ''} onChange={e => setCertData({...certData, nome_instituicao: e.target.value})} placeholder="Nome oficial da ONG" className={inputCls} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Texto antes do nome</label>
-                                            <input type="text" value={certData.texto_pre} onChange={e => setCertData({...certData, texto_pre: e.target.value})} placeholder="Certificamos que" className={inputCls} />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Texto após o nome</label>
-                                            <input type="text" value={certData.texto_pos} onChange={e => setCertData({...certData, texto_pos: e.target.value})} placeholder="concluiu com êxito o curso de" className={inputCls} />
-                                        </div>
-                                        <div className="md:col-span-2 space-y-2">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Site de Validação</label>
-                                            <input type="text" value={certData.site_validacao} onChange={e => setCertData({...certData, site_validacao: e.target.value})} placeholder="portal.suaong.org.br" className={inputCls} />
-                                            <p className="text-[10px] text-gray-400">Se vazio, usa o domínio personalizado da aba Organização.</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Section: Tipografia */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Tipografia e Tamanhos</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                                        {[
-                                            { label: 'Título', key: 'tam_titulo', min: 20, max: 60 },
-                                            { label: 'Nome do Aluno', key: 'tam_nome', min: 16, max: 56 },
-                                            { label: 'Texto do Corpo', key: 'tam_texto', min: 10, max: 30 },
-                                            { label: 'Nome da Inst.', key: 'tam_instituicao', min: 8, max: 28 },
-                                        ].map(({ label, key, min, max }) => (
-                                            <div key={key} className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
-                                                <div className="flex items-center gap-3">
-                                                    <input
-                                                        type="range"
-                                                        min={min} max={max}
-                                                        value={certData[key as keyof typeof certData] as number}
-                                                        onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
-                                                        className="flex-1 accent-[#2D9E6B]"
-                                                    />
-                                                    <span className="text-sm font-black text-[#1A3C4A] w-8 text-right">{certData[key as keyof typeof certData]}</span>
+                                <div className="grid grid-cols-1 2xl:grid-cols-[1fr_390px] gap-6">
+                                    <div className="space-y-6">
+                                        {/* Preview mobile (oculto em telas grandes) */}
+                                        <div className="2xl:hidden space-y-3">
+                                            <div className="bg-white p-4 rounded-[24px] shadow-xl shadow-black/5 border border-gray-50 grid grid-cols-3 gap-2">
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Aluno</label>
+                                                    <input type="text" value={preview.aluno} onChange={e => setPreview(p => ({ ...p, aluno: e.target.value }))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Curso</label>
+                                                    <input type="text" value={preview.curso} onChange={e => setPreview(p => ({ ...p, curso: e.target.value }))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">C.H. (h)</label>
+                                                    <input type="text" value={preview.ch} onChange={e => setPreview(p => ({ ...p, ch: e.target.value }))} className="w-full px-2 py-1.5 bg-gray-50 rounded-lg text-[10px] font-bold border-none" />
                                                 </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                            <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-x-auto">
+                                                <CertPreview
+                                                    certData={certData}
+                                                    blocos={certBlocos}
+                                                    corPrimaria={visualData.cor_primaria}
+                                                    corSecundaria={visualData.cor_secundaria}
+                                                    tenantNome={tenant?.nome || ''}
+                                                    scale={0.38}
+                                                    exemploAluno={preview.aluno}
+                                                    exemploCurso={preview.curso}
+                                                    exemploCH={preview.ch}
+                                                />
+                                            </div>
+                                        </div>
 
-                                {/* Section: Posição */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Posição dos Elementos</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        {([
-                                            { label: 'Título / Textos / Nome do Aluno', keyY: 'pos_y_conteudo', keyX: 'pos_x_conteudo' },
-                                            { label: 'Data de Emissão', keyY: 'pos_y_rodape', keyX: 'pos_x_rodape' },
-                                        ] as const).map(({ label, keyY, keyX }) => (
-                                            <div key={keyY} className="space-y-4">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
-                                                {([
-                                                    { axis: 'Vertical', key: keyY, negLabel: '↓', posLabel: '↑' },
-                                                    { axis: 'Horizontal', key: keyX, negLabel: '←', posLabel: '→' },
-                                                ] as const).map(({ axis, key, negLabel, posLabel }) => (
-                                                    <div key={key} className="space-y-1">
-                                                        <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">{axis}</span>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-[9px] font-bold text-gray-300 w-4 text-center">{negLabel}</span>
+                                        {/* Section: Textos */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-8">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <FileText className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Conteúdo dos Textos</h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Título do Certificado</label>
+                                                    <input type="text" value={certData.titulo} onChange={e => setCertData({ ...certData, titulo: e.target.value })} placeholder="CERTIFICADO DE CONCLUSÃO" className={inputCls} />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Nome da Instituição <span className="normal-case font-bold text-gray-300">(opcional)</span></label>
+                                                    <input type="text" value={certData.nome_instituicao || ''} onChange={e => setCertData({ ...certData, nome_instituicao: e.target.value })} placeholder="Ex: São Vicente de Paulo" className={inputCls} />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Introdução (&quot;Texto Pré&quot;)</label>
+                                                    <input type="text" value={certData.texto_pre} onChange={e => setCertData({ ...certData, texto_pre: e.target.value })} placeholder="Certificamos que" className={inputCls} />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Conclusão (&quot;Texto Pós&quot;)</label>
+                                                    <input type="text" value={certData.texto_pos} onChange={e => setCertData({ ...certData, texto_pos: e.target.value })} placeholder="concluiu com êxito o curso de" className={inputCls} />
+                                                </div>
+                                                <div className="md:col-span-2 space-y-3 pt-2 border-t border-gray-50 mt-2">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Site de Validação do QR Code</label>
+                                                    <input type="text" value={certData.site_validacao} onChange={e => setCertData({ ...certData, site_validacao: e.target.value })} placeholder="portal.suaong.org.br" className={inputCls} />
+                                                    <p className="text-[9px] text-gray-300 font-bold ml-1 uppercase letter tracking-widest">Deixe vazio para usar o domínio automático da aba Organização</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Section: Tipografia */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-10">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <Palette className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Tipografia e Tamanhos</h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10">
+                                                {[
+                                                    { label: 'Título do Documento', key: 'tam_titulo', min: 20, max: 60 },
+                                                    { label: 'Nome do Participante', key: 'tam_nome', min: 16, max: 56 },
+                                                    { label: 'Parágrafo do Corpo', key: 'tam_texto', min: 10, max: 30 },
+                                                    { label: 'Nome da Instituição', key: 'tam_instituicao', min: 8, max: 28 },
+                                                ].map(({ label, key, min, max }) => (
+                                                    <div key={key} className="space-y-4">
+                                                        <div className="flex justify-between items-center px-1">
+                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
+                                                            <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg">{certData[key as keyof typeof certData]}px</span>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            <span className="text-[10px] font-bold text-gray-300">A</span>
                                                             <input
                                                                 type="range"
-                                                                min={-300} max={300}
+                                                                min={min} max={max}
                                                                 value={certData[key as keyof typeof certData] as number}
-                                                                onChange={e => setCertData({...certData, [key]: Number(e.target.value)})}
-                                                                className="flex-1 accent-[#2D9E6B]"
+                                                                onChange={e => setCertData({ ...certData, [key]: Number(e.target.value) })}
+                                                                className="flex-1 h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]"
                                                             />
-                                                            <span className="text-[9px] font-bold text-gray-300 w-4 text-center">{posLabel}</span>
-                                                            <span className="text-xs font-black text-[#1A3C4A] w-12 text-right">
-                                                                {(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}
-                                                            </span>
-                                                            {(certData[key as keyof typeof certData] as number) !== 0 && (
-                                                                <button type="button" onClick={() => setCertData({...certData, [key]: 0})} className="text-[9px] font-black text-gray-300 hover:text-red-400 uppercase">0</button>
-                                                            )}
+                                                            <span className="text-xl font-bold text-gray-300">A</span>
                                                         </div>
                                                     </div>
                                                 ))}
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                        </div>
 
-                                {/* Section: Cores */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Cores</h4>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                        {[
-                                            { label: 'Cor Primária', stateKey: 'cor_primaria', isVisual: true },
-                                            { label: 'Cor Secundária', stateKey: 'cor_secundaria', isVisual: true },
-                                            { label: 'Cor do Texto', stateKey: 'cor_texto', isVisual: false },
-                                            { label: 'Cor do Nome', stateKey: 'cor_nome', isVisual: false, placeholder: 'Usa Cor Secundária' },
-                                        ].map(({ label, stateKey, isVisual, placeholder }) => (
-                                            <div key={stateKey} className="space-y-3">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
-                                                <div className="flex gap-3 items-center">
-                                                    <input
-                                                        type="color"
-                                                        value={isVisual
-                                                            ? (visualData[stateKey as keyof typeof visualData] || '#000000')
-                                                            : (certData[stateKey as keyof typeof certData] as string || '#4D4D4D')}
-                                                        onChange={e => isVisual
-                                                            ? setVisualData({...visualData, [stateKey]: e.target.value})
-                                                            : setCertData({...certData, [stateKey]: e.target.value})}
-                                                        className="w-12 h-12 rounded-xl border-none p-1 cursor-pointer bg-gray-50"
-                                                    />
-                                                    <input
-                                                        type="text"
-                                                        value={isVisual
-                                                            ? (visualData[stateKey as keyof typeof visualData] || '')
-                                                            : (certData[stateKey as keyof typeof certData] as string || '')}
-                                                        onChange={e => isVisual
-                                                            ? setVisualData({...visualData, [stateKey]: e.target.value})
-                                                            : setCertData({...certData, [stateKey]: e.target.value})}
-                                                        placeholder={placeholder || '#000000'}
-                                                        className="flex-1 px-3 py-2 bg-gray-50 rounded-xl text-xs font-mono"
-                                                    />
+                                        {/* Section: Posição */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-10">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <Sparkles className="w-5 h-5 text-[#1A3C4A]" />
                                                 </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Ajuste Fino de Posição</h4>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                                                {([
+                                                    { label: 'Bloco de Conteúdo (Título/Nome/Texto)', keyY: 'pos_y_conteudo', keyX: 'pos_x_conteudo' },
+                                                    { label: 'Bloco de Rodapé (Data e Código)', keyY: 'pos_y_rodape', keyX: 'pos_x_rodape' },
+                                                ] as const).map(({ label, keyY, keyX }) => (
+                                                    <div key={keyY} className="space-y-8">
+                                                        <p className="text-[11px] font-black text-[#1A3C4A] uppercase tracking-wider bg-gray-50 p-3 rounded-xl border border-gray-100 text-center">{label}</p>
 
-                                {/* Section: Layout */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Layout e Visibilidade</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-4">
-                                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Alinhamento do Texto</p>
-                                            <div className="flex bg-gray-100 p-1 rounded-2xl w-fit gap-1">
-                                                {(['esquerda', 'centro', 'direita'] as const).map(a => (
-                                                    <button
-                                                        key={a} type="button"
-                                                        onClick={() => setCertData({...certData, alinhamento: a})}
-                                                        className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-white shadow-md text-[#1A3C4A]' : 'text-gray-400 hover:text-gray-600'}`}
-                                                    >
-                                                        {a === 'esquerda' ? '⬅ Esq.' : a === 'centro' ? '↔ Centro' : 'Dir. ➡'}
-                                                    </button>
+                                                        {([
+                                                            { axis: 'Deslocamento Vertical', key: keyY, negLabel: 'BAIXO', posLabel: 'CIMA' },
+                                                            { axis: 'Deslocamento Horizontal', key: keyX, negLabel: 'ESQ.', posLabel: 'DIR.' },
+                                                        ] as const).map(({ axis, key, negLabel, posLabel }) => (
+                                                            <div key={key} className="space-y-4">
+                                                                <div className="flex justify-between items-center px-1">
+                                                                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{axis}</span>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg">{(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}px</span>
+                                                                        {(certData[key as keyof typeof certData] as number) !== 0 && (
+                                                                            <button type="button" onClick={() => setCertData({ ...certData, [key]: 0 })} className="text-[9px] font-black text-red-400 hover:bg-red-50 p-1.5 rounded-lg transition-all uppercase">Reset</button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-x-4">
+                                                                    <span className="text-[9px] font-black text-gray-300 bg-gray-50 w-10 py-1 rounded-md text-center">{negLabel}</span>
+                                                                    <input
+                                                                        type="range"
+                                                                        min={-300} max={300}
+                                                                        value={certData[key as keyof typeof certData] as number}
+                                                                        onChange={e => setCertData({ ...certData, [key]: Number(e.target.value) })}
+                                                                        className="flex-1 h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]"
+                                                                    />
+                                                                    <span className="text-[9px] font-black text-gray-300 bg-gray-50 w-10 py-1 rounded-md text-center">{posLabel}</span>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
                                                 ))}
                                             </div>
                                         </div>
-                                        <div className="space-y-3">
-                                            <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Mostrar / Ocultar Elementos</p>
-                                            {[
-                                                { key: 'mostrar_borda', label: 'Borda decorativa' },
-                                                { key: 'mostrar_instituicao', label: 'Nome da Instituição' },
-                                                { key: 'mostrar_carga_horaria', label: 'Carga Horária' },
-                                                { key: 'mostrar_codigo', label: 'Código de Validação' },
-                                            ].map(({ key, label }) => (
-                                                <label key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-all">
-                                                    <span className="text-sm font-bold text-[#1A3C4A]">{label}</span>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={certData[key as keyof typeof certData] as boolean}
-                                                            onChange={e => setCertData({...certData, [key]: e.target.checked})}
-                                                            className="sr-only peer"
-                                                        />
-                                                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2D9E6B]"></div>
-                                                    </div>
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
 
-                                {/* Section: Assinaturas */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-4">Assinaturas</h4>
-                                    {/* Vertical compartilhado */}
-                                    <div className="mb-6 p-4 bg-gray-50 rounded-2xl space-y-2">
-                                        <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">↕ Vertical — Ambas as Assinaturas</p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-[9px] text-gray-300">↓</span>
-                                            <input type="range" min={-300} max={300}
-                                                value={certData.off_y_responsavel}
-                                                onChange={e => setCertData({...certData, off_y_responsavel: Number(e.target.value)})}
-                                                className="flex-1 accent-[#2D9E6B]" />
-                                            <span className="text-[9px] text-gray-300">↑</span>
-                                            <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
-                                                {certData.off_y_responsavel > 0 ? '+' : ''}{certData.off_y_responsavel}
-                                            </span>
-                                            {certData.off_y_responsavel !== 0 && (
-                                                <button type="button" onClick={() => setCertData({...certData, off_y_responsavel: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-                                        {/* Responsável */}
-                                        <div className="space-y-5 p-5 bg-gray-50 rounded-2xl">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-[#1A3C4A]">Responsável (direita)</p>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome</label>
-                                                <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({...certData, nome_responsavel: e.target.value})} placeholder="Ex: Maria Silva" className={inputCls} />
+                                        {/* Section: Cores */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-8">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <Palette className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Paleta de Cores</h4>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cargo</label>
-                                                <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({...certData, cargo_responsavel: e.target.value})} placeholder="Ex: Coordenadora Geral" className={inputCls} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem da Assinatura</label>
-                                                <label className={`flex flex-col items-center justify-center gap-2 w-full p-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingAssinatura ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
-                                                    {certData.assinatura_url ? (
-                                                        <div className="w-full space-y-2">
-                                                            <img src={certData.assinatura_url} alt="Assinatura" className="h-14 mx-auto object-contain" />
-                                                            <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                                                {[
+                                                    { label: 'Cor Primária', stateKey: 'cor_primaria', isVisual: true },
+                                                    { label: 'Cor Secundária', stateKey: 'cor_secundaria', isVisual: true },
+                                                    { label: 'Cor do Texto', stateKey: 'cor_texto', isVisual: false },
+                                                    { label: 'Cor do Nome', stateKey: 'cor_nome', isVisual: false, placeholder: 'Usa Secundária' },
+                                                ].map(({ label, stateKey, isVisual, placeholder }) => (
+                                                    <div key={stateKey} className="space-y-4">
+                                                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">{label}</label>
+                                                        <div className="flex gap-3 items-center group">
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="color"
+                                                                    value={isVisual
+                                                                        ? (visualData[stateKey as keyof typeof visualData] || '#000000')
+                                                                        : (certData[stateKey as keyof typeof certData] as string || '#4D4D4D')}
+                                                                    onChange={e => isVisual
+                                                                        ? setVisualData({ ...visualData, [stateKey]: e.target.value })
+                                                                        : setCertData({ ...certData, [stateKey]: e.target.value })}
+                                                                    className="w-14 h-14 rounded-2xl border-none p-1 cursor-pointer bg-gray-50 hover:scale-105 transition-transform"
+                                                                />
+                                                            </div>
+                                                            <input
+                                                                type="text"
+                                                                value={isVisual
+                                                                    ? (visualData[stateKey as keyof typeof visualData] || '')
+                                                                    : (certData[stateKey as keyof typeof certData] as string || '')}
+                                                                onChange={e => isVisual
+                                                                    ? setVisualData({ ...visualData, [stateKey]: e.target.value })
+                                                                    : setCertData({ ...certData, [stateKey]: e.target.value })}
+                                                                placeholder={placeholder || '#000000'}
+                                                                className="flex-1 min-w-0 px-4 py-3 bg-gray-50 rounded-2xl text-[11px] font-mono font-bold uppercase border-none focus:ring-2 focus:ring-[#2D9E6B]/20"
+                                                            />
                                                         </div>
-                                                    ) : (
-                                                        <>
-                                                            <Upload className="w-5 h-5 text-gray-300" />
-                                                            <span className="text-[10px] font-black uppercase text-gray-400">{uploadingAssinatura ? 'Enviando...' : 'Upload (PNG/JPG)'}</span>
-                                                        </>
-                                                    )}
-                                                    <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
-                                                        const file = e.target.files?.[0]; if (!file) return
-                                                        setUploadingAssinatura(true)
-                                                        const fd = new FormData(); fd.append('file', file)
-                                                        const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
-                                                        const data = await res.json()
-                                                        if (data.url) setCertData(prev => ({...prev, assinatura_url: data.url}))
-                                                        setUploadingAssinatura(false); e.target.value = ''
-                                                    }} />
-                                                </label>
-                                                {certData.assinatura_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover</button>}
+                                                    </div>
+                                                ))}
                                             </div>
-                                            {/* Posição individual */}
-                                            <div className="pt-2 border-t border-gray-200 space-y-3">
-                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">↔ Horizontal</p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-gray-300">←</span>
-                                                    <input type="range" min={-300} max={300}
-                                                        value={certData.off_x_responsavel}
-                                                        onChange={e => setCertData({...certData, off_x_responsavel: Number(e.target.value)})}
-                                                        className="flex-1 accent-[#2D9E6B]" />
-                                                    <span className="text-[9px] text-gray-300">→</span>
-                                                    <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
-                                                        {certData.off_x_responsavel > 0 ? '+' : ''}{certData.off_x_responsavel}
-                                                    </span>
-                                                    {certData.off_x_responsavel !== 0 && (
-                                                        <button type="button" onClick={() => setCertData({...certData, off_x_responsavel: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
-                                                    )}
+                                        </div>
+
+                                        {/* Section: Layout e Visibilidade */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-10">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <LayoutTemplate className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Layout e Visibilidade</h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                                                <div className="space-y-6">
+                                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Alinhamento Global do Texto</p>
+                                                    <div className="flex bg-gray-50 p-2 rounded-3xl w-fit gap-2 border border-gray-100">
+                                                        {(['esquerda', 'centro', 'direita'] as const).map(a => (
+                                                            <button
+                                                                key={a} type="button"
+                                                                onClick={() => setCertData({ ...certData, alinhamento: a })}
+                                                                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-[#1A3C4A] shadow-xl text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
+                                                            >
+                                                                {a === 'esquerda' ? 'Esquerda' : a === 'centro' ? 'Centro' : 'Direita'}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-[9px] text-gray-300 font-bold ml-1">Define como o texto será distribuído na horizontal por padrão.</p>
+                                                </div>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                    {[
+                                                        { key: 'mostrar_borda', label: 'Borda decorativa' },
+                                                        { key: 'mostrar_instituicao', label: 'Nome Instituição' },
+                                                        { key: 'mostrar_carga_horaria', label: 'Carga Horária' },
+                                                        { key: 'mostrar_codigo', label: 'Código QR/Valid.' },
+                                                    ].map(({ key, label }) => (
+                                                        <label key={key} className="flex items-center justify-between px-5 py-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200 group">
+                                                            <span className="text-[11px] font-black uppercase text-[#1A3C4A] tracking-wider">{label}</span>
+                                                            <div className="relative">
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={certData[key as keyof typeof certData] as boolean}
+                                                                    onChange={e => setCertData({ ...certData, [key]: e.target.checked })}
+                                                                    className="sr-only peer"
+                                                                />
+                                                                <div className="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#2D9E6B]"></div>
+                                                            </div>
+                                                        </label>
+                                                    ))}
                                                 </div>
                                             </div>
                                         </div>
 
-                                        {/* Mediador(a) */}
-                                        <div className="space-y-5 p-5 bg-gray-50 rounded-2xl">
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-[#1A3C4A]">Mediador(a) (esquerda) <span className="font-normal text-gray-400 normal-case tracking-normal">— opcional</span></p>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Nome</label>
-                                                <input type="text" value={certData.nome_mediador} onChange={e => setCertData({...certData, nome_mediador: e.target.value})} placeholder="Ex: João Oliveira" className={inputCls} />
+                                        {/* Section: Assinaturas */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-10">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <Users className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Gestão de Assinaturas</h4>
                                             </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Cargo</label>
-                                                <input type="text" value={certData.cargo_mediador} onChange={e => setCertData({...certData, cargo_mediador: e.target.value})} placeholder="Ex: Mediador(a)" className={inputCls} />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem da Assinatura</label>
-                                                <label className={`flex flex-col items-center justify-center gap-2 w-full p-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingMediador ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
-                                                    {certData.assinatura_mediador_url ? (
-                                                        <div className="w-full space-y-2">
-                                                            <img src={certData.assinatura_mediador_url} alt="Assinatura mediador" className="h-14 mx-auto object-contain" />
-                                                            <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
-                                                        </div>
-                                                    ) : (
-                                                        <>
-                                                            <Upload className="w-5 h-5 text-gray-300" />
-                                                            <span className="text-[10px] font-black uppercase text-gray-400">{uploadingMediador ? 'Enviando...' : 'Upload (PNG/JPG)'}</span>
-                                                        </>
-                                                    )}
-                                                    <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
-                                                        const file = e.target.files?.[0]; if (!file) return
-                                                        setUploadingMediador(true)
-                                                        const fd = new FormData(); fd.append('file', file)
-                                                        const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
-                                                        const data = await res.json()
-                                                        if (data.url) setCertData(prev => ({...prev, assinatura_mediador_url: data.url}))
-                                                        setUploadingMediador(false); e.target.value = ''
-                                                    }} />
-                                                </label>
-                                                {certData.assinatura_mediador_url && <button type="button" onClick={() => setCertData(prev => ({...prev, assinatura_mediador_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover</button>}
-                                            </div>
-                                            {/* Posição individual */}
-                                            <div className="pt-2 border-t border-gray-200 space-y-3">
-                                                <p className="text-[9px] font-black uppercase text-gray-300 tracking-widest">↔ Horizontal</p>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[9px] text-gray-300">←</span>
+
+                                            {/* Ajuste Vertical Geral */}
+                                            <div className="mb-12 p-8 bg-[#1A3C4A]/[0.02] border border-[#1A3C4A]/5 rounded-[32px] space-y-6">
+                                                <div className="flex justify-between items-center px-2">
+                                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-[0.2em]">Posicionamento Vertical (Geral)</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-3 py-1 rounded-lg border border-green-100">{certData.off_y_responsavel > 0 ? '+' : ''}{certData.off_y_responsavel}px</span>
+                                                        {certData.off_y_responsavel !== 0 && (
+                                                            <button type="button" onClick={() => setCertData({ ...certData, off_y_responsavel: 0 })} className="text-[9px] font-black text-red-400 hover:bg-white px-2 py-1 rounded-lg shadow-sm border border-red-50 transition-all uppercase">Reset</button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-6">
+                                                    <span className="text-[10px] font-black text-gray-300 bg-white px-3 py-1.5 rounded-xl border border-gray-50 w-16 text-center shadow-sm">BAIXO</span>
                                                     <input type="range" min={-300} max={300}
-                                                        value={certData.off_x_mediador}
-                                                        onChange={e => setCertData({...certData, off_x_mediador: Number(e.target.value)})}
-                                                        className="flex-1 accent-[#2D9E6B]" />
-                                                    <span className="text-[9px] text-gray-300">→</span>
-                                                    <span className="text-[10px] font-black text-[#1A3C4A] w-10 text-right">
-                                                        {certData.off_x_mediador > 0 ? '+' : ''}{certData.off_x_mediador}
-                                                    </span>
-                                                    {certData.off_x_mediador !== 0 && (
-                                                        <button type="button" onClick={() => setCertData({...certData, off_x_mediador: 0})} className="text-[9px] text-gray-300 hover:text-red-400 font-black">0</button>
-                                                    )}
+                                                        value={certData.off_y_responsavel}
+                                                        onChange={e => setCertData({ ...certData, off_y_responsavel: Number(e.target.value) })}
+                                                        className="flex-1 h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
+                                                    <span className="text-[10px] font-black text-gray-300 bg-white px-3 py-1.5 rounded-xl border border-gray-50 w-16 text-center shadow-sm">CIMA</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                                                {/* Bloco Responsável */}
+                                                <div className="space-y-8 p-10 bg-gray-50/50 rounded-[40px] border border-gray-100">
+                                                    <div className="flex items-center gap-3 border-b border-gray-100 pb-5 mb-2">
+                                                        <div className="w-8 h-8 bg-[#1A3C4A] rounded-xl flex items-center justify-center">
+                                                            <Building className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        <p className="text-[11px] font-black uppercase tracking-widest text-[#1A3C4A]">Responsável (Direita)</p>
+                                                    </div>
+
+                                                    <div className="space-y-6">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                            <div className="space-y-2">
+                                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Nome Completo</label>
+                                                                <input type="text" value={certData.nome_responsavel} onChange={e => setCertData({ ...certData, nome_responsavel: e.target.value })} placeholder="Ex: Maria Silva" className={inputCls} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Cargo / Função</label>
+                                                                <input type="text" value={certData.cargo_responsavel} onChange={e => setCertData({ ...certData, cargo_responsavel: e.target.value })} placeholder="Ex: Diretora Geral" className={inputCls} />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Imagem da Assinatura</label>
+                                                            <label className={`group relative flex flex-col items-center justify-center gap-3 w-full p-8 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${uploadingAssinatura ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B] hover:bg-white'}`}>
+                                                                {certData.assinatura_url ? (
+                                                                    <div className="w-full space-y-4">
+                                                                        <img src={certData.assinatura_url} alt="Assinatura" className="h-20 mx-auto object-contain drop-shadow-sm" />
+                                                                        <div className="flex justify-center gap-2">
+                                                                            <span className="text-[9px] font-black uppercase bg-[#2D9E6B]/10 text-[#2D9E6B] px-3 py-1 rounded-full">✓ Alterar Imagem</span>
+                                                                            <button type="button" onClick={(e) => { e.preventDefault(); setCertData(prev => ({ ...prev, assinatura_url: '' })) }} className="text-[9px] font-black uppercase bg-red-50 text-red-500 px-3 py-1 rounded-full hover:bg-red-500 hover:text-white transition-colors">Remover</button>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                                                                            <Upload className="w-6 h-6 text-gray-300 group-hover:text-[#2D9E6B]" />
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                            <span className="text-[10px] font-black uppercase text-[#1A3C4A] block">{uploadingAssinatura ? 'Enviando...' : 'Fazer Upload'}</span>
+                                                                            <span className="text-[9px] font-bold text-gray-400 block mt-1">PNG Transparente Sugerido</span>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                                    const file = e.target.files?.[0]; if (!file) return
+                                                                    setUploadingAssinatura(true)
+                                                                    const fd = new FormData(); fd.append('file', file)
+                                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                                    const data = await res.json()
+                                                                    if (data.url) setCertData(prev => ({ ...prev, assinatura_url: data.url }))
+                                                                    setUploadingAssinatura(false); e.target.value = ''
+                                                                }} />
+                                                            </label>
+                                                        </div>
+
+                                                        <div className="space-y-4 pt-4 border-t border-gray-100">
+                                                            <div className="flex justify-between items-center px-1">
+                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ajuste Horizontal Individual</span>
+                                                                <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100">{certData.off_x_responsavel > 0 ? '+' : ''}{certData.off_x_responsavel}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="text-[9px] font-black text-gray-300">ESQ.</span>
+                                                                <input type="range" min={-300} max={300}
+                                                                    value={certData.off_x_responsavel}
+                                                                    onChange={e => setCertData({ ...certData, off_x_responsavel: Number(e.target.value) })}
+                                                                    className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
+                                                                <span className="text-[9px] font-black text-gray-300">DIR.</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Bloco Mediador */}
+                                                <div className="space-y-8 p-10 bg-gray-50/50 rounded-[40px] border border-gray-100">
+                                                    <div className="flex items-center gap-3 border-b border-gray-100 pb-5 mb-2">
+                                                        <div className="w-8 h-8 bg-[#2D9E6B]/10 rounded-xl flex items-center justify-center">
+                                                            <Users className="w-4 h-4 text-[#2D9E6B]" />
+                                                        </div>
+                                                        <p className="text-[11px] font-black uppercase tracking-widest text-[#1A3C4A]">Mediador/a (Esquerda) <span className="font-bold text-gray-300 normal-case tracking-normal ml-1">— Opcional</span></p>
+                                                    </div>
+
+                                                    <div className="space-y-6">
+                                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                                            <div className="space-y-2">
+                                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Nome Completo</label>
+                                                                <input type="text" value={certData.nome_mediador} onChange={e => setCertData({ ...certData, nome_mediador: e.target.value })} placeholder="Ex: João Oliveira" className={inputCls} />
+                                                            </div>
+                                                            <div className="space-y-2">
+                                                                <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Cargo / Função</label>
+                                                                <input type="text" value={certData.cargo_mediador} onChange={e => setCertData({ ...certData, cargo_mediador: e.target.value })} placeholder="Ex: Coordenador Técnico" className={inputCls} />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-3">
+                                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Imagem da Assinatura</label>
+                                                            <label className={`group relative flex flex-col items-center justify-center gap-3 w-full p-8 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${uploadingMediador ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B] hover:bg-white'}`}>
+                                                                {certData.assinatura_mediador_url ? (
+                                                                    <div className="w-full space-y-4">
+                                                                        <img src={certData.assinatura_mediador_url} alt="Assinatura mediador" className="h-20 mx-auto object-contain drop-shadow-sm" />
+                                                                        <div className="flex justify-center gap-2">
+                                                                            <span className="text-[9px] font-black uppercase bg-[#2D9E6B]/10 text-[#2D9E6B] px-3 py-1 rounded-full">✓ Alterar Imagem</span>
+                                                                            <button type="button" onClick={(e) => { e.preventDefault(); setCertData(prev => ({ ...prev, assinatura_mediador_url: '' })) }} className="text-[9px] font-black uppercase bg-red-50 text-red-500 px-3 py-1 rounded-full hover:bg-red-500 hover:text-white transition-colors">Remover</button>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <>
+                                                                        <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all">
+                                                                            <Upload className="w-6 h-6 text-gray-300 group-hover:text-[#2D9E6B]" />
+                                                                        </div>
+                                                                        <div className="text-center">
+                                                                            <span className="text-[10px] font-black uppercase text-[#1A3C4A] block">{uploadingMediador ? 'Enviando...' : 'Fazer Upload'}</span>
+                                                                            <span className="text-[9px] font-bold text-gray-400 block mt-1">PNG Transparente Sugerido</span>
+                                                                        </div>
+                                                                    </>
+                                                                )}
+                                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                                    const file = e.target.files?.[0]; if (!file) return
+                                                                    setUploadingMediador(true)
+                                                                    const fd = new FormData(); fd.append('file', file)
+                                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                                    const data = await res.json()
+                                                                    if (data.url) setCertData(prev => ({ ...prev, assinatura_mediador_url: data.url }))
+                                                                    setUploadingMediador(false); e.target.value = ''
+                                                                }} />
+                                                            </label>
+                                                        </div>
+
+                                                        <div className="space-y-4 pt-4 border-t border-gray-100">
+                                                            <div className="flex justify-between items-center px-1">
+                                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ajuste Horizontal Individual</span>
+                                                                <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100">{certData.off_x_mediador > 0 ? '+' : ''}{certData.off_x_mediador}</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-4">
+                                                                <span className="text-[9px] font-black text-gray-300">ESQ.</span>
+                                                                <input type="range" min={-300} max={300}
+                                                                    value={certData.off_x_mediador}
+                                                                    onChange={e => setCertData({ ...certData, off_x_mediador: Number(e.target.value) })}
+                                                                    className="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
+                                                                <span className="text-[9px] font-black text-gray-300">DIR.</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
-                                    </div>
-                                </div>
+                                        {/* Section: Logo e Fundo */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-10">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <Building className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Logo e Background</h4>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                                <div className="space-y-4">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Logo Superior Esquerdo</label>
+                                                    <label className={`group relative flex flex-col items-center justify-center gap-3 w-full p-10 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${uploadingLogo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B] hover:bg-gray-50'}`}>
+                                                        {certData.logo_url ? (
+                                                            <div className="w-full space-y-4">
+                                                                <img src={certData.logo_url} alt="Logo" className="h-20 mx-auto object-contain" />
+                                                                <p className="text-[9px] font-black text-[#2D9E6B] text-center uppercase tracking-widest bg-white py-1 rounded-full shadow-sm border border-green-50">✓ Toque para Alterar</p>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="w-8 h-8 text-gray-300 group-hover:text-[#2D9E6B] transition-colors" />
+                                                                <span className="text-[10px] font-black uppercase text-gray-400">{uploadingLogo ? 'Enviando...' : 'Fazer Upload'}</span>
+                                                            </>
+                                                        )}
+                                                        <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                            const file = e.target.files?.[0]; if (!file) return
+                                                            setUploadingLogo(true)
+                                                            const fd = new FormData(); fd.append('file', file)
+                                                            const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                            const data = await res.json()
+                                                            if (data.url) setCertData(prev => ({ ...prev, logo_url: data.url }))
+                                                            setUploadingLogo(false); e.target.value = ''
+                                                        }} />
+                                                    </label>
+                                                    {certData.logo_url && <button type="button" onClick={() => setCertData(prev => ({ ...prev, logo_url: '' }))} className="text-[9px] font-black text-red-400 hover:text-red-500 uppercase tracking-widest pl-1">Remover Logo</button>}
+                                                </div>
+                                                <div className="space-y-4">
+                                                    <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Template de Fundo (A4)</label>
+                                                    <label className={`group relative flex flex-col items-center justify-center gap-3 w-full p-10 border-2 border-dashed rounded-[32px] cursor-pointer transition-all ${uploadingFundo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B] hover:bg-gray-50'}`}>
+                                                        {certData.fundo_url ? (
+                                                            <div className="w-full space-y-4">
+                                                                <div className="relative aspect-[1.414/1] w-full overflow-hidden rounded-2xl shadow-md border border-gray-100">
+                                                                    <img src={certData.fundo_url} alt="Fundo" className="absolute inset-0 w-full h-full object-cover" />
+                                                                </div>
+                                                                <p className="text-[9px] font-black text-[#2D9E6B] text-center uppercase tracking-widest bg-white py-1 rounded-full shadow-sm border border-green-50">✓ Toque para Alterar</p>
+                                                            </div>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="w-8 h-8 text-gray-300 group-hover:text-[#2D9E6B] transition-colors" />
+                                                                <span className="text-[10px] font-black uppercase text-gray-400">{uploadingFundo ? 'Enviando...' : 'Fazer Upload'}</span>
+                                                            </>
+                                                        )}
+                                                        <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
+                                                            const file = e.target.files?.[0]; if (!file) return
+                                                            setUploadingFundo(true)
+                                                            const fd = new FormData(); fd.append('file', file)
+                                                            const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
+                                                            const data = await res.json()
+                                                            if (data.url) setCertData(prev => ({ ...prev, fundo_url: data.url }))
+                                                            setUploadingFundo(false); e.target.value = ''
+                                                        }} />
+                                                    </label>
+                                                    {certData.fundo_url && <button type="button" onClick={() => setCertData(prev => ({ ...prev, fundo_url: '' }))} className="text-[9px] font-black text-red-400 hover:text-red-500 uppercase tracking-widest pl-1">Remover Fundo</button>}
+                                                </div>
+                                            </div>
+                                        </div>
 
-                                {/* Section: Logo e Fundo */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-400 mb-6">Logo e Fundo</h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Logo da Instituição no Certificado</label>
-                                            <p className="text-[10px] text-gray-400">Aparece no canto superior esquerdo. Use PNG com fundo transparente.</p>
-                                            <label className={`flex flex-col items-center justify-center gap-2 w-full p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingLogo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
-                                                {certData.logo_url ? (
-                                                    <div className="w-full space-y-2">
-                                                        <img src={certData.logo_url} alt="Logo" className="h-16 mx-auto object-contain" />
-                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
+                                        {/* Section: Blocos de Texto */}
+                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
+                                                    <Sparkles className="w-5 h-5 text-[#1A3C4A]" />
+                                                </div>
+                                                <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Blocos Personalizados</h4>
+                                            </div>
+                                            <div className="bg-[#1A3C4A]/[0.02] border border-[#1A3C4A]/5 p-6 rounded-3xl mb-8">
+                                                <p className="text-[10px] font-bold text-gray-500 leading-relaxed uppercase tracking-wider">
+                                                    Os blocos personalizados permitem total liberdade de criação. Ao adicionar blocos, eles <span className="text-[#1A3C4A] font-black">substituem</span> as configurações automáticas acima (Título, Nome e Textos). O rodapé e assinaturas sempre permanecem.
+                                                </p>
+                                            </div>
+                                            <CertBlocosEditor blocos={certBlocos} onChange={setCertBlocos} />
+                                        </div>
+                                    </div>
+
+                                    {/* Preview sticky */}
+                                    <div className="hidden 2xl:block">
+                                        <div className="sticky top-6 space-y-4">
+                                            {/* Campos de exemplo */}
+                                            <div className="bg-white p-8 rounded-[32px] shadow-2xl shadow-black/5 border border-gray-50 space-y-6">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <div className="w-8 h-8 bg-[#2D9E6B]/5 rounded-xl flex items-center justify-center">
+                                                        <Sparkles className="w-4 h-4 text-[#2D9E6B]" />
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        <Upload className="w-6 h-6 text-gray-300" />
-                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingLogo ? 'Enviando...' : 'Upload logo (PNG/JPG)'}</span>
-                                                    </>
-                                                )}
-                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
-                                                    const file = e.target.files?.[0]; if (!file) return
-                                                    setUploadingLogo(true)
-                                                    const fd = new FormData(); fd.append('file', file)
-                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
-                                                    const data = await res.json()
-                                                    if (data.url) setCertData(prev => ({...prev, logo_url: data.url}))
-                                                    setUploadingLogo(false); e.target.value = ''
-                                                }} />
-                                            </label>
-                                            {certData.logo_url && <button type="button" onClick={() => setCertData(prev => ({...prev, logo_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover logo</button>}
-                                        </div>
-                                        <div className="space-y-3">
-                                            <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Imagem de Fundo</label>
-                                            <p className="text-[10px] text-gray-400">A4 paisagem — 2480×1754 px recomendado. O texto é sobreposto.</p>
-                                            <label className={`flex flex-col items-center justify-center gap-2 w-full p-5 border-2 border-dashed rounded-2xl cursor-pointer transition-all ${uploadingFundo ? 'opacity-50 pointer-events-none' : 'border-gray-200 hover:border-[#2D9E6B]'}`}>
-                                                {certData.fundo_url ? (
-                                                    <div className="w-full space-y-2">
-                                                        <img src={certData.fundo_url} alt="Fundo" className="w-full h-24 object-cover rounded-xl" />
-                                                        <p className="text-[10px] font-bold text-[#2D9E6B] text-center">✓ Clique para substituir</p>
-                                                    </div>
-                                                ) : (
-                                                    <>
-                                                        <Upload className="w-6 h-6 text-gray-300" />
-                                                        <span className="text-[10px] font-black uppercase text-gray-400">{uploadingFundo ? 'Enviando...' : 'Upload fundo (PNG/JPG)'}</span>
-                                                    </>
-                                                )}
-                                                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
-                                                    const file = e.target.files?.[0]; if (!file) return
-                                                    setUploadingFundo(true)
-                                                    const fd = new FormData(); fd.append('file', file)
-                                                    const res = await fetch('/api/configuracoes/certificados/upload-fundo', { method: 'POST', body: fd })
-                                                    const data = await res.json()
-                                                    if (data.url) setCertData(prev => ({...prev, fundo_url: data.url}))
-                                                    setUploadingFundo(false); e.target.value = ''
-                                                }} />
-                                            </label>
-                                            {certData.fundo_url && <button type="button" onClick={() => setCertData(prev => ({...prev, fundo_url: ''}))} className="text-[10px] font-black text-red-400 hover:text-red-600 uppercase">Remover fundo</button>}
+                                                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Dados do Preview</p>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome do Participante</label>
+                                                    <input type="text" value={preview.aluno} onChange={e => setPreview(p => ({ ...p, aluno: e.target.value }))} className="w-full px-4 py-3 bg-gray-50 rounded-2xl text-[11px] font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Título do Evento/Curso</label>
+                                                    <input type="text" value={preview.curso} onChange={e => setPreview(p => ({ ...p, curso: e.target.value }))} className="w-full px-4 py-3 bg-gray-50 rounded-2xl text-[11px] font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all" />
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Carga Horária (h)</label>
+                                                    <input type="text" value={preview.ch} onChange={e => setPreview(p => ({ ...p, ch: e.target.value }))} className="w-full px-4 py-3 bg-gray-50 rounded-2xl text-[11px] font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all" />
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                                <CertPreview
+                                                    certData={certData}
+                                                    blocos={certBlocos}
+                                                    corPrimaria={visualData.cor_primaria}
+                                                    corSecundaria={visualData.cor_secundaria}
+                                                    tenantNome={tenant?.nome || ''}
+                                                    scale={0.41}
+                                                    exemploAluno={preview.aluno}
+                                                    exemploCurso={preview.curso}
+                                                    exemploCH={preview.ch}
+                                                />
+                                            </div>
+                                            <p className="text-[9px] text-gray-300 text-center font-bold uppercase tracking-widest">O preview é aproximado. O PDF final pode ter pequenas diferenças.</p>
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Section: Blocos de Texto */}
-                                <div className="bg-white p-8 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                    <div className="flex items-start justify-between mb-6">
-                                        <div>
-                                            <h4 className="text-xs font-black uppercase tracking-widest text-gray-400">Blocos de Texto Personalizados</h4>
-                                            <p className="text-[10px] text-gray-400 mt-1">
-                                                Posicione cada elemento livremente. Se houver blocos, eles substituem o layout padrão (Título, Nome, Textos).
-                                                O rodapé (assinaturas, data, código) é sempre mantido.
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <CertBlocosEditor blocos={certBlocos} onChange={setCertBlocos} />
-                                </div>
-                            </div>
-
-                            {/* Preview sticky */}
-                            <div className="hidden 2xl:block">
-                                <div className="sticky top-6 space-y-4">
-                                    {/* Campos de exemplo */}
-                                    <div className="bg-white p-5 rounded-[24px] shadow-xl shadow-black/5 border border-gray-50 space-y-3">
-                                        <p className="text-[9px] font-black uppercase tracking-widest text-gray-400">Dados do preview</p>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Nome do aluno</label>
-                                            <input type="text" value={preview.aluno} onChange={e => setPreview(p => ({...p, aluno: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Nome do curso</label>
-                                            <input type="text" value={preview.curso} onChange={e => setPreview(p => ({...p, curso: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <label className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Carga horária (h)</label>
-                                            <input type="text" value={preview.ch} onChange={e => setPreview(p => ({...p, ch: e.target.value}))} className="w-full px-3 py-2 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-[#2D9E6B]/20" />
-                                        </div>
-                                    </div>
-                                    <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
-                                        <CertPreview
-                                            certData={certData}
-                                            blocos={certBlocos}
-                                            corPrimaria={visualData.cor_primaria}
-                                            corSecundaria={visualData.cor_secundaria}
-                                            tenantNome={tenant?.nome || ''}
-                                            scale={0.41}
-                                            exemploAluno={preview.aluno}
-                                            exemploCurso={preview.curso}
-                                            exemploCH={preview.ch}
-                                        />
-                                    </div>
-                                    <p className="text-[9px] text-gray-300 text-center font-bold uppercase tracking-widest">O preview é aproximado. O PDF final pode ter pequenas diferenças.</p>
-                                </div>
-                            </div>
-
-                            </div>
                             </div>
                         )}
 
@@ -1143,20 +1226,20 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab !== 'templates' && (
-                        <div className="flex justify-end pt-10">
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="bg-[#1A3C4A] text-white px-12 py-5 rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] hover:bg-[var(--secondary)] transition-all shadow-2xl shadow-black/20 flex items-center gap-4 disabled:opacity-50"
-                            >
-                                {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Salvar Alterações</>}
-                            </button>
-                        </div>
+                            <div className="flex justify-end pt-10">
+                                <button
+                                    type="submit"
+                                    disabled={saving}
+                                    className="bg-[#1A3C4A] text-white px-12 py-5 rounded-[24px] font-black uppercase text-[11px] tracking-[0.2em] hover:bg-[var(--secondary)] transition-all shadow-2xl shadow-black/20 flex items-center gap-4 disabled:opacity-50"
+                                >
+                                    {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <><Save className="w-5 h-5" /> Salvar Alterações</>}
+                                </button>
+                            </div>
                         )}
 
                     </form>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     )
 }
