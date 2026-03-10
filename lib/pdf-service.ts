@@ -203,7 +203,7 @@ export class PDFService {
                 const isJpg = config.fundo_url.toLowerCase().match(/\.(jpg|jpeg)/)
                 const bgImage = isJpg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes)
                 page.drawImage(bgImage, { x: 0, y: 0, width, height })
-            } catch (error) { }
+            } catch { }
         }
 
         // Logo
@@ -323,7 +323,7 @@ export class PDFService {
                     const mImg = config.assinatura_mediador_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(mBytes) : await pdfDoc.embedPng(mBytes)
                     const mH = 40, mW = mImg.width * (mH / mImg.height)
                     page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 125 + medY, width: mW, height: mH })
-                } catch (error) { }
+                } catch { }
             }
             page.drawLine({ start: { x: medX, y: 120 + medY }, end: { x: medX + medBlockW, y: 120 + medY }, thickness: 1, color: primaryColor })
             const medNomeW = fontItalic.widthOfTextAtSize(config.nome_mediador!, 12)
@@ -344,7 +344,7 @@ export class PDFService {
                 const sigImg = config.assinatura_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
                 const sigH = 40, sigW = sigImg.width * (sigH / sigImg.height)
                 page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 125 + respY, width: sigW, height: sigH })
-            } catch (error) { }
+            } catch { }
         }
         page.drawLine({ start: { x: respX, y: 120 + respY }, end: { x: respX + 200, y: 120 + respY }, thickness: 1, color: primaryColor })
         const nResp = config.nome_responsavel || 'Assinatura Eletrônica'
