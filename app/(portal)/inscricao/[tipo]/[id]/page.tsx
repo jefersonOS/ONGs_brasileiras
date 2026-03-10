@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, AlertTriangle, ArrowLeft, ArrowRight, UserCheck } from 'lucide-react'
+import { CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react'
 
 interface CampoFormulario {
     id: string
@@ -63,23 +63,14 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
     const router = useRouter()
     const supabase = createClient()
 
-    const [step, setStep] = useState<'confirmar-dados' | 'formulario'>('confirmar-dados')
     const [user, setUser] = useState<any>(null)
-    const [perfil, setPerfil] = useState<any>(null)
     const [entidade, setEntidade] = useState<any>(null)
     const [turma, setTurma] = useState<any>(null)
     const [formulario, setFormulario] = useState<CampoFormulario[]>([])
     const [respostas, setRespostas] = useState<Record<string, string>>({})
 
-    // Campos editáveis de confirmação
-    const [nome, setNome] = useState('')
     const [email, setEmail] = useState('')
     const [whatsapp, setWhatsapp] = useState('')
-    const [cpf, setCpf] = useState('')
-    const [rg, setRg] = useState('')
-    const [dataNascimento, setDataNascimento] = useState('')
-    const [endereco, setEndereco] = useState('')
-    const [savingPerfil, setSavingPerfil] = useState(false)
 
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
@@ -92,7 +83,6 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
             const { data: { user: currentUser } } = await supabase.auth.getUser()
 
             if (!currentUser) {
-                // Busca tenant_id para que o cidadão seja vinculado ao tenant correto no registro
                 let tenantId: string | null = null
                 if (tipo === 'curso') {
                     const { data: c } = await supabase.from('cursos').select('tenant_id').eq('id', id).single()
@@ -120,22 +110,15 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                 return
             }
 
-            // Buscar perfil completo de public.users
+            // Buscar email e whatsapp do perfil para pré-preencher
             const { data: perfilData } = await supabase
                 .from('users')
-                .select('nome, email, whatsapp, cpf, rg, data_nascimento, endereco')
+                .select('email, whatsapp')
                 .eq('id', currentUser.id)
                 .single()
 
-            setPerfil(perfilData || {})
-            // Campos iniciam vazios — usuário deve preencher tudo a cada matrícula
-            setNome('')
-            setEmail('')
-            setWhatsapp('')
-            setCpf('')
-            setRg('')
-            setDataNascimento('')
-            setEndereco('')
+            if (perfilData?.email) setEmail(perfilData.email)
+            if (perfilData?.whatsapp) setWhatsapp(perfilData.whatsapp)
 
             // Buscar curso/turma
             if (tipo === 'curso') {
@@ -146,7 +129,6 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     setTurma(t)
                     if (t?.formulario_inscricao?.length) {
                         setFormulario(t.formulario_inscricao)
-                        // Todos os campos do formulário iniciam vazios
                         const initialRespostas: Record<string, string> = {}
                         t.formulario_inscricao.forEach((campo: CampoFormulario) => {
                             initialRespostas[campo.id] = ''
@@ -166,36 +148,12 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tipo, id, turmaId])
 
-    const handleConfirmarDados = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setSavingPerfil(true)
-        try {
-            // Verificar se registro existe antes de atualizar
-            const { data: userExists } = await supabase.from('users').select('id').eq('id', user.id).single()
-            if (userExists) {
-                // Atualizar apenas os campos editados, preservando tenant_id, ativo, role, etc.
-                await supabase.from('users').update({
-                    nome,
-                    email,
-                    whatsapp,
-                    cpf,
-                    rg: rg || null,
-                    data_nascimento: dataNascimento || null,
-                    endereco: endereco || null,
-                }).eq('id', user.id)
-            }
-            // Se não existe, o upsert na API de confirmar irá criar quando a inscrição for submetida
-
-            await supabase.auth.updateUser({ data: { nome, whatsapp } })
-        } finally {
-            setSavingPerfil(false)
-            setStep('formulario')
-        }
-    }
-
     const handleInscricao = async (e: React.FormEvent) => {
         e.preventDefault()
         setSubmitting(true)
+
+        // Atualizar email e whatsapp no perfil caso tenham sido preenchidos agora
+        await supabase.from('users').update({ email: email || null, whatsapp: whatsapp || null }).eq('id', user.id)
 
         const campoWhatsApp = formulario.find(c => c.is_whatsapp)
         const telefoneWhatsApp = campoWhatsApp ? (respostas[campoWhatsApp.id] || whatsapp || null) : whatsapp || null
@@ -288,28 +246,11 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     <ArrowLeft className="w-4 h-4" /> Voltar para os detalhes
                 </Link>
 
-                {/* Indicador de etapas */}
-                <div className="flex items-center gap-3 mb-8">
-                    <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-wider ${step === 'confirmar-dados' ? 'text-[#1A3C4A]' : 'text-[#2D9E6B]'}`}>
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${step === 'confirmar-dados' ? 'bg-[#1A3C4A] text-white' : 'bg-[#2D9E6B] text-white'}`}>
-                            {step === 'formulario' ? <CheckCircle className="w-4 h-4" /> : '1'}
-                        </div>
-                        Confirmação de Dados
-                    </div>
-                    <div className="flex-1 h-px bg-gray-200" />
-                    <div className={`flex items-center gap-2 text-xs font-black uppercase tracking-wider ${step === 'formulario' ? 'text-[#1A3C4A]' : 'text-gray-300'}`}>
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black ${step === 'formulario' ? 'bg-[#1A3C4A] text-white' : 'bg-gray-200 text-gray-400'}`}>
-                            2
-                        </div>
-                        Inscrição
-                    </div>
-                </div>
-
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                     {/* Header */}
                     <div className="bg-[#1A3C4A] p-8 text-white">
                         <span className="text-xs font-bold uppercase tracking-wider text-[#2D9E6B] mb-2 block">
-                            {step === 'confirmar-dados' ? 'Passo 1 — Confirme seus dados' : 'Passo 2 — Formulário de Inscrição'}
+                            Formulário de Inscrição
                         </span>
                         <h1 className="text-2xl md:text-3xl font-bold">{entidade?.titulo || 'Carregando...'}</h1>
                         {turma?.data_inicio && (
@@ -320,121 +261,85 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                         )}
                     </div>
 
-                    {/* Etapa 1: Confirmar dados */}
-                    {step === 'confirmar-dados' && (
-                        <form onSubmit={handleConfirmarDados} className="p-8 space-y-5">
-                            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl">
-                                <UserCheck className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
-                                <p className="text-sm text-blue-700">Confirme ou atualize seus dados antes de prosseguir com a inscrição. Essas informações serão usadas pela instituição.</p>
+                    <form onSubmit={handleInscricao} className="p-8 space-y-6">
+                        {statusInscricao === 'erro' && (
+                            <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
+                                <strong>Erro:</strong> {errorMessage}
                             </div>
+                        )}
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className={labelClass}>Nome Completo *</label>
-                                    <input required type="text" value={nome} onChange={e => setNome(e.target.value)} className={inputClass} placeholder="Seu nome completo" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>E-mail *</label>
-                                    <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} placeholder="seu@email.com" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>WhatsApp</label>
-                                    <input type="tel" value={whatsapp} onChange={e => setWhatsapp(e.target.value)} className={inputClass} placeholder="(00) 00000-0000" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>CPF</label>
-                                    <input type="text" value={cpf} onChange={e => setCpf(e.target.value)} className={inputClass} placeholder="000.000.000-00" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>RG</label>
-                                    <input type="text" value={rg} onChange={e => setRg(e.target.value)} className={inputClass} placeholder="00.000.000-0" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Data de Nascimento</label>
-                                    <input type="date" value={dataNascimento} onChange={e => setDataNascimento(e.target.value)} className={inputClass} />
-                                </div>
-                                <div className="md:col-span-2">
-                                    <label className={labelClass}>Endereço</label>
-                                    <input type="text" value={endereco} onChange={e => setEndereco(e.target.value)} className={inputClass} placeholder="Rua, número, bairro, cidade - UF" />
-                                </div>
+                        {/* Campos de contato */}
+                        <div className="space-y-4">
+                            <div>
+                                <label className={labelClass}>E-mail *</label>
+                                <input
+                                    required
+                                    type="email"
+                                    value={email}
+                                    onChange={e => setEmail(e.target.value)}
+                                    className={inputClass}
+                                    placeholder="seu@email.com"
+                                />
                             </div>
-
-                            <div className="pt-2">
-                                <button
-                                    type="submit"
-                                    disabled={savingPerfil}
-                                    className="w-full py-4 bg-[#1A3C4A] text-white rounded-xl font-bold text-sm shadow-sm hover:bg-[#2E6B7A] transition-all disabled:opacity-70 flex justify-center items-center gap-2"
-                                >
-                                    {savingPerfil ? (
-                                        <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Salvando...</>
-                                    ) : (
-                                        <>Confirmar e Continuar <ArrowRight className="w-4 h-4" /></>
-                                    )}
-                                </button>
+                            <div>
+                                <label className={labelClass}>
+                                    WhatsApp
+                                    {!whatsapp && <span className="ml-1 text-[10px] normal-case font-normal text-gray-400">(usado para confirmação)</span>}
+                                </label>
+                                <input
+                                    type="tel"
+                                    value={whatsapp}
+                                    onChange={e => setWhatsapp(e.target.value)}
+                                    className={inputClass}
+                                    placeholder="(00) 00000-0000"
+                                />
                             </div>
-                        </form>
-                    )}
+                        </div>
 
-                    {/* Etapa 2: Formulário de inscrição */}
-                    {step === 'formulario' && (
-                        <form onSubmit={handleInscricao} className="p-8 space-y-6">
-                            {statusInscricao === 'erro' && (
-                                <div className="p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm">
-                                    <strong>Erro:</strong> {errorMessage}
-                                </div>
-                            )}
-
-                            {formulario.length > 0 ? (
-                                <div className="space-y-5">
-                                    {formulario.map(campo => (
-                                        <div key={campo.id}>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                                                {campo.label}
-                                                {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
-                                                {campo.is_whatsapp && <span className="ml-2 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">usado para confirmação no WhatsApp</span>}
-                                            </label>
-                                            <CampoInput
-                                                campo={campo}
-                                                value={respostas[campo.id] || ''}
-                                                onChange={v => setRespostas(prev => ({ ...prev, [campo.id]: v }))}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="border border-gray-100 rounded-lg p-5 bg-gray-50">
-                                    <h3 className="font-semibold text-gray-800 mb-2">Resumo da Inscrição</h3>
-                                    <ul className="text-sm text-gray-600 space-y-2">
-                                        <li><strong>Aluno:</strong> {nome}</li>
-                                        <li><strong>Modalidade:</strong> <span className="capitalize">{tipo}</span></li>
-                                        {turma && <li><strong>Turma:</strong> #{turmaId?.split('-')[0]}</li>}
-                                        {turma?.data_inicio && <li><strong>Início:</strong> {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
-                                        {turma?.data_fim && <li><strong>Encerramento:</strong> {new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
-                                    </ul>
-                                </div>
-                            )}
-
-                            <div className="flex gap-3 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setStep('confirmar-dados')}
-                                    className="px-6 py-4 border border-gray-200 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-50 transition-all flex items-center gap-2"
-                                >
-                                    <ArrowLeft className="w-4 h-4" /> Voltar
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    className="flex-1 py-4 bg-[#2D9E6B] text-white rounded-xl font-bold text-lg shadow-sm hover:bg-green-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
-                                >
-                                    {submitting ? (
-                                        <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Processando...</>
-                                    ) : 'Confirmar Inscrição'}
-                                </button>
+                        {/* Campos do formulário personalizado */}
+                        {formulario.length > 0 && (
+                            <div className="space-y-5">
+                                {formulario.map(campo => (
+                                    <div key={campo.id}>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                            {campo.label}
+                                            {campo.obrigatorio && <span className="text-red-500 ml-1">*</span>}
+                                            {campo.is_whatsapp && <span className="ml-2 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">usado para confirmação no WhatsApp</span>}
+                                        </label>
+                                        <CampoInput
+                                            campo={campo}
+                                            value={respostas[campo.id] || ''}
+                                            onChange={v => setRespostas(prev => ({ ...prev, [campo.id]: v }))}
+                                        />
+                                    </div>
+                                ))}
                             </div>
-                            <p className="text-center text-xs text-gray-400">Ao se inscrever você concorda com os termos de participação da instituição.</p>
-                        </form>
-                    )}
+                        )}
+
+                        {/* Resumo quando não há formulário personalizado */}
+                        {formulario.length === 0 && turma && (
+                            <div className="border border-gray-100 rounded-lg p-5 bg-gray-50">
+                                <h3 className="font-semibold text-gray-800 mb-2">Resumo da Inscrição</h3>
+                                <ul className="text-sm text-gray-600 space-y-2">
+                                    <li><strong>Modalidade:</strong> <span className="capitalize">{tipo}</span></li>
+                                    <li><strong>Turma:</strong> #{turmaId?.split('-')[0]}</li>
+                                    {turma?.data_inicio && <li><strong>Início:</strong> {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
+                                    {turma?.data_fim && <li><strong>Encerramento:</strong> {new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
+                                </ul>
+                            </div>
+                        )}
+
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="w-full py-4 bg-[#2D9E6B] text-white rounded-xl font-bold text-lg shadow-sm hover:bg-green-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+                        >
+                            {submitting ? (
+                                <><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Processando...</>
+                            ) : 'Confirmar Inscrição'}
+                        </button>
+                        <p className="text-center text-xs text-gray-400">Ao se inscrever você concorda com os termos de participação da instituição.</p>
+                    </form>
                 </div>
             </div>
         </div>
