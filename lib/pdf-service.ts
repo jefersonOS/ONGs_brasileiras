@@ -162,7 +162,6 @@ export class PDFService {
         const align = config.alinhamento || 'centro'
         const showBorda = config.mostrar_borda !== false
         const showCodigo = config.mostrar_codigo !== false
-        const showCarga = config.mostrar_carga_horaria !== false
         const showInstituicao = config.mostrar_instituicao !== false
         const tamTitulo = config.tam_titulo || 36
         const tamNome = config.tam_nome || 32
@@ -204,7 +203,7 @@ export class PDFService {
                 const isJpg = config.fundo_url.toLowerCase().match(/\.(jpg|jpeg)/)
                 const bgImage = isJpg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes)
                 page.drawImage(bgImage, { x: 0, y: 0, width, height })
-            } catch (_e) { }
+            } catch (error) { }
         }
 
         // Logo
@@ -248,7 +247,7 @@ export class PDFService {
                 lines.forEach((line, i) => {
                     if (!line.trim()) return
                     const tw = font.widthOfTextAtSize(line, bloco.tam)
-                    let px = (bloco.alinhamento === 'centro') ? width / 2 - tw / 2 : (bloco.alinhamento === 'direita') ? width - bloco.x - tw : bloco.x
+                    const px = (bloco.alinhamento === 'centro') ? width / 2 - tw / 2 : (bloco.alinhamento === 'direita') ? width - bloco.x - tw : bloco.x
                     const py = height - bloco.y - bloco.tam - (i * lineHeight)
                     if (py > 0 && py < height) page.drawText(line, { x: px, y: py, size: bloco.tam, font, color })
                 })
@@ -324,7 +323,7 @@ export class PDFService {
                     const mImg = config.assinatura_mediador_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(mBytes) : await pdfDoc.embedPng(mBytes)
                     const mH = 40, mW = mImg.width * (mH / mImg.height)
                     page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 125 + medY, width: mW, height: mH })
-                } catch (_e) { }
+                } catch (error) { }
             }
             page.drawLine({ start: { x: medX, y: 120 + medY }, end: { x: medX + medBlockW, y: 120 + medY }, thickness: 1, color: primaryColor })
             const medNomeW = fontItalic.widthOfTextAtSize(config.nome_mediador!, 12)
@@ -345,7 +344,7 @@ export class PDFService {
                 const sigImg = config.assinatura_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
                 const sigH = 40, sigW = sigImg.width * (sigH / sigImg.height)
                 page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 125 + respY, width: sigW, height: sigH })
-            } catch (_e) { }
+            } catch (error) { }
         }
         page.drawLine({ start: { x: respX, y: 120 + respY }, end: { x: respX + 200, y: 120 + respY }, thickness: 1, color: primaryColor })
         const nResp = config.nome_responsavel || 'Assinatura Eletrônica'

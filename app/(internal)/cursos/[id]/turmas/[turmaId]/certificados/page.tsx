@@ -18,10 +18,9 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
     useEffect(() => {
         const fetchData = async () => {
             const { data: cursoData } = await supabase.from('cursos').select('*').eq('id', cursoId).single()
-            const { data: turmaData } = await supabase.from('turmas').select('*').eq('id', turmaId).single()
+            await supabase.from('turmas').select('*').eq('id', turmaId).single()
 
             if (cursoData) setCurso(cursoData)
-            // if (turmaData) setTurma(turmaData) // Removed unused
 
             // Buscar inscritos e suas presenças
             const { data: inscritos } = await supabase
