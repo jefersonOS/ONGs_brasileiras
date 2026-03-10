@@ -92,8 +92,19 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
             const { data: { user: currentUser } } = await supabase.auth.getUser()
 
             if (!currentUser) {
+                // Busca tenant_id para que o cidadão seja vinculado ao tenant correto no registro
+                let tenantId: string | null = null
+                if (tipo === 'curso') {
+                    const { data: c } = await supabase.from('cursos').select('tenant_id').eq('id', id).single()
+                    tenantId = c?.tenant_id || null
+                } else {
+                    const { data: a } = await supabase.from('atividades').select('tenant_id').eq('id', id).single()
+                    tenantId = a?.tenant_id || null
+                }
                 const redirectUrl = `/inscricao/${tipo}/${id}${turmaId ? `?turma=${turmaId}` : ''}`
-                router.replace(`/register?perfil=cidadao&redirect=${encodeURIComponent(redirectUrl)}`)
+                const registerParams = new URLSearchParams({ perfil: 'cidadao', redirect: redirectUrl })
+                if (tenantId) registerParams.set('tenantId', tenantId)
+                router.replace(`/register?${registerParams.toString()}`)
                 return
             }
 

@@ -41,14 +41,13 @@ export default function CoursePresencePage({ params }: { params: { id: string, t
             if (cursoData) setCurso(cursoData)
             if (turmaData) setTurma(turmaData)
 
-            // 2. Inscritos
-            const { data: inscritosData } = await supabase
-                .from('inscricoes')
-                .select('id, dados_formulario, telefone_whatsapp, users(id, nome, email, cpf, whatsapp, rg, data_nascimento, endereco)')
-                .eq('turma_id', turmaId)
-                .eq('status', 'confirmada')
-
-            if (inscritosData) setInscritos(inscritosData)
+            // 2. Inscritos — usa API route com admin client para ignorar RLS da tabela users
+            // (cidadãos podem ter tenant_id nulo, o que os tornaria invisíveis via RLS normal)
+            const inscritosRes = await fetch(`/api/cursos/turmas/${turmaId}/inscritos`)
+            if (inscritosRes.ok) {
+                const inscritosData = await inscritosRes.json()
+                setInscritos(inscritosData)
+            }
 
             // 3. Presenças do encontro atual (encontro_id será o index do array de encontros da turma)
             await fetchPresencas(0) // Default primeiro encontro

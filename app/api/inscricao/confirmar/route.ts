@@ -19,9 +19,17 @@ export async function POST(req: Request) {
                 nome: u.user_metadata?.nome || '',
                 tipo: u.user_metadata?.tipo || 'cidadao',
                 role: u.user_metadata?.role || 'cidadao',
-                tenant_id: u.user_metadata?.tenant_id || null,
+                tenant_id: u.user_metadata?.tenant_id || tenantId || null,
                 ativo: true,
             }, { onConflict: 'id', ignoreDuplicates: true })
+
+            // Garante tenant_id para cidadãos que se cadastraram sem ele
+            if (tenantId && !u.user_metadata?.tenant_id) {
+                await adminSupabase.from('users')
+                    .update({ tenant_id: tenantId })
+                    .eq('id', u.id)
+                    .is('tenant_id', null)
+            }
         }
 
         // 1. Criar Inscrição com dados do formulário
