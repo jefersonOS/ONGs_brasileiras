@@ -321,20 +321,22 @@ export class PDFService {
                     const mBytes = await mRes.arrayBuffer()
                     const mImg = config.assinatura_mediador_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(mBytes) : await pdfDoc.embedPng(mBytes)
                     const mH = 40, mW = mImg.width * (mH / mImg.height)
-                    page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 125 + medY, width: mW, height: mH })
+                    page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 90 + medY, width: mW, height: mH })
                 } catch { }
             }
-            page.drawLine({ start: { x: medX, y: 120 + medY }, end: { x: medX + medBlockW, y: 120 + medY }, thickness: 1, color: primaryColor })
+            page.drawLine({ start: { x: medX, y: 80 + medY }, end: { x: medX + medBlockW, y: 80 + medY }, thickness: 1, color: primaryColor })
             const medNomeW = fontItalic.widthOfTextAtSize(config.nome_mediador!, 12)
-            page.drawText(config.nome_mediador!, { x: medX + (medBlockW - medNomeW) / 2, y: 100 + medY, size: 12, font: fontItalic, color: textColor })
+            page.drawText(config.nome_mediador!, { x: medX + (medBlockW - medNomeW) / 2, y: 64 + medY, size: 12, font: fontItalic, color: textColor })
             if (config.cargo_mediador) {
                 const medCargoW = fontText.widthOfTextAtSize(config.cargo_mediador, 10)
-                page.drawText(config.cargo_mediador, { x: medX + (medBlockW - medCargoW) / 2, y: 84 + medY, size: 10, font: fontText, color: rgb(0.5, 0.5, 0.5) })
+                page.drawText(config.cargo_mediador, { x: medX + (medBlockW - medCargoW) / 2, y: 50 + medY, size: 10, font: fontText, color: rgb(0.5, 0.5, 0.5) })
             }
         }
 
         // Responsável
-        const respX = width - 300 + offXResp
+        // Base: width-280 espelha o CSS "right: 80, minWidth: 200" (841.89-80-200=561.89)
+        // Sinal negativo para off_x espelha o CSS translateX(-offXResp)
+        const respX = width - 280 - offXResp
         const respY = offYResp
         if (config.assinatura_url) {
             try {
@@ -342,16 +344,16 @@ export class PDFService {
                 const sigBytes = await sigRes.arrayBuffer()
                 const sigImg = config.assinatura_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
                 const sigH = 40, sigW = sigImg.width * (sigH / sigImg.height)
-                page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 125 + respY, width: sigW, height: sigH })
+                page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 90 + respY, width: sigW, height: sigH })
             } catch { }
         }
-        page.drawLine({ start: { x: respX, y: 120 + respY }, end: { x: respX + 200, y: 120 + respY }, thickness: 1, color: primaryColor })
+        page.drawLine({ start: { x: respX, y: 80 + respY }, end: { x: respX + 200, y: 80 + respY }, thickness: 1, color: primaryColor })
         const nResp = config.nome_responsavel || 'Assinatura Eletrônica'
         const nRespW = fontItalic.widthOfTextAtSize(nResp, 12)
-        page.drawText(nResp, { x: respX + (200 - nRespW) / 2, y: 100 + respY, size: 12, font: fontItalic, color: textColor })
+        page.drawText(nResp, { x: respX + (200 - nRespW) / 2, y: 64 + respY, size: 12, font: fontItalic, color: textColor })
         if (config.cargo_responsavel) {
             const cargoW = fontText.widthOfTextAtSize(config.cargo_responsavel, 10)
-            page.drawText(config.cargo_responsavel, { x: respX + (200 - cargoW) / 2, y: 84 + respY, size: 10, font: fontText, color: rgb(0.5, 0.5, 0.5) })
+            page.drawText(config.cargo_responsavel, { x: respX + (200 - cargoW) / 2, y: 50 + respY, size: 10, font: fontText, color: rgb(0.5, 0.5, 0.5) })
         }
 
         // Código de Validação
