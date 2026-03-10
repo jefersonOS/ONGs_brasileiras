@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Award, CheckCircle2, AlertCircle, FileText, Send, Download, RefreshCw, ArrowLeft } from 'lucide-react'
+import { Award, CheckCircle2, AlertCircle, FileText, Send, Download, RefreshCw, ArrowLeft, Eye } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
 
@@ -194,14 +194,24 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                                 <td className="px-8 py-6">
                                     <div className="flex gap-2">
                                         {p.certificado && (
-                                            <Link
-                                                href={`/api/certificados/${p.certificado.id}`}
-                                                target="_blank"
-                                                className="p-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-all border border-gray-100"
-                                                title="Download PDF"
-                                            >
-                                                <Download className="w-4 h-4" />
-                                            </Link>
+                                            <>
+                                                <Link
+                                                    href={`/api/certificados/${p.certificado.id}?preview=true`}
+                                                    target="_blank"
+                                                    className="p-2 bg-gray-50 text-blue-600 rounded-xl hover:bg-blue-50 transition-all border border-gray-100"
+                                                    title="Visualizar Certificado"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </Link>
+                                                <Link
+                                                    href={`/api/certificados/${p.certificado.id}`}
+                                                    target="_blank"
+                                                    className="p-2 bg-gray-50 text-gray-600 rounded-xl hover:bg-gray-100 transition-all border border-gray-100"
+                                                    title="Download PDF"
+                                                >
+                                                    <Download className="w-4 h-4" />
+                                                </Link>
+                                            </>
                                         )}
                                         <button className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:text-green-600 transition-all border border-gray-100">
                                             <Send className="w-4 h-4" />

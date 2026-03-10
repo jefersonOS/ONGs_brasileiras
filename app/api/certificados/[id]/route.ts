@@ -130,11 +130,16 @@ export async function GET(request: Request, { params }: { params: { id: string }
             certConfig
         )
 
+        const { searchParams } = new URL(request.url)
+        const preview = searchParams.get('preview') === 'true'
+
         return new NextResponse(Buffer.from(pdfBytes), {
             status: 200,
             headers: {
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="Certificado_${certificado.codigo_validacao}.pdf"`
+                'Content-Disposition': preview
+                    ? 'inline'
+                    : `attachment; filename="Certificado_${certificado.codigo_validacao}.pdf"`
             }
         })
     } catch (err: any) {
