@@ -59,6 +59,19 @@ function resolveTokens(texto: string, vals: Record<string, string>): string {
     return texto.replace(/\{\{(\w+)\}\}/g, (_, k) => vals[k] ?? ('{{' + k + '}}'))
 }
 
+function RichText({ text, style }: { text: string, style: React.CSSProperties }) {
+    const parts = text.split(/(\*\*.*?\*\*)/g)
+    return (
+        <span style={style}>
+            {parts.map((part, i) =>
+                part.startsWith('**') && part.endsWith('**')
+                    ? <strong key={i}>{part.slice(2, -2)}</strong>
+                    : <span key={i}>{part}</span>
+            )}
+        </span>
+    )
+}
+
 export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tenantNome, scale = 0.42, exemploAluno, exemploCurso, exemploCH }: CertPreviewProps) {
     const EXEMPLO_ALUNO = exemploAluno || DEFAULT_ALUNO
     const EXEMPLO_CURSO = exemploCurso || DEFAULT_CURSO
@@ -72,8 +85,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
     const nameClr = certData.cor_nome || secondary
     const nomeInst = certData.nome_instituicao || tenantNome || 'NOME DA INSTITUIÇÃO'
     const titulo = certData.titulo || 'CERTIFICADO DE CONCLUSÃO'
-    const textoPre = certData.texto_pre || 'Certificamos que'
-    const textoPos = certData.texto_pos || 'concluiu com êxito o curso de'
+    const subtitulo = certData.texto_pre || 'ESTE CERTIFICADO COMPROVA QUE'
     const responsavel = certData.nome_responsavel || 'Assinatura Eletrônica / Coordenação'
     const siteVal = certData.site_validacao || 'portal.nexori.com.br'
 
@@ -89,7 +101,6 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
     const posXConteudo = certData.pos_x_conteudo || 0
     const posXRodape = certData.pos_x_rodape || 0
     const offXMed = certData.off_x_mediador || 0
-    const offYMed = certData.off_y_mediador || 0
     const offXResp = certData.off_x_responsavel || 0
     const offYResp = certData.off_y_responsavel || 0
 
@@ -106,6 +117,11 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
         codigo: EXEMPLO_CODIGO,
         periodo: EXEMPLO_PERIODO,
     }
+
+    // Texto principal do corpo — espelha o formato do pdf-service.ts
+    const bodyText = certData.texto_complementar
+        ? `CONCLUIU COM ÊXITO O **CURSO DE ${EXEMPLO_CURSO.toUpperCase()}**. ${certData.texto_complementar} COM **CARGA HORÁRIA DE ${EXEMPLO_CH}H**.`
+        : `CONCLUIU COM ÊXITO O **CURSO DE ${EXEMPLO_CURSO.toUpperCase()}**. OFERECIDO NO **PERIODO DE ${EXEMPLO_PERIODO}**. COM **CARGA HORÁRIA DE ${EXEMPLO_CH}H**.`
 
     return (
         <div className="space-y-3">
@@ -129,11 +145,13 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                     fontFamily: 'Helvetica Neue, Helvetica, Arial, sans-serif',
                     backgroundColor: '#fff', overflow: 'hidden',
                 }}>
+                    {/* Fundo */}
                     {certData.fundo_url && (
                         <img src={certData.fundo_url} alt=""
                             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
                     )}
 
+                    {/* Borda */}
                     {certData.mostrar_borda && (
                         <>
                             <div style={{ position: 'absolute', inset: 20, border: `4px solid ${primary}`, pointerEvents: 'none' }} />
@@ -141,6 +159,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                         </>
                     )}
 
+                    {/* Logo — topo esquerdo */}
                     {certData.logo_url && (
                         <img src={certData.logo_url} alt="Logo"
                             style={{ position: 'absolute', top: 28, left: 60, height: 60, objectFit: 'contain' }} />
@@ -171,39 +190,86 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                             )
                         })
                     ) : (
-                        <div style={{
-                            position: 'absolute',
-                            top: 50 - posYConteudo, left: 60 + posXConteudo,
-                            right: 60 - posXConteudo, bottom: 130 + posYConteudo,
-                            display: 'flex', flexDirection: 'column',
-                            alignItems, textAlign, justifyContent: 'center', gap: 0,
-                        }}>
+                        <>
+                            {/* Instituição — topo (espelha posição do PDF: height-80) */}
                             {certData.mostrar_instituicao && (
-                                <div style={{ fontSize: certData.tam_instituicao, fontWeight: 900, color: primary, letterSpacing: 3, marginBottom: 20, textTransform: 'uppercase' }}>
+                                <div style={{
+                                    position: 'absolute',
+                                    top: 28,
+                                    left: certData.logo_url ? 140 : 60,
+                                    right: 60,
+                                    textAlign: certData.logo_url ? 'right' as const : textAlign,
+                                    fontSize: certData.tam_instituicao,
+                                    fontWeight: 900,
+                                    color: primary,
+                                    letterSpacing: 3,
+                                    textTransform: 'uppercase' as const,
+                                    lineHeight: 1.2,
+                                }}>
                                     {nomeInst}
                                 </div>
                             )}
-                            <div style={{ fontSize: certData.tam_titulo, fontWeight: 900, color: primary, letterSpacing: 1, marginBottom: 22 }}>{titulo}</div>
-                            <div style={{ width: textAlign === 'center' ? '50%' : '40%', height: 3, backgroundColor: secondary, marginBottom: 24, alignSelf: alignItems }} />
-                            <div style={{ fontSize: certData.tam_texto, color: textClr, marginBottom: 10 }}>{textoPre}</div>
-                            <div style={{ fontSize: certData.tam_nome, fontWeight: 900, color: nameClr, marginBottom: 12 }}>{EXEMPLO_ALUNO}</div>
-                            <div style={{ fontSize: certData.tam_texto, color: textClr, marginBottom: 8 }}>{textoPos}</div>
-                            <div style={{ fontSize: Math.min(certData.tam_texto + 6, 26), fontWeight: 700, color: primary, marginBottom: 8 }}>
-                                &ldquo;{EXEMPLO_CURSO}&rdquo;
+
+                            {/* Área central de conteúdo (espelha height-160 a height-330) */}
+                            <div style={{
+                                position: 'absolute',
+                                top: 100 - posYConteudo,
+                                left: 60 + posXConteudo,
+                                right: 60 - posXConteudo,
+                                bottom: 130 + posYConteudo,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems,
+                                textAlign,
+                                justifyContent: 'center',
+                                gap: 0,
+                            }}>
+                                {/* Título principal */}
+                                <div style={{
+                                    fontSize: certData.tam_titulo,
+                                    fontWeight: 900,
+                                    color: primary,
+                                    letterSpacing: 1,
+                                    marginBottom: 20,
+                                }}>
+                                    {titulo}
+                                </div>
+
+                                {/* Subtítulo (texto_pre) — estilo do PDF: menor, cinza, uppercase */}
+                                <div style={{
+                                    fontSize: 14,
+                                    color: '#888',
+                                    letterSpacing: 1,
+                                    textTransform: 'uppercase' as const,
+                                    marginBottom: 16,
+                                }}>
+                                    {subtitulo}
+                                </div>
+
+                                {/* Nome do aluno */}
+                                <div style={{
+                                    fontSize: certData.tam_nome,
+                                    fontWeight: 900,
+                                    color: nameClr,
+                                    marginBottom: 20,
+                                }}>
+                                    {EXEMPLO_ALUNO}
+                                </div>
+
+                                {/* Corpo com texto rico — espelha drawRichText do PDF */}
+                                <div style={{
+                                    fontSize: certData.tam_texto,
+                                    color: textClr,
+                                    lineHeight: 1.5,
+                                    maxWidth: '90%',
+                                }}>
+                                    <RichText text={bodyText} style={{}} />
+                                </div>
                             </div>
-                            {certData.texto_complementar && (
-                                <div style={{ fontSize: certData.tam_texto - 2, color: textClr, marginBottom: 6, fontStyle: 'italic' }}>
-                                    {certData.texto_complementar}
-                                </div>
-                            )}
-                            {certData.mostrar_carga_horaria && (
-                                <div style={{ fontSize: certData.tam_texto - 2, color: textClr }}>
-                                    com carga horária total de {EXEMPLO_CH} horas.
-                                </div>
-                            )}
-                        </div>
+                        </>
                     )}
 
+                    {/* Data de emissão */}
                     <div style={{
                         position: 'absolute',
                         bottom: certData.nome_mediador ? 18 + posYRodape : 55 + posYRodape,
@@ -215,6 +281,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                         Emitido em {new Date().toLocaleDateString('pt-BR')}
                     </div>
 
+                    {/* Assinatura mediador */}
                     {certData.nome_mediador && (
                         <div style={{
                             position: 'absolute', bottom: 55,
@@ -232,6 +299,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                         </div>
                     )}
 
+                    {/* Assinatura responsável */}
                     <div style={{
                         position: 'absolute', bottom: 55,
                         right: 80, textAlign: 'center', minWidth: 200,
@@ -247,6 +315,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                         </div>
                     </div>
 
+                    {/* Código de autenticação */}
                     {certData.mostrar_codigo && (
                         <div style={{ position: 'absolute', bottom: 18, left: 0, right: 0, textAlign: 'center' }}>
                             <div style={{ fontSize: 9, color: '#aaa' }}>Código de Autenticação: {EXEMPLO_CODIGO}</div>

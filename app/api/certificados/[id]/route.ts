@@ -20,7 +20,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
             users!cidadao_id (nome, cpf),
             inscricoes!inscricao_id (
                 entidade_tipo,
-                entidade_id
+                entidade_id,
+                turma_id
             )
         `)
         .eq('id', id)
@@ -42,6 +43,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     let certConfig: any = {}
     let nomeInstituicao = 'Organização'
     let cursoCertConfig: Record<string, string> = {}
+    let periodoStr = ''
 
     if (certificado.inscricoes.entidade_tipo === 'curso') {
         const { data: curso } = await supabase
@@ -54,6 +56,20 @@ export async function GET(request: Request, { params }: { params: { id: string }
             cargaHoraria = curso.carga_horaria?.toString() || '0'
             tenantId = curso.tenant_id || null
             cursoCertConfig = curso.cert_config || {}
+        }
+
+        // Buscar dados da turma para o período
+        if (certificado.inscricoes.turma_id) {
+            const { data: turma } = await supabase
+                .from('turmas')
+                .select('data_inicio, data_fim')
+                .eq('id', certificado.inscricoes.turma_id)
+                .single()
+            if (turma && turma.data_inicio && turma.data_fim) {
+                const dInicio = new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')
+                const dFim = new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')
+                periodoStr = `${dInicio} a ${dFim}`
+            }
         }
     } else {
         const { data: atividade } = await supabase
@@ -114,6 +130,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
                 off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
                 off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
                 blocos: cfg.cert_blocos?.length ? cfg.cert_blocos : undefined,
+                periodo: periodoStr || undefined,
             }
         }
     }
