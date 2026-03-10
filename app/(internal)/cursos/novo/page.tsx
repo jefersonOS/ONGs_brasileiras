@@ -8,8 +8,6 @@ import { Plus, Trash2, Sparkles, RefreshCw, ImageIcon, Upload } from 'lucide-rea
 export default function NovoCursoPage() {
     const router = useRouter()
     const supabase = createClient()
-    const debounceRef = useRef<NodeJS.Timeout | null>(null)
-
     const [titulo, setTitulo] = useState('')
     const [categoria, setCategoria] = useState('profissionalizante')
     const [descricao, setDescricao] = useState('')
@@ -69,14 +67,6 @@ export default function NovoCursoPage() {
         }
     }
 
-    const handleTituloChange = (value: string) => {
-        setTitulo(value)
-        if (debounceRef.current) clearTimeout(debounceRef.current)
-        debounceRef.current = setTimeout(() => {
-            if (value.trim().length >= 4) gerarThumbnail(value)
-        }, 1500)
-    }
-
     const handleCreate = async (e: React.FormEvent, statusOverride?: string) => {
         e.preventDefault()
         setLoading(true)
@@ -128,15 +118,11 @@ export default function NovoCursoPage() {
                             <input
                                 type="text"
                                 value={titulo}
-                                onChange={e => handleTituloChange(e.target.value)}
+                                onChange={e => setTitulo(e.target.value)}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]"
                                 placeholder="Ex: Informática Básica, Corte e Costura..."
                             />
-                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
-                                <Sparkles className="w-3 h-3 text-purple-400" />
-                                A thumbnail será gerada automaticamente com IA ao digitar o título
-                            </p>
                         </div>
 
                         {/* Thumbnail Preview */}
