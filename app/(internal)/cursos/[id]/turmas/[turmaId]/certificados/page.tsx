@@ -11,7 +11,6 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
     const supabase = createClient()
 
     const [curso, setCurso] = useState<any>(null)
-    const [turma, setTurma] = useState<any>(null)
     const [participantes, setParticipantes] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [issuing, setIssuing] = useState(false)
@@ -22,7 +21,7 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
             const { data: turmaData } = await supabase.from('turmas').select('*').eq('id', turmaId).single()
 
             if (cursoData) setCurso(cursoData)
-            if (turmaData) setTurma(turmaData)
+            // if (turmaData) setTurma(turmaData) // Removed unused
 
             // Buscar inscritos e suas presenças
             const { data: inscritos } = await supabase

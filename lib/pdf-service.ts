@@ -69,17 +69,6 @@ function hexToRgb(hex: string) {
     return rgb(r, g, b)
 }
 
-function calcX(text: string, font: any, size: number, align: string, width: number, margin = 60): number {
-    const tw = font.widthOfTextAtSize(text, size)
-    if (align === 'esquerda') return margin
-    if (align === 'direita') return width - margin - tw
-    return width / 2 - tw / 2
-}
-
-function resolveTokens(texto: string, vals: Record<string, string>): string {
-    return texto.replace(/\{\{(\w+)\}\}/g, (_, k) => vals[k] ?? '')
-}
-
 export class PDFService {
     static async drawRichText(
         page: any,
@@ -159,23 +148,15 @@ export class PDFService {
         config: CertConfig = {}
     ): Promise<Uint8Array> {
         // Derivar todas as opções de configuração
-        const align = config.alinhamento || 'centro'
-        const showBorda = config.mostrar_borda !== false
         const showCodigo = config.mostrar_codigo !== false
-        const showCarga = config.mostrar_carga_horaria !== false
-        const showInstituicao = config.mostrar_instituicao !== false
         const tamTitulo = config.tam_titulo || 48
         const tamNome = config.tam_nome || 42
         const tamTexto = config.tam_texto || 16
-        const tamInstituicao = config.tam_instituicao || 16
         const posYConteudo = config.pos_y_conteudo || 0
         const posYRodape = config.pos_y_rodape || 0
         const posXConteudo = config.pos_x_conteudo || 0
-        const posXRodape = config.pos_x_rodape || 0
         const offXMed = config.off_x_mediador || 0
-        const offYMed = config.off_y_mediador || 0
         const offXResp = config.off_x_responsavel || 0
-        const offYResp = config.off_y_responsavel || 0
 
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
@@ -188,7 +169,6 @@ export class PDFService {
         const fontTitle = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
         const fontText = await pdfDoc.embedFont(StandardFonts.Helvetica)
         const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique)
-        const fontBoldItalic = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique)
 
         // Cores
         const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.45) // Ajustado para Amigos do Bem
@@ -272,7 +252,7 @@ export class PDFService {
         const periodo = config.periodo || ''
         const carga = String(cargaHoraria)
 
-        let textoPrincipal = `CONCLUIU COM ÊXITO O **CURSO DE ${curso}**. OFERECIDO NO **PERIODO DE ${periodo}**. PELA ASSOCIAÇÃO AMIGOS DO BEM, EM PARCERIA COM O GOVERNO DO ESTADO ATRAVÉS DA SECRETARIA ESTADUAL DE TURISMO E EMPREENDEDORISMO, COM **CARGA HORÁRIA DE ${carga}H**.`
+        const textoPrincipal = `CONCLUIU COM ÊXITO O **CURSO DE ${curso}**. OFERECIDO NO **PERIODO DE ${periodo}**. PELA ASSOCIAÇÃO AMIGOS DO BEM, EM PARCERIA COM O GOVERNO DO ESTADO ATRAVÉS DA SECRETARIA ESTADUAL DE TURISMO E EMPREENDEDORISMO, COM **CARGA HORÁRIA DE ${carga}H**.`
 
         await this.drawRichText(page, textoPrincipal, 60 + posXConteudo, height - 340 + posYConteudo, width, {
             fontNormal: fontText,
@@ -326,7 +306,7 @@ export class PDFService {
                 const sigBytes = await sigRes.arrayBuffer()
                 const sigImg = await pdfDoc.embedPng(sigBytes)
                 page.drawImage(sigImg, { x: 100 + lineW / 2 - 40 + offXMed, y: baseY + 45, width: 80, height: 40 })
-            } catch (e) { }
+            } catch (_e) { }
         }
         if (config.assinatura_url) {
             try {
@@ -334,7 +314,7 @@ export class PDFService {
                 const sigBytes = await sigRes.arrayBuffer()
                 const sigImg = await pdfDoc.embedPng(sigBytes)
                 page.drawImage(sigImg, { x: width - 100 - lineW / 2 - 40 + offXResp, y: baseY + 45, width: 80, height: 40 })
-            } catch (e) { }
+            } catch (_e) { }
         }
 
         // 7. Código de Validação (Discreto no fundo)
