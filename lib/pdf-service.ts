@@ -69,6 +69,17 @@ function hexToRgb(hex: string) {
     return rgb(r, g, b)
 }
 
+function calcX(text: string, font: any, size: number, align: string, width: number, margin = 60): number {
+    const tw = font.widthOfTextAtSize(text, size)
+    if (align === 'esquerda') return margin
+    if (align === 'direita') return width - margin - tw
+    return width / 2 - tw / 2
+}
+
+function resolveTokens(texto: string, vals: Record<string, string>): string {
+    return texto.replace(/\{\{(\w+)\}\}/g, (_, k) => vals[k] ?? '')
+}
+
 export class PDFService {
     static async drawRichText(
         page: any,
@@ -148,15 +159,23 @@ export class PDFService {
         config: CertConfig = {}
     ): Promise<Uint8Array> {
         // Derivar todas as opções de configuração
+        const align = config.alinhamento || 'centro'
+        const showBorda = config.mostrar_borda !== false
         const showCodigo = config.mostrar_codigo !== false
-        const tamTitulo = config.tam_titulo || 48
-        const tamNome = config.tam_nome || 42
-        const tamTexto = config.tam_texto || 16
+        const showCarga = config.mostrar_carga_horaria !== false
+        const showInstituicao = config.mostrar_instituicao !== false
+        const tamTitulo = config.tam_titulo || 36
+        const tamNome = config.tam_nome || 32
+        const tamTexto = config.tam_texto || 18
+        const tamInstituicao = config.tam_instituicao || 16
         const posYConteudo = config.pos_y_conteudo || 0
         const posYRodape = config.pos_y_rodape || 0
         const posXConteudo = config.pos_x_conteudo || 0
+        const posXRodape = config.pos_x_rodape || 0
         const offXMed = config.off_x_mediador || 0
+        const offYMed = config.off_y_mediador || 0
         const offXResp = config.off_x_responsavel || 0
+        const offYResp = config.off_y_responsavel || 0
 
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
@@ -169,163 +188,183 @@ export class PDFService {
         const fontTitle = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
         const fontText = await pdfDoc.embedFont(StandardFonts.Helvetica)
         const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique)
+        const fontBoldItalic = await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique)
 
         // Cores
-        const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.45) // Ajustado para Amigos do Bem
-        const pinkSecondary = rgb(0.85, 0.35, 0.8) // Rosa Amigos do Bem
-        const textColor = config.cor_texto ? hexToRgb(config.cor_texto) : rgb(0.1, 0.2, 0.3)
-        const nameColor = config.cor_nome ? hexToRgb(config.cor_nome) : rgb(0.10, 0.24, 0.45)
+        const primaryColor = config.cor_primaria ? hexToRgb(config.cor_primaria) : rgb(0.10, 0.24, 0.29)
+        const highlightColor = config.cor_secundaria ? hexToRgb(config.cor_secundaria) : rgb(0.18, 0.62, 0.42)
+        const textColor = config.cor_texto ? hexToRgb(config.cor_texto) : rgb(0.3, 0.3, 0.3)
+        const nameColor = config.cor_nome ? hexToRgb(config.cor_nome) : highlightColor
 
-        // 1. Faixas Decorativas (Cantos) - Usando retângulos e linhas para simular polígonos
-        // Canto Superior Esquerdo
-        page.drawRectangle({
-            x: 0,
-            y: height - 150,
-            width: 150,
-            height: 150,
-            color: pinkSecondary,
-            opacity: 0.8
-        })
-        page.drawLine({ start: { x: 160, y: height }, end: { x: 0, y: height - 160 }, thickness: 8, color: pinkSecondary, opacity: 0.5 })
+        // Fundo
+        if (config.fundo_url) {
+            try {
+                const imgRes = await fetch(config.fundo_url)
+                const imgBytes = await imgRes.arrayBuffer()
+                const isJpg = config.fundo_url.toLowerCase().match(/\.(jpg|jpeg)/)
+                const bgImage = isJpg ? await pdfDoc.embedJpg(imgBytes) : await pdfDoc.embedPng(imgBytes)
+                page.drawImage(bgImage, { x: 0, y: 0, width, height })
+            } catch (_e) { }
+        }
 
-        // Canto Inferior Direito
-        page.drawRectangle({
-            x: width - 150,
-            y: 0,
-            width: 150,
-            height: 150,
-            color: pinkSecondary,
-            opacity: 0.8
-        })
-        page.drawLine({ start: { x: width - 160, y: 0 }, end: { x: width, y: 160 }, thickness: 8, color: pinkSecondary, opacity: 0.5 })
-
-        // 2. Logo Centralizado
+        // Logo
         if (config.logo_url) {
             try {
                 const logoRes = await fetch(config.logo_url)
                 const logoBytes = await logoRes.arrayBuffer()
                 const isJpg = config.logo_url.toLowerCase().match(/\.(jpg|jpeg)/)
                 const logoImg = isJpg ? await pdfDoc.embedJpg(logoBytes) : await pdfDoc.embedPng(logoBytes)
-                const logoH = 80
+                const logoH = 60
                 const logoW = logoImg.width * (logoH / logoImg.height)
-                page.drawImage(logoImg, { x: width / 2 - logoW / 2, y: height - 110, width: logoW, height: logoH })
+                page.drawImage(logoImg, { x: 60, y: height - 80, width: logoW, height: logoH })
             } catch (e) {
                 console.warn('Logo do certificado não carregou:', e)
             }
         }
 
-        // 3. Título Principal
-        const tituloDoc = config.titulo || 'CERTIFICADO'
-        const twTitle = fontTitle.widthOfTextAtSize(tituloDoc, tamTitulo)
-        page.drawText(tituloDoc, {
-            x: width / 2 - twTitle / 2 + posXConteudo,
-            y: height - 180 + posYConteudo,
-            size: tamTitulo,
-            font: fontTitle,
-            color: primaryColor,
-        })
-
-        // Subtítulo
-        const subtitle = 'ESTE CERTIFICADO COMPROVA QUE'
-        const twSub = fontText.widthOfTextAtSize(subtitle, 14)
-        page.drawText(subtitle, {
-            x: width / 2 - twSub / 2 + posXConteudo,
-            y: height - 220 + posYConteudo,
-            size: 14,
-            font: fontText,
-            color: rgb(0.4, 0.4, 0.4),
-        })
-
-        // 4. Nome do Participante (Destaque Itálico/Script-like)
-        const nomeUpper = nomeCidadao
-        const twNome = fontItalic.widthOfTextAtSize(nomeUpper, tamNome)
-        page.drawText(nomeUpper, {
-            x: width / 2 - twNome / 2 + posXConteudo,
-            y: height - 290 + posYConteudo,
-            size: tamNome,
-            font: fontItalic,
-            color: nameColor,
-        })
-
-        // 5. Bloco de Texto Principal (com bolding dinâmico)
-        const curso = tituloEntidade.toUpperCase()
-        const periodo = config.periodo || ''
-        const carga = String(cargaHoraria)
-
-        const textoPrincipal = `CONCLUIU COM ÊXITO O **CURSO DE ${curso}**. OFERECIDO NO **PERIODO DE ${periodo}**. PELA ASSOCIAÇÃO AMIGOS DO BEM, EM PARCERIA COM O GOVERNO DO ESTADO ATRAVÉS DA SECRETARIA ESTADUAL DE TURISMO E EMPREENDEDORISMO, COM **CARGA HORÁRIA DE ${carga}H**.`
-
-        await this.drawRichText(page, textoPrincipal, 60 + posXConteudo, height - 340 + posYConteudo, width, {
-            fontNormal: fontText,
-            fontBold: fontTitle,
-            size: tamTexto,
-            color: textColor,
-            align: 'centro'
-        })
-
-        // 6. Rodapé e Assinaturas
-        const baseY = 80 + posYRodape
-
-        // Linhas de Assinatura
-        // Mediadora
-        const lineW = 220
-        page.drawLine({
-            start: { x: 100 + offXMed, y: baseY + 40 },
-            end: { x: 100 + lineW + offXMed, y: baseY + 40 },
-            thickness: 1,
-            color: pinkSecondary
-        })
-        const labelMed = config.cargo_mediador || 'Mediadora'
-        const twLMed = fontText.widthOfTextAtSize(labelMed, 12)
-        page.drawText(labelMed, { x: 100 + lineW / 2 - twLMed / 2 + offXMed, y: baseY + 20, size: 12, font: fontText, color: textColor })
-
-        if (config.nome_mediador) {
-            const twNMed = fontItalic.widthOfTextAtSize(config.nome_mediador, 14)
-            page.drawText(config.nome_mediador, { x: 100 + lineW / 2 - twNMed / 2 + offXMed, y: baseY + 45, size: 14, font: fontItalic, color: textColor })
+        // Borda
+        if (showBorda) {
+            page.drawRectangle({ x: 20, y: 20, width: width - 40, height: height - 40, borderColor: primaryColor, borderWidth: 4 })
+            page.drawRectangle({ x: 30, y: 30, width: width - 60, height: height - 60, borderColor: highlightColor, borderWidth: 1 })
         }
 
-        // Presidente
-        page.drawLine({
-            start: { x: width - 100 - lineW + offXResp, y: baseY + 40 },
-            end: { x: width - 100 + offXResp, y: baseY + 40 },
-            thickness: 1,
-            color: pinkSecondary
-        })
-        const labelPres = config.cargo_responsavel || 'Presidente'
-        const twLPres = fontText.widthOfTextAtSize(labelPres, 12)
-        page.drawText(labelPres, { x: width - 100 - lineW / 2 - twLPres / 2 + offXResp, y: baseY + 20, size: 12, font: fontText, color: textColor })
+        // Blocos de texto posicionáveis ou layout padrão
+        if (config.blocos && config.blocos.length > 0) {
+            const tokenVals: Record<string, string> = {
+                nome: nomeCidadao.toUpperCase(),
+                curso: tituloEntidade,
+                carga_horaria: String(cargaHoraria),
+                data_emissao: dataEmissao.toLocaleDateString('pt-BR'),
+                instituicao: config.nome_instituicao || nomeInstituicao,
+                codigo: codigoValidacao,
+                periodo: config.periodo || '',
+            }
+            for (const bloco of config.blocos) {
+                const resolvedText = resolveTokens(bloco.texto, tokenVals)
+                const font = bloco.negrito && bloco.italico ? fontBoldItalic : bloco.negrito ? fontTitle : bloco.italico ? fontItalic : fontText
+                const color = bloco.cor ? hexToRgb(bloco.cor) : textColor
+                const lines = resolvedText.split('\n')
+                const lineHeight = bloco.tam * 1.4
+                lines.forEach((line, i) => {
+                    if (!line.trim()) return
+                    const tw = font.widthOfTextAtSize(line, bloco.tam)
+                    let px = (bloco.alinhamento === 'centro') ? width / 2 - tw / 2 : (bloco.alinhamento === 'direita') ? width - bloco.x - tw : bloco.x
+                    const py = height - bloco.y - bloco.tam - (i * lineHeight)
+                    if (py > 0 && py < height) page.drawText(line, { x: px, y: py, size: bloco.tam, font, color })
+                })
+            }
+        } else {
+            // Instituição
+            if (showInstituicao) {
+                const instText = (config.nome_instituicao || nomeInstituicao).toUpperCase()
+                page.drawText(instText, { x: calcX(instText, fontTitle, tamInstituicao, align, width), y: height - 80, size: tamInstituicao, font: fontTitle, color: primaryColor })
+            }
 
-        if (config.nome_responsavel) {
-            const twNResp = fontItalic.widthOfTextAtSize(config.nome_responsavel, 14)
-            page.drawText(config.nome_responsavel, { x: width - 100 - lineW / 2 - twNResp / 2 + offXResp, y: baseY + 45, size: 14, font: fontItalic, color: textColor })
+            // Título Principal
+            const tituloDoc = config.titulo || (tipo === 'certificado' ? 'CERTIFICADO DE CONCLUSÃO' : 'COMPROVANTE DE PARTICIPAÇÃO')
+            page.drawText(tituloDoc, {
+                x: calcX(tituloDoc, fontTitle, tamTitulo, align, width) + posXConteudo,
+                y: height - 160 + posYConteudo,
+                size: tamTitulo,
+                font: fontTitle,
+                color: primaryColor,
+            })
+
+            // Subtítulo
+            const subtitle = config.texto_pre || (tipo === 'certificado' ? 'ESTE CERTIFICADO COMPROVA QUE' : 'Comprovamos para os devidos fins que')
+            page.drawText(subtitle, {
+                x: calcX(subtitle, fontText, 14, align, width) + posXConteudo,
+                y: height - 220 + posYConteudo,
+                size: 14,
+                font: fontText,
+                color: rgb(0.4, 0.4, 0.4),
+            })
+
+            // Nome do Participante
+            const nomeUpper = nomeCidadao.toUpperCase()
+            page.drawText(nomeUpper, {
+                x: calcX(nomeUpper, fontTitle, tamNome, align, width) + posXConteudo,
+                y: height - 280 + posYConteudo,
+                size: tamNome,
+                font: fontTitle,
+                color: nameColor,
+            })
+
+            // Bloco de Texto Principal (com bolding dinâmico)
+            const curso = tituloEntidade.toUpperCase()
+            const periodo = config.periodo || ''
+            const carga = String(cargaHoraria)
+
+            const orientedText = `CONCLUIU COM ÊXITO O **CURSO DE ${curso}**. OFERECIDO NO **PERIODO DE ${periodo}**. PELA ASSOCIAÇÃO AMIGOS DO BEM, EM PARCERIA COM O GOVERNO DO ESTADO ATRAVÉS DA SECRETARIA ESTADUAL DE TURISMO E EMPREENDEDORISMO, COM **CARGA HORÁRIA DE ${carga}H**.`
+
+            await this.drawRichText(page, orientedText, 60 + posXConteudo, height - 330 + posYConteudo, width, {
+                fontNormal: fontText,
+                fontBold: fontTitle,
+                size: tamTexto,
+                color: textColor,
+                align: 'centro'
+            })
         }
 
-        // Assinaturas (Imagens)
-        if (config.assinatura_mediador_url) {
-            try {
-                const sigRes = await fetch(config.assinatura_mediador_url)
-                const sigBytes = await sigRes.arrayBuffer()
-                const sigImg = await pdfDoc.embedPng(sigBytes)
-                page.drawImage(sigImg, { x: 100 + lineW / 2 - 40 + offXMed, y: baseY + 45, width: 80, height: 40 })
-            } catch (_e) { }
+        // Rodapé e Assinaturas
+        const hasMediador = !!(config.nome_mediador)
+        const baseY = posYRodape
+        const dateStr = `Emitido em ${dataEmissao.toLocaleDateString('pt-BR')}`
+        page.drawText(dateStr, { x: hasMediador ? width / 2 - fontText.widthOfTextAtSize(dateStr, 12) / 2 : 100 + posXRodape, y: hasMediador ? 50 + baseY : 100 + baseY, size: hasMediador ? 12 : 14, font: fontText, color: textColor })
+
+        // Mediador
+        if (hasMediador) {
+            const medX = 80 + posXRodape + offXMed
+            const medY = baseY + offYMed
+            const medBlockW = 200
+            if (config.assinatura_mediador_url) {
+                try {
+                    const mRes = await fetch(config.assinatura_mediador_url)
+                    const mBytes = await mRes.arrayBuffer()
+                    const mImg = config.assinatura_mediador_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(mBytes) : await pdfDoc.embedPng(mBytes)
+                    const mH = 40, mW = mImg.width * (mH / mImg.height)
+                    page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 125 + medY, width: mW, height: mH })
+                } catch (_e) { }
+            }
+            page.drawLine({ start: { x: medX, y: 120 + medY }, end: { x: medX + medBlockW, y: 120 + medY }, thickness: 1, color: primaryColor })
+            const medNomeW = fontItalic.widthOfTextAtSize(config.nome_mediador!, 12)
+            page.drawText(config.nome_mediador!, { x: medX + (medBlockW - medNomeW) / 2, y: 100 + medY, size: 12, font: fontItalic, color: textColor })
+            if (config.cargo_mediador) {
+                const medCargoW = fontText.widthOfTextAtSize(config.cargo_mediador, 10)
+                page.drawText(config.cargo_mediador, { x: medX + (medBlockW - medCargoW) / 2, y: 84 + medY, size: 10, font: fontText, color: rgb(0.5, 0.5, 0.5) })
+            }
         }
+
+        // Responsável
+        const respX = width - 300 + posXRodape + offXResp
+        const respY = baseY + offYResp
         if (config.assinatura_url) {
             try {
                 const sigRes = await fetch(config.assinatura_url)
                 const sigBytes = await sigRes.arrayBuffer()
-                const sigImg = await pdfDoc.embedPng(sigBytes)
-                page.drawImage(sigImg, { x: width - 100 - lineW / 2 - 40 + offXResp, y: baseY + 45, width: 80, height: 40 })
+                const sigImg = config.assinatura_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
+                const sigH = 40, sigW = sigImg.width * (sigH / sigImg.height)
+                page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 125 + respY, width: sigW, height: sigH })
             } catch (_e) { }
         }
+        page.drawLine({ start: { x: respX, y: 120 + respY }, end: { x: respX + 200, y: 120 + respY }, thickness: 1, color: primaryColor })
+        const nResp = config.nome_responsavel || 'Assinatura Eletrônica'
+        const nRespW = fontItalic.widthOfTextAtSize(nResp, 12)
+        page.drawText(nResp, { x: respX + (200 - nRespW) / 2, y: 100 + respY, size: 12, font: fontItalic, color: textColor })
+        if (config.cargo_responsavel) {
+            const cargoW = fontText.widthOfTextAtSize(config.cargo_responsavel, 10)
+            page.drawText(config.cargo_responsavel, { x: respX + (200 - cargoW) / 2, y: 84 + respY, size: 10, font: fontText, color: rgb(0.5, 0.5, 0.5) })
+        }
 
-        // 7. Código de Validação (Discreto no fundo)
+        // Código de Validação
         if (showCodigo) {
-            const authStr = `Código de Autenticação: ${codigoValidacao} | Verificável em: ${config.site_validacao || 'nexori.com.br'}/validar/${codigoValidacao}`
+            const authStr = `Código: ${codigoValidacao} | Validar em: ${config.site_validacao || 'nexori.com.br'}/validar/${codigoValidacao}`
             page.drawText(authStr, {
                 x: width / 2 - (fontText.widthOfTextAtSize(authStr, 8) / 2),
-                y: 15,
+                y: 25,
                 size: 8,
                 font: fontText,
-                color: rgb(0.6, 0.6, 0.6),
+                color: rgb(0.5, 0.5, 0.5),
             })
         }
 
