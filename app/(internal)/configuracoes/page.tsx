@@ -803,15 +803,15 @@ export default function ConfiguracoesPage() {
                                                 </div>
                                                 <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Layout e Visibilidade</h4>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
                                                 <div className="space-y-6">
                                                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Alinhamento Global do Texto</p>
-                                                    <div className="flex bg-gray-50 p-2 rounded-3xl w-fit gap-2 border border-gray-100">
+                                                    <div className="flex flex-wrap bg-gray-50 p-2 rounded-3xl w-fit gap-2 border border-gray-100">
                                                         {(['esquerda', 'centro', 'direita'] as const).map(a => (
                                                             <button
                                                                 key={a} type="button"
                                                                 onClick={() => setCertData({ ...certData, alinhamento: a })}
-                                                                className={`px-6 py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-[#1A3C4A] shadow-xl text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
+                                                                className={`px-4 md:px-6 py-2.5 md:py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-[#1A3C4A] shadow-xl text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
                                                             >
                                                                 {a === 'esquerda' ? 'Esquerda' : a === 'centro' ? 'Centro' : 'Direita'}
                                                             </button>
@@ -827,7 +827,7 @@ export default function ConfiguracoesPage() {
                                                         { key: 'mostrar_codigo', label: 'Código QR/Valid.' },
                                                     ].map(({ key, label }) => (
                                                         <label key={key} className="flex items-center justify-between px-5 py-4 bg-gray-50 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all border border-transparent hover:border-gray-200 group">
-                                                            <span className="text-[11px] font-black uppercase text-[#1A3C4A] tracking-wider">{label}</span>
+                                                            <span className="text-[11px] font-black uppercase text-[#1A3C4A] tracking-wider whitespace-nowrap">{label}</span>
                                                             <div className="relative">
                                                                 <input
                                                                     type="checkbox"
