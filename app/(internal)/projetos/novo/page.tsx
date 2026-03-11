@@ -4,6 +4,34 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+const DOCS_PADRAO = [
+    {
+        titulo: 'Projeto Básico',
+        categoria: 'projeto_basico',
+        descricao: 'Documento de apresentação, justificativa e objetivos do projeto.',
+    },
+    {
+        titulo: 'Plano de Trabalho',
+        categoria: 'plano_trabalho',
+        descricao: 'Cronograma, metas, estratégias e recursos previstos para execução.',
+    },
+    {
+        titulo: 'Relatório Parcial',
+        categoria: 'relatorio_parcial',
+        descricao: 'Relatório intermediário de andamento das atividades.',
+    },
+    {
+        titulo: 'Relatório Final',
+        categoria: 'relatorio_final',
+        descricao: 'Relatório de conclusão com resultados e impactos alcançados.',
+    },
+    {
+        titulo: 'Prestação de Contas',
+        categoria: 'prestacao_contas',
+        descricao: 'Documentação financeira, notas fiscais e comprovantes de despesas.',
+    },
+]
+
 export default function NovoProjetoPage() {
     const [nome, setNome] = useState('')
     const [descricao, setDescricao] = useState('')
@@ -18,30 +46,29 @@ export default function NovoProjetoPage() {
         setLoading(true)
         setError(null)
 
-        // Get the current user to find their tenant_id
         const { data: { user } } = await supabase.auth.getUser()
         const tenantId = user?.user_metadata?.tenant_id
 
-        if (!tenantId) {
-            // If testing without fully set tenants, fail gracefully or handle it.
-            // The RLS policy might block insertion anyway.
-            // Assuming user has tenant_id injected for now.
-        }
-
-        const { error: insertError } = await supabase.from('projetos').insert({
-            tenant_id: tenantId, // Make sure to inject. If tenant_id isn't known here due to testing context, RLS will fail. 
-            // Note: Real world we would rely on Postgres default fetching from JWT or set it here.
-            nome,
-            descricao,
-            status
-        })
+        const { data: novoProjeto, error: insertError } = await supabase
+            .from('projetos')
+            .insert({ tenant_id: tenantId, nome, descricao, status })
+            .select('id')
+            .single()
 
         if (insertError) {
-            console.error(insertError)
             setError(insertError.message)
             setLoading(false)
             return
         }
+
+        // Cria a estrutura padrão de documentos para o novo projeto
+        await supabase.from('projeto_documentos').insert(
+            DOCS_PADRAO.map(doc => ({
+                ...doc,
+                projeto_id: novoProjeto.id,
+                tenant_id: tenantId,
+            }))
+        )
 
         router.push('/projetos')
         router.refresh()
@@ -82,7 +109,7 @@ export default function NovoProjetoPage() {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B] focus:border-[#2D9E6B]"
                             rows={4}
                             placeholder="Descreva os objetivos principais do projeto..."
-                        ></textarea>
+                        />
                     </div>
 
                     <div>
@@ -95,6 +122,14 @@ export default function NovoProjetoPage() {
                             <option value="ativo">Ativo</option>
                             <option value="arquivado">Arquivado</option>
                         </select>
+                    </div>
+
+                    {/* Aviso sobre estrutura criada automaticamente */}
+                    <div className="p-3 bg-blue-50 border border-blue-100 rounded-md">
+                        <p className="text-xs text-blue-700 font-medium mb-1">Estrutura de documentação criada automaticamente:</p>
+                        <ul className="text-xs text-blue-600 space-y-0.5 list-disc list-inside">
+                            {DOCS_PADRAO.map(d => <li key={d.categoria}>{d.titulo}</li>)}
+                        </ul>
                     </div>
 
                     <div className="pt-4 flex items-center justify-end gap-3">

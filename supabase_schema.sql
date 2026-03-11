@@ -34,6 +34,30 @@ CREATE TABLE projetos (
   created_at timestamptz DEFAULT now()
 );
 
+-- DOCUMENTOS DE PROJETOS
+CREATE TABLE projeto_documentos (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id uuid REFERENCES tenants(id) NOT NULL,
+  projeto_id uuid REFERENCES projetos(id) ON DELETE CASCADE NOT NULL,
+  titulo text NOT NULL,
+  descricao text,
+  categoria text NOT NULL CHECK (categoria IN (
+    'projeto_basico',
+    'plano_trabalho',
+    'relatorio_parcial',
+    'relatorio_final',
+    'prestacao_contas',
+    'ata_reuniao',
+    'contrato',
+    'outro'
+  )),
+  arquivo_url text,
+  status text DEFAULT 'pendente' CHECK (status IN ('pendente', 'enviado', 'aprovado', 'rejeitado')),
+  observacao text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
 -- PLANOS DE TRABALHO
 CREATE TABLE planos_trabalho (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -312,6 +336,9 @@ CREATE POLICY "Tenants visíveis para seus usuários" ON tenants
   FOR SELECT USING (id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
 
 CREATE POLICY "Projetos do tenant" ON projetos
+  FOR ALL USING (tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
+
+CREATE POLICY "Documentos do tenant" ON projeto_documentos
   FOR ALL USING (tenant_id = (auth.jwt() -> 'user_metadata' ->> 'tenant_id')::uuid);
 
 CREATE POLICY "Planos do tenant" ON planos_trabalho
