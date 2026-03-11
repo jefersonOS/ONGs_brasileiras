@@ -2,6 +2,7 @@
 
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 
 interface Projeto extends Record<string, unknown> {
@@ -17,8 +18,10 @@ interface ProjetosTableProps {
 }
 
 export function ProjetosTable({ initialData }: ProjetosTableProps) {
+    const router = useRouter()
+
     const columns: Column<Projeto>[] = [
-        { title: 'Nome', key: 'nome', render: (row) => <span className="font-medium">{row.nome}</span> },
+        { title: 'Nome', key: 'nome', render: (row) => <span className="font-medium text-[#1A3C4A]">{row.nome}</span> },
         { title: 'Descrição', key: 'descricao', render: (row) => <span className="text-gray-500 truncate max-w-sm block">{row.descricao || '-'}</span> },
         {
             title: 'Status', key: 'status', render: (row) => (
@@ -27,7 +30,7 @@ export function ProjetosTable({ initialData }: ProjetosTableProps) {
                 </span>
             )
         },
-        { title: 'Criado em', key: 'created_at', render: (row) => new Date(row.created_at).toLocaleDateString() }
+        { title: 'Criado em', key: 'created_at', render: (row) => new Date(row.created_at).toLocaleDateString('pt-BR') }
     ]
 
     return (
@@ -49,6 +52,7 @@ export function ProjetosTable({ initialData }: ProjetosTableProps) {
                 searchKey="nome"
                 searchPlaceholder="Buscar por nome do projeto..."
                 emptyMessage="Nenhum projeto encontrado. Comece criando um novo!"
+                onRowClick={(row) => router.push(`/projetos/${row.id}`)}
             />
         </div>
     )
