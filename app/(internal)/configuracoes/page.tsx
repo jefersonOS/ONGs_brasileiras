@@ -392,7 +392,7 @@ export default function ConfiguracoesPage() {
                     <form onSubmit={handleSave} className="space-y-8">
 
                         {activeTab === 'organizacao' && (
-                            <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 animate-in fade-in duration-500">
+                            <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 animate-in fade-in duration-500">
                                 <h3 className="text-xl font-black text-[#1A3C4A] mb-8">Dados da Instituição</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     <div className="space-y-2">
@@ -460,7 +460,7 @@ export default function ConfiguracoesPage() {
 
                         {activeTab === 'visual' && (
                             <div className="space-y-8 animate-in fade-in duration-500">
-                                <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                     <h3 className="text-xl font-black text-[#1A3C4A] mb-8">Personalização do Portal</h3>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
                                         <div className="space-y-8">
@@ -503,7 +503,7 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab === 'ai' && (
-                            <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
+                            <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
                                 <div className="flex justify-between items-center mb-10">
                                     <h3 className="text-xl font-black text-[#1A3C4A]">Inteligência Artificial</h3>
                                     <div className="flex items-center gap-4 bg-gray-50 px-6 py-3 rounded-2xl border border-gray-100">
@@ -553,7 +553,7 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab === 'whatsapp' && (
-                            <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
+                            <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-100 animate-in fade-in duration-500">
                                 <div className="flex justify-between items-center mb-10">
                                     <h3 className="text-xl font-black text-[#1A3C4A]">Serviço de WhatsApp</h3>
                                     <div className="flex bg-gray-100 p-1 rounded-2xl">
@@ -632,7 +632,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Textos */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-8">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <FileText className="w-5 h-5 text-[#1A3C4A]" />
@@ -665,7 +665,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Tipografia */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-10">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <Palette className="w-5 h-5 text-[#1A3C4A]" />
@@ -680,7 +680,7 @@ export default function ConfiguracoesPage() {
                                                     { label: 'Nome da Instituição', key: 'tam_instituicao', min: 8, max: 28 },
                                                 ].map(({ label, key, min, max }) => (
                                                     <div key={key} className="space-y-4">
-                                                        <div className="flex justify-between items-center px-1">
+                                                        <div className="flex flex-wrap justify-between items-center px-1 gap-2">
                                                             <label className="text-[10px] font-black uppercase text-gray-400 tracking-widest">{label}</label>
                                                             <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg">{certData[key as keyof typeof certData]}px</span>
                                                         </div>
@@ -701,14 +701,14 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Posição */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-10">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <Sparkles className="w-5 h-5 text-[#1A3C4A]" />
                                                 </div>
                                                 <h4 className="text-sm font-black uppercase tracking-[0.2em] text-[#1A3C4A]">Ajuste Fino de Posição</h4>
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
                                                 {([
                                                     { label: 'Bloco de Conteúdo (Título/Nome/Texto)', keyY: 'pos_y_conteudo', keyX: 'pos_x_conteudo' },
                                                     { label: 'Bloco de Rodapé (Data e Código)', keyY: 'pos_y_rodape', keyX: 'pos_x_rodape' },
@@ -723,10 +723,10 @@ export default function ConfiguracoesPage() {
                                                             <div key={key} className="space-y-4">
                                                                 <div className="flex justify-between items-center px-1">
                                                                     <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{axis}</span>
-                                                                    <div className="flex items-center gap-2">
+                                                                    <div className="flex flex-wrap items-center gap-2">
                                                                         <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg">{(certData[key as keyof typeof certData] as number) > 0 ? '+' : ''}{certData[key as keyof typeof certData]}px</span>
                                                                         {(certData[key as keyof typeof certData] as number) !== 0 && (
-                                                                            <button type="button" onClick={() => setCertData({ ...certData, [key]: 0 })} className="text-[9px] font-black text-red-400 hover:bg-red-50 p-1.5 rounded-lg transition-all uppercase">Reset</button>
+                                                                            <button type="button" onClick={() => setCertData({ ...certData, [key]: 0 })} className="text-[9px] font-black text-red-400 hover:bg-red-50 p-1.5 rounded-lg transition-all uppercase whitespace-nowrap">Reset</button>
                                                                         )}
                                                                     </div>
                                                                 </div>
@@ -749,7 +749,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Cores */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-8">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <Palette className="w-5 h-5 text-[#1A3C4A]" />
@@ -796,7 +796,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Layout e Visibilidade */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-10">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <LayoutTemplate className="w-5 h-5 text-[#1A3C4A]" />
@@ -844,7 +844,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Assinaturas */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-10">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <Users className="w-5 h-5 text-[#1A3C4A]" />
@@ -859,7 +859,7 @@ export default function ConfiguracoesPage() {
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-3 py-1 rounded-lg border border-green-100">{certData.off_y_responsavel > 0 ? '+' : ''}{certData.off_y_responsavel}px</span>
                                                         {certData.off_y_responsavel !== 0 && (
-                                                            <button type="button" onClick={() => setCertData({ ...certData, off_y_responsavel: 0 })} className="text-[9px] font-black text-red-400 hover:bg-white px-2 py-1 rounded-lg shadow-sm border border-red-50 transition-all uppercase">Reset</button>
+                                                            <button type="button" onClick={() => setCertData({ ...certData, off_y_responsavel: 0 })} className="text-[9px] font-black text-red-400 hover:bg-white px-2 py-1 rounded-lg shadow-sm border border-red-50 transition-all uppercase whitespace-nowrap">Reset</button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -903,7 +903,7 @@ export default function ConfiguracoesPage() {
                                                                         <img src={certData.assinatura_url} alt="Assinatura" className="h-20 mx-auto object-contain drop-shadow-sm" />
                                                                         <div className="flex justify-center gap-2">
                                                                             <span className="text-[9px] font-black uppercase bg-[#2D9E6B]/10 text-[#2D9E6B] px-3 py-1 rounded-full">✓ Alterar Imagem</span>
-                                                                            <button type="button" onClick={(e) => { e.preventDefault(); setCertData(prev => ({ ...prev, assinatura_url: '' })) }} className="text-[9px] font-black uppercase bg-red-50 text-red-500 px-3 py-1 rounded-full hover:bg-red-500 hover:text-white transition-colors">Remover</button>
+                                                                            <button type="button" onClick={(e) => { e.preventDefault(); setCertData(prev => ({ ...prev, assinatura_url: '' })) }} className="text-[9px] font-black uppercase bg-red-50 text-red-500 px-3 py-1 rounded-full hover:bg-red-500 hover:text-white transition-colors whitespace-nowrap">Remover</button>
                                                                         </div>
                                                                     </div>
                                                                 ) : (
@@ -932,7 +932,7 @@ export default function ConfiguracoesPage() {
                                                         <div className="space-y-4 pt-4 border-t border-gray-100">
                                                             <div className="flex justify-between items-center px-1">
                                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ajuste Horizontal Individual</span>
-                                                                <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100">{certData.off_x_responsavel > 0 ? '+' : ''}{certData.off_x_responsavel}</span>
+                                                                <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100 whitespace-nowrap">{certData.off_x_responsavel > 0 ? '+' : ''}{certData.off_x_responsavel}</span>
                                                             </div>
                                                             <div className="flex items-center gap-4">
                                                                 <span className="text-[9px] font-black text-gray-300">ESQ.</span>
@@ -975,7 +975,7 @@ export default function ConfiguracoesPage() {
                                                                         <img src={certData.assinatura_mediador_url} alt="Assinatura mediador" className="h-20 mx-auto object-contain drop-shadow-sm" />
                                                                         <div className="flex justify-center gap-2">
                                                                             <span className="text-[9px] font-black uppercase bg-[#2D9E6B]/10 text-[#2D9E6B] px-3 py-1 rounded-full">✓ Alterar Imagem</span>
-                                                                            <button type="button" onClick={(e) => { e.preventDefault(); setCertData(prev => ({ ...prev, assinatura_mediador_url: '' })) }} className="text-[9px] font-black uppercase bg-red-50 text-red-500 px-3 py-1 rounded-full hover:bg-red-500 hover:text-white transition-colors">Remover</button>
+                                                                            <button type="button" onClick={(e) => { e.preventDefault(); setCertData(prev => ({ ...prev, assinatura_mediador_url: '' })) }} className="text-[9px] font-black uppercase bg-red-50 text-red-500 px-3 py-1 rounded-full hover:bg-red-500 hover:text-white transition-colors whitespace-nowrap">Remover</button>
                                                                         </div>
                                                                     </div>
                                                                 ) : (
@@ -1004,7 +1004,7 @@ export default function ConfiguracoesPage() {
                                                         <div className="space-y-4 pt-4 border-t border-gray-100">
                                                             <div className="flex justify-between items-center px-1">
                                                                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Ajuste Horizontal Individual</span>
-                                                                <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100">{certData.off_x_mediador > 0 ? '+' : ''}{certData.off_x_mediador}</span>
+                                                                <span className="text-[10px] font-black text-[#2D9E6B] bg-green-50 px-2 py-0.5 rounded-lg border border-green-100 whitespace-nowrap">{certData.off_x_mediador > 0 ? '+' : ''}{certData.off_x_mediador}</span>
                                                             </div>
                                                             <div className="flex items-center gap-4">
                                                                 <span className="text-[9px] font-black text-gray-300">ESQ.</span>
@@ -1021,7 +1021,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Logo e Fundo */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-10">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <Building className="w-5 h-5 text-[#1A3C4A]" />
@@ -1087,7 +1087,7 @@ export default function ConfiguracoesPage() {
                                         </div>
 
                                         {/* Section: Blocos de Texto */}
-                                        <div className="bg-white p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
+                                        <div className="bg-white p-6 md:p-10 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50">
                                             <div className="flex items-center gap-3 mb-6">
                                                 <div className="w-10 h-10 bg-[#1A3C4A]/5 rounded-2xl flex items-center justify-center">
                                                     <Sparkles className="w-5 h-5 text-[#1A3C4A]" />
@@ -1107,7 +1107,7 @@ export default function ConfiguracoesPage() {
                                     <div className="hidden 2xl:block">
                                         <div className="sticky top-6 space-y-4">
                                             {/* Campos de exemplo */}
-                                            <div className="bg-white p-8 rounded-[32px] shadow-2xl shadow-black/5 border border-gray-50 space-y-6">
+                                            <div className="bg-white p-6 md:p-8 rounded-[32px] shadow-2xl shadow-black/5 border border-gray-50 space-y-6">
                                                 <div className="flex items-center gap-3 mb-2">
                                                     <div className="w-8 h-8 bg-[#2D9E6B]/5 rounded-xl flex items-center justify-center">
                                                         <Sparkles className="w-4 h-4 text-[#2D9E6B]" />
@@ -1128,7 +1128,7 @@ export default function ConfiguracoesPage() {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-white p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50">
+                                            <div className="bg-white p-4 md:p-6 rounded-[32px] shadow-xl shadow-black/5 border border-gray-50 overflow-hidden">
                                                 <CertPreview
                                                     certData={certData}
                                                     blocos={certBlocos}
@@ -1149,7 +1149,7 @@ export default function ConfiguracoesPage() {
                         )}
 
                         {activeTab === 'usuarios' && (
-                            <div className="bg-white p-12 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 animate-in fade-in duration-500 text-center space-y-8">
+                            <div className="bg-white p-6 md:p-12 rounded-[40px] shadow-2xl shadow-black/5 border border-gray-50 animate-in fade-in duration-500 text-center space-y-8">
                                 <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-[30px] flex items-center justify-center mx-auto shadow-xl shadow-blue-500/10">
                                     <Users className="w-10 h-10" />
                                 </div>
