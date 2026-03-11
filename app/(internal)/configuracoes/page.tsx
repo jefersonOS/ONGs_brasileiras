@@ -806,12 +806,12 @@ export default function ConfiguracoesPage() {
                                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
                                                 <div className="space-y-6">
                                                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest ml-1">Alinhamento Global do Texto</p>
-                                                    <div className="flex flex-wrap bg-gray-50 p-2 rounded-3xl w-fit gap-2 border border-gray-100">
+                                                    <div className="flex flex-col bg-gray-50 p-2 rounded-3xl w-full max-w-[240px] gap-2 border border-gray-100">
                                                         {(['esquerda', 'centro', 'direita'] as const).map(a => (
                                                             <button
                                                                 key={a} type="button"
                                                                 onClick={() => setCertData({ ...certData, alinhamento: a })}
-                                                                className={`px-4 md:px-6 py-2.5 md:py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-[#1A3C4A] shadow-xl text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
+                                                                className={`w-full px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase transition-all ${certData.alinhamento === a ? 'bg-[#1A3C4A] shadow-xl text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100/50'}`}
                                                             >
                                                                 {a === 'esquerda' ? 'Esquerda' : a === 'centro' ? 'Centro' : 'Direita'}
                                                             </button>
@@ -819,7 +819,7 @@ export default function ConfiguracoesPage() {
                                                     </div>
                                                     <p className="text-[9px] text-gray-300 font-bold ml-1">Define como o texto será distribuído na horizontal por padrão.</p>
                                                 </div>
-                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                <div className="grid grid-cols-1 gap-3 content-start">
                                                     {[
                                                         { key: 'mostrar_borda', label: 'Borda decorativa' },
                                                         { key: 'mostrar_instituicao', label: 'Nome Instituição' },
