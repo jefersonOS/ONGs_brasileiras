@@ -53,8 +53,8 @@ export function Sidebar() {
     }, [])
 
     return (
-        <aside className="w-[220px] fixed inset-y-0 left-0 bg-[#1A3C4A] text-white flex flex-col z-20">
-            <div className="h-[60px] flex items-center px-6 font-bold text-xl border-b border-[#2E6B7A]">
+        <aside className="w-[220px] fixed inset-y-0 left-0 bg-[var(--primary)] text-white flex flex-col z-20">
+            <div className="h-[60px] flex items-center px-6 font-bold text-xl border-b border-white/10">
                 Nexori
             </div>
 
@@ -81,7 +81,7 @@ export function Sidebar() {
                                 href={item.href}
                                 className={clsx(
                                     "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                                    isActive ? "bg-[#2D9E6B] text-white" : "text-gray-300 hover:bg-[#2E6B7A] hover:text-white"
+                                    isActive ? "bg-[var(--secondary)] text-white" : "text-gray-300 hover:bg-white/10 hover:text-white"
                                 )}
                             >
                                 <item.icon className="w-4 h-4" />
@@ -98,22 +98,22 @@ export function Sidebar() {
                     </h4>
                     <div className="space-y-2">
                         <Link href="/planos-trabalho/novo" className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
-                            <Plus className="w-4 h-4 text-[#2D9E6B]" /> Novo Plano
+                            <Plus className="w-4 h-4 text-[var(--secondary)]" /> Novo Plano
                         </Link>
                         <Link href="/atividades/nova" className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
-                            <Plus className="w-4 h-4 text-[#2D9E6B]" /> Nova Atividade
+                            <Plus className="w-4 h-4 text-[var(--secondary)]" /> Nova Atividade
                         </Link>
                         <Link href="/cursos/novo" className="flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors">
-                            <Plus className="w-4 h-4 text-[#2D9E6B]" /> Novo Curso
+                            <Plus className="w-4 h-4 text-[var(--secondary)]" /> Novo Curso
                         </Link>
                     </div>
                 </div>
             </div>
 
             {/* Footer / User Info */}
-            <div className="p-4 border-t border-[#2E6B7A] bg-[#142e39]">
+            <div className="p-4 border-t border-white/10 bg-black/10">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#2D9E6B] flex items-center justify-center text-sm font-bold uppercase">
+                    <div className="w-8 h-8 rounded-full bg-[var(--secondary)] flex items-center justify-center text-sm font-bold uppercase">
                         {userName.charAt(0)}
                     </div>
                     <div className="flex-1 overflow-hidden">
