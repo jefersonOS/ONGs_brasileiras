@@ -358,7 +358,7 @@ export default function ConfiguracoesPage() {
     if (loading) return <div className="p-8 text-center animate-pulse">Carregando configurações...</div>
 
     return (
-        <div className="max-w-6xl mx-auto pb-20 space-y-8">
+        <div className="max-w-[1800px] mx-auto px-6 pb-20 space-y-8">
             <div className="flex justify-between items-end">
                 <div>
                     <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter">Painel de Configurações</h1>
@@ -598,7 +598,7 @@ export default function ConfiguracoesPage() {
 
                         {activeTab === 'certificados' && (
                             <div className="animate-in fade-in duration-500">
-                                <div className="grid grid-cols-1 2xl:grid-cols-[1fr_390px] gap-6">
+                                <div className="grid grid-cols-1 2xl:grid-cols-[1fr_500px] gap-10">
                                     <div className="space-y-6">
                                         {/* Preview mobile (oculto em telas grandes) */}
                                         <div className="2xl:hidden space-y-3">
@@ -1135,7 +1135,7 @@ export default function ConfiguracoesPage() {
                                                     corPrimaria={visualData.cor_primaria}
                                                     corSecundaria={visualData.cor_secundaria}
                                                     tenantNome={tenant?.nome || ''}
-                                                    scale={0.41}
+                                                    scale={0.52}
                                                     exemploAluno={preview.aluno}
                                                     exemploCurso={preview.curso}
                                                     exemploCH={preview.ch}
