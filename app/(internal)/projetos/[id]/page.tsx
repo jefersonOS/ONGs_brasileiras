@@ -217,7 +217,9 @@ export default function ProjetoDetalhe() {
     const [novoTitulo, setNovoTitulo] = useState('')
     const [novaCategoria, setNovaCategoria] = useState('outro')
     const [novaDescricao, setNovaDescricao] = useState('')
+    const [novoArquivo, setNovoArquivo] = useState<File | null>(null)
     const [salvando, setSalvando] = useState(false)
+    const novoArquivoRef = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -255,11 +257,13 @@ export default function ProjetoDetalhe() {
         setSalvando(true)
 
         const { data: { user } } = await supabase.auth.getUser()
+        const tenantId = user?.user_metadata?.tenant_id
+
         const { data, error } = await supabase
             .from('projeto_documentos')
             .insert({
                 projeto_id: id,
-                tenant_id: user?.user_metadata?.tenant_id,
+                tenant_id: tenantId,
                 titulo: novoTitulo.trim(),
                 categoria: novaCategoria,
                 descricao: novaDescricao.trim() || null,
@@ -268,10 +272,27 @@ export default function ProjetoDetalhe() {
             .single()
 
         if (!error && data) {
-            setDocumentos(prev => [...prev, data])
+            let docFinal = data
+
+            // Se um arquivo foi selecionado, faz o upload imediatamente
+            if (novoArquivo) {
+                const form = new FormData()
+                form.append('file', novoArquivo)
+                form.append('documentoId', data.id)
+                form.append('projetoId', id)
+                const res = await fetch('/api/projetos/documentos/upload', { method: 'POST', body: form })
+                const uploaded = await res.json()
+                if (res.ok) {
+                    docFinal = { ...data, arquivo_url: uploaded.url, status: 'enviado' }
+                }
+            }
+
+            setDocumentos(prev => [...prev, docFinal])
             setNovoTitulo('')
             setNovaDescricao('')
             setNovaCategoria('outro')
+            setNovoArquivo(null)
+            if (novoArquivoRef.current) novoArquivoRef.current.value = ''
             setShowNovoDoc(false)
         }
         setSalvando(false)
@@ -364,7 +385,7 @@ export default function ProjetoDetalhe() {
                     <form onSubmit={handleAddDoc} className="bg-white border border-[#2D9E6B]/30 rounded-xl p-4 mb-4 shadow-sm space-y-3">
                         <p className="text-sm font-semibold text-gray-700">Novo documento</p>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div className="md:col-span-1">
+                            <div>
                                 <input
                                     required
                                     type="text"
@@ -395,8 +416,41 @@ export default function ProjetoDetalhe() {
                                 />
                             </div>
                         </div>
+
+                        {/* Upload de arquivo */}
+                        <div>
+                            <input
+                                ref={novoArquivoRef}
+                                type="file"
+                                className="hidden"
+                                onChange={e => setNovoArquivo(e.target.files?.[0] ?? null)}
+                            />
+                            {novoArquivo ? (
+                                <div className="flex items-center gap-2 p-2.5 bg-green-50 border border-green-200 rounded-lg">
+                                    <Paperclip className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
+                                    <span className="text-xs text-green-700 font-medium flex-1 truncate">{novoArquivo.name}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setNovoArquivo(null); if (novoArquivoRef.current) novoArquivoRef.current.value = '' }}
+                                        className="text-xs text-gray-400 hover:text-red-500 flex-shrink-0"
+                                    >
+                                        remover
+                                    </button>
+                                </div>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={() => novoArquivoRef.current?.click()}
+                                    className="flex items-center gap-2 px-3 py-2 text-xs text-gray-500 border border-dashed border-gray-300 rounded-lg hover:border-[#2D9E6B] hover:text-[#2D9E6B] transition-colors w-full justify-center"
+                                >
+                                    <Upload className="w-3.5 h-3.5" />
+                                    Anexar arquivo (opcional)
+                                </button>
+                            )}
+                        </div>
+
                         <div className="flex gap-2 justify-end">
-                            <button type="button" onClick={() => setShowNovoDoc(false)} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">
+                            <button type="button" onClick={() => { setShowNovoDoc(false); setNovoArquivo(null) }} className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700">
                                 Cancelar
                             </button>
                             <button type="submit" disabled={salvando} className="px-4 py-1.5 text-sm bg-[#1A3C4A] text-white rounded-lg hover:bg-[#2E6B7A] disabled:opacity-50">
