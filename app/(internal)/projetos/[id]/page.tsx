@@ -145,7 +145,6 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
 
     // Conteúdo gerado (seções)
     const [conteudoGerado, setConteudoGerado] = useState<any[] | null>(null)
-    const [tituloGerado, setTituloGerado] = useState('')
 
     const [salvando, setSalvando] = useState(false)
 
@@ -170,10 +169,7 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
             const data = await res.json()
             if (!res.ok) throw new Error(data.error || 'Erro ao gerar')
             setConteudoGerado(data.secoes || [])
-            if (data.titulo && !titulo.trim()) {
-                setTituloGerado(data.titulo)
-                setTitulo(data.titulo)
-            }
+            if (data.titulo && !titulo.trim()) setTitulo(data.titulo)
         } catch (e: any) {
             setErroIA(e.message)
         }
@@ -354,7 +350,7 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
                             {temConteudo && (
                                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                                     <p className="text-xs font-semibold text-green-700">✓ Conteúdo gerado — {conteudoGerado!.length} seções</p>
-                                    <p className="text-xs text-green-600 mt-0.5">Clique em "Criar documento" para abrir o formulário preenchido.</p>
+                                    <p className="text-xs text-green-600 mt-0.5">Clique em &quot;Criar documento&quot; para abrir o formulário preenchido.</p>
                                 </div>
                             )}
                         </div>
@@ -392,7 +388,7 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
                             )}
                             {templateSelecionado && (
                                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                                    <p className="text-xs font-semibold text-green-700">✓ Template "{templateSelecionado.nome}" selecionado</p>
+                                    <p className="text-xs font-semibold text-green-700">✓ Template &quot;{templateSelecionado.nome}&quot; selecionado</p>
                                 </div>
                             )}
                         </div>
@@ -428,7 +424,7 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
                                 <div className="p-3 bg-green-50 border border-green-200 rounded-lg flex items-start justify-between gap-3">
                                     <div>
                                         <p className="text-xs font-semibold text-green-700">✓ Estrutura extraída — {conteudoGerado!.length} seções</p>
-                                        <p className="text-xs text-green-600 mt-0.5">Clique em "Criar documento" para abrir o formulário.</p>
+                                        <p className="text-xs text-green-600 mt-0.5">Clique em &quot;Criar documento&quot; para abrir o formulário.</p>
                                     </div>
                                     <button
                                         type="button"
@@ -491,7 +487,6 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
 
 export default function ProjetoDetalhe() {
     const { id } = useParams<{ id: string }>()
-    const router = useRouter()
     const supabase = createClient()
 
     const [projeto, setProjeto] = useState<Projeto | null>(null)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { ArrowLeft, Plus, Trash2, Upload, Download, RefreshCw, Paperclip, Save } from 'lucide-react'
@@ -135,7 +135,6 @@ function getFinancialCols(colunas: string[]) {
 
 export default function DocumentoPage() {
     const { id: projetoId, docId } = useParams<{ id: string; docId: string }>()
-    const router = useRouter()
     const supabase = createClient()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
