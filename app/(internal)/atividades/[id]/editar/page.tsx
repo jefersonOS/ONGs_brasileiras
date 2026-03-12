@@ -4,7 +4,182 @@ import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Plus, Trash2, Sparkles, ArrowLeft } from 'lucide-react'
+import { Plus, Trash2, Sparkles, ArrowLeft, GripVertical, ChevronDown, ChevronUp, Phone, ToggleLeft, ToggleRight } from 'lucide-react'
+
+// ─── Form Builder ────────────────────────────────────────────────────────────
+
+type TipoCampo = 'texto' | 'email' | 'telefone' | 'numero' | 'selecao' | 'textarea'
+
+interface CampoFormulario {
+    id: string
+    tipo: TipoCampo
+    label: string
+    placeholder: string
+    obrigatorio: boolean
+    opcoes: string[]
+    is_whatsapp: boolean
+}
+
+const TIPOS_CAMPO: { value: TipoCampo, label: string }[] = [
+    { value: 'texto', label: 'Texto curto' },
+    { value: 'email', label: 'E-mail' },
+    { value: 'telefone', label: 'Telefone / WhatsApp' },
+    { value: 'numero', label: 'Número' },
+    { value: 'selecao', label: 'Seleção (dropdown)' },
+    { value: 'textarea', label: 'Texto longo' },
+]
+
+const CAMPOS_DEFAULT: CampoFormulario[] = [
+    { id: '1', tipo: 'texto', label: 'Nome Completo', placeholder: 'Seu nome completo', obrigatorio: true, opcoes: [], is_whatsapp: false },
+    { id: '2', tipo: 'email', label: 'E-mail', placeholder: 'seu@email.com', obrigatorio: true, opcoes: [], is_whatsapp: false },
+    { id: '3', tipo: 'telefone', label: 'WhatsApp', placeholder: '(00) 00000-0000', obrigatorio: true, opcoes: [], is_whatsapp: true },
+    { id: '4', tipo: 'texto', label: 'CPF', placeholder: '000.000.000-00', obrigatorio: false, opcoes: [], is_whatsapp: false },
+]
+
+function FormBuilder({ campos, setCampos }: { campos: CampoFormulario[], setCampos: (c: CampoFormulario[]) => void }) {
+    const [expandedId, setExpandedId] = useState<string | null>(null)
+
+    const addCampo = () => {
+        const newCampo: CampoFormulario = {
+            id: Date.now().toString(),
+            tipo: 'texto',
+            label: 'Novo Campo',
+            placeholder: '',
+            obrigatorio: false,
+            opcoes: [],
+            is_whatsapp: false,
+        }
+        setCampos([...campos, newCampo])
+        setExpandedId(newCampo.id)
+    }
+
+    const updateCampo = (id: string, patch: Partial<CampoFormulario>) => {
+        setCampos(campos.map(c => c.id === id ? { ...c, ...patch } : c))
+    }
+
+    const removeCampo = (id: string) => {
+        setCampos(campos.filter(c => c.id !== id))
+    }
+
+    const moveUp = (i: number) => {
+        if (i === 0) return
+        const next = [...campos];
+        [next[i - 1], next[i]] = [next[i], next[i - 1]]
+        setCampos(next)
+    }
+
+    const moveDown = (i: number) => {
+        if (i === campos.length - 1) return
+        const next = [...campos];
+        [next[i], next[i + 1]] = [next[i + 1], next[i]]
+        setCampos(next)
+    }
+
+    return (
+        <div className="space-y-3">
+            {campos.map((campo, i) => (
+                <div key={campo.id} className="border border-gray-200 rounded-lg bg-white overflow-hidden">
+                    <div className="flex items-center gap-2 p-3 bg-gray-50 cursor-pointer" onClick={() => setExpandedId(expandedId === campo.id ? null : campo.id)}>
+                        <GripVertical className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                            <span className="font-medium text-sm text-gray-800">{campo.label || 'Sem título'}</span>
+                            <span className="ml-2 text-[10px] text-gray-400 uppercase">{TIPOS_CAMPO.find(t => t.value === campo.tipo)?.label}</span>
+                            {campo.is_whatsapp && <span className="ml-2 text-[10px] text-green-600 font-bold uppercase">WhatsApp</span>}
+                            {campo.obrigatorio && <span className="ml-2 text-[10px] text-red-500 uppercase">*obrigatório</span>}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                            <button type="button" onClick={e => { e.stopPropagation(); moveUp(i) }} className="p-1 text-gray-400 hover:text-gray-600"><ChevronUp className="w-3 h-3" /></button>
+                            <button type="button" onClick={e => { e.stopPropagation(); moveDown(i) }} className="p-1 text-gray-400 hover:text-gray-600"><ChevronDown className="w-3 h-3" /></button>
+                            <button type="button" onClick={e => { e.stopPropagation(); removeCampo(campo.id) }} className="p-1 text-gray-400 hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </div>
+                    </div>
+
+                    {expandedId === campo.id && (
+                        <div className="p-4 space-y-3 border-t border-gray-100">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Tipo de Campo</label>
+                                    <select
+                                        value={campo.tipo}
+                                        onChange={e => updateCampo(campo.id, { tipo: e.target.value as TipoCampo, is_whatsapp: e.target.value === 'telefone' ? campo.is_whatsapp : false })}
+                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded bg-white focus:outline-none"
+                                    >
+                                        {TIPOS_CAMPO.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Rótulo (label)</label>
+                                    <input
+                                        type="text"
+                                        value={campo.label}
+                                        onChange={e => updateCampo(campo.id, { label: e.target.value })}
+                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none"
+                                        placeholder="Ex: Nome Completo"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Placeholder (dica)</label>
+                                    <input
+                                        type="text"
+                                        value={campo.placeholder}
+                                        onChange={e => updateCampo(campo.id, { placeholder: e.target.value })}
+                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none"
+                                        placeholder="Ex: Digite seu nome..."
+                                    />
+                                </div>
+                                <div className="flex items-center gap-4 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => updateCampo(campo.id, { obrigatorio: !campo.obrigatorio })}
+                                        className={`flex items-center gap-2 text-sm font-medium transition-colors ${campo.obrigatorio ? 'text-red-600' : 'text-gray-400'}`}
+                                    >
+                                        {campo.obrigatorio ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                                        Obrigatório
+                                    </button>
+                                    {campo.tipo === 'telefone' && (
+                                        <button
+                                            type="button"
+                                            onClick={() => updateCampo(campo.id, { is_whatsapp: !campo.is_whatsapp })}
+                                            className={`flex items-center gap-2 text-sm font-medium transition-colors ${campo.is_whatsapp ? 'text-green-600' : 'text-gray-400'}`}
+                                        >
+                                            {campo.is_whatsapp ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                                            <Phone className="w-4 h-4" /> Usar para WhatsApp
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {campo.tipo === 'selecao' && (
+                                <div>
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Opções (uma por linha)</label>
+                                    <textarea
+                                        rows={4}
+                                        value={campo.opcoes.join('\n')}
+                                        onChange={e => updateCampo(campo.id, { opcoes: e.target.value.split('\n') })}
+                                        onKeyDown={e => e.stopPropagation()}
+                                        className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:outline-none"
+                                        placeholder={"Opção 1\nOpção 2\nOpção 3"}
+                                    />
+                                    <p className="text-[11px] text-gray-400 mt-1">Pressione Enter para adicionar uma nova opção</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            ))}
+
+            <button
+                type="button"
+                onClick={addCampo}
+                className="w-full py-2.5 border-2 border-dashed border-gray-200 rounded-lg text-sm font-medium text-gray-400 hover:border-[#2D9E6B] hover:text-[#2D9E6B] transition-colors flex items-center justify-center gap-2"
+            >
+                <Plus className="w-4 h-4" /> Adicionar Campo
+            </button>
+        </div>
+    )
+}
+
+// ─── Página Principal ─────────────────────────────────────────────────────────
 
 export default function EditarAtividadePage() {
     const router = useRouter()
@@ -16,7 +191,6 @@ export default function EditarAtividadePage() {
     const [isGenerating, setIsGenerating] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    // Form States
     const [titulo, setTitulo] = useState('')
     const [tipo, setTipo] = useState('educacional')
     const [descricao, setDescricao] = useState('')
@@ -38,6 +212,7 @@ export default function EditarAtividadePage() {
     const [publicoAlvo, setPublicoAlvo] = useState('')
     const [faixaEtaria, setFaixaEtaria] = useState('livre')
     const [status, setStatus] = useState('rascunho')
+    const [formularioInscricao, setFormularioInscricao] = useState<CampoFormulario[]>(CAMPOS_DEFAULT)
 
     useEffect(() => {
         const init = async () => {
@@ -73,6 +248,11 @@ export default function EditarAtividadePage() {
             setPublicoAlvo(atividade.publico_alvo || '')
             setFaixaEtaria(atividade.faixa_etaria || 'livre')
             setStatus(atividade.status || 'rascunho')
+            setFormularioInscricao(
+                Array.isArray(atividade.formulario_inscricao) && atividade.formulario_inscricao.length > 0
+                    ? atividade.formulario_inscricao
+                    : CAMPOS_DEFAULT
+            )
             setLoading(false)
         }
         init()
@@ -110,6 +290,7 @@ export default function EditarAtividadePage() {
             publico_alvo: publicoAlvo,
             faixa_etaria: faixaEtaria,
             status,
+            formulario_inscricao: exigeInscricao ? formularioInscricao : null,
         }).eq('id', id)
 
         if (updateError) {
@@ -279,6 +460,15 @@ export default function EditarAtividadePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Formulário de Inscrição */}
+                {exigeInscricao && (
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-1 pb-2 border-b border-gray-100">Formulário de Inscrição</h3>
+                        <p className="text-xs text-gray-400 mb-4">Monte o formulário que os interessados preencherão ao se inscrever. O campo marcado como <span className="text-green-600 font-medium">WhatsApp</span> será usado para envio da confirmação.</p>
+                        <FormBuilder campos={formularioInscricao} setCampos={setFormularioInscricao} />
+                    </div>
+                )}
 
                 <div className="pt-6 border-t border-gray-200 flex items-center justify-between">
                     <select value={status} onChange={e => setStatus(e.target.value)} className="px-3 py-2 border bg-white border-gray-300 rounded-md focus:outline-none focus:ring-[#2D9E6B]">

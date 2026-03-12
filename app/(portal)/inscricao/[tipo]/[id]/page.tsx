@@ -137,8 +137,14 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     }
                 }
             } else if (tipo === 'atividade') {
-                const { data: a } = await supabase.from('atividades').select('titulo, tipo, exige_inscricao, vagas, datas, locais, publico_alvo, descricao').eq('id', id).single()
+                const { data: a } = await supabase.from('atividades').select('titulo, tipo, exige_inscricao, vagas, datas, locais, publico_alvo, descricao, formulario_inscricao').eq('id', id).single()
                 setEntidade(a)
+                if (a?.formulario_inscricao?.length) {
+                    setFormulario(a.formulario_inscricao)
+                    const initialRespostas: Record<string, string> = {}
+                    a.formulario_inscricao.forEach((campo: CampoFormulario) => { initialRespostas[campo.id] = '' })
+                    setRespostas(initialRespostas)
+                }
             }
 
             setLoading(false)
