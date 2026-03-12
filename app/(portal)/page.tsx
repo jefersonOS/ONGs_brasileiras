@@ -3,6 +3,8 @@ import { getTenant } from '@/lib/tenant-server'
 import Link from 'next/link'
 import { CalendarDays, GraduationCap, MapPin, Search, Users } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function PublicLandingPage() {
     const supabase = createClient()
     const tenant = await getTenant()

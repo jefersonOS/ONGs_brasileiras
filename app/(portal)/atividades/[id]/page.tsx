@@ -4,6 +4,8 @@ import { CalendarDays, MapPin, Users, ArrowLeft, Info } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import { BotaoInscricao } from '@/components/portal/BotaoInscricao'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AtividadePublicaPage({ params }: { params: { id: string } }) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
