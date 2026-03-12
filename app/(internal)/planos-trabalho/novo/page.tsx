@@ -62,6 +62,8 @@ function NovoPlanoForm() {
         if (searchParams.get('ai') === 'true') {
             setShowAIModal(true)
         }
+        const pid = searchParams.get('projeto_id')
+        if (pid) setProjetoId(pid)
     }, [supabase, searchParams])
 
     const saveTemplate = async () => {

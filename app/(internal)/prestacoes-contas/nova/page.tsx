@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
     ArrowLeft, Plus, Trash2, Send, Sparkles, LayoutTemplate,
@@ -57,6 +57,7 @@ function getFinancialCols(colunas: string[]) {
 export default function NovaPrestacaoPage() {
     const supabase = createClient()
     const router = useRouter()
+    const searchParams = useSearchParams()
     const importFileRef = useRef<HTMLInputElement>(null)
 
     // Header
@@ -93,12 +94,21 @@ export default function NovaPrestacaoPage() {
 
     useEffect(() => {
         const init = async () => {
+            const projetoId = searchParams.get('projeto_id')
+            let planosQuery = supabase.from('planos_trabalho').select('id, titulo, metas, cronograma, orcamento_estimado, objetivos')
+            if (projetoId) {
+                planosQuery = planosQuery.eq('projeto_id', projetoId)
+            } else {
+                planosQuery = planosQuery.eq('status', 'aprovado')
+            }
             const [{ data: planosData }, { data: templatesData }] = await Promise.all([
-                supabase.from('planos_trabalho').select('id, titulo, metas, cronograma, orcamento_estimado, objetivos').eq('status', 'aprovado'),
+                planosQuery,
                 supabase.from('templates_plano').select('id, nome, secoes').order('created_at', { ascending: false }),
             ])
             setPlanos(planosData || [])
             setTemplates(templatesData || [])
+            // Pre-select single plan when coming from a project
+            if (planosData?.length === 1) setPlanoId(planosData[0].id)
             setLoading(false)
         }
         init()

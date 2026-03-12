@@ -7,7 +7,8 @@ import Link from 'next/link'
 import {
     ArrowLeft, FileText, Plus, Trash2,
     Clock, CheckCircle, XCircle, Send, Paperclip,
-    Sparkles, LayoutTemplate, BookMarked, Upload, X, RefreshCw
+    Sparkles, LayoutTemplate, BookMarked, Upload, X, RefreshCw,
+    ClipboardList, Receipt, ExternalLink, Calendar
 } from 'lucide-react'
 
 interface Projeto {
@@ -26,6 +27,25 @@ interface Documento {
     arquivo_url: string | null
     status: string
     observacao: string | null
+    created_at: string
+}
+
+interface PlanoTrabalho {
+    id: string
+    titulo: string
+    descricao: string | null
+    status: string
+    data_inicio: string | null
+    data_limite: string | null
+    created_at: string
+}
+
+interface PrestacaoContas {
+    id: string
+    titulo: string
+    periodo_mes: number | null
+    periodo_ano: number | null
+    status: string
     created_at: string
 }
 
@@ -492,6 +512,8 @@ export default function ProjetoDetalhe() {
 
     const [projeto, setProjeto] = useState<Projeto | null>(null)
     const [documentos, setDocumentos] = useState<Documento[]>([])
+    const [planos, setPlanos] = useState<PlanoTrabalho[]>([])
+    const [prestacoes, setPrestacoes] = useState<PrestacaoContas[]>([])
     const [loading, setLoading] = useState(true)
     const [tenantId, setTenantId] = useState('')
     const [showModal, setShowModal] = useState(false)
@@ -501,16 +523,33 @@ export default function ProjetoDetalhe() {
             const { data: { user } } = await supabase.auth.getUser()
             setTenantId(user?.user_metadata?.tenant_id || '')
 
-            const [{ data: proj }, { data: docs }] = await Promise.all([
+            const [{ data: proj }, { data: docs }, { data: planosData }] = await Promise.all([
                 supabase.from('projetos').select('*').eq('id', id).single(),
                 supabase.from('projeto_documentos')
                     .select('*')
                     .eq('projeto_id', id)
                     .order('created_at', { ascending: true }),
+                supabase.from('planos_trabalho')
+                    .select('id, titulo, descricao, status, data_inicio, data_limite, created_at')
+                    .eq('projeto_id', id)
+                    .order('created_at', { ascending: false }),
             ])
 
             setProjeto(proj)
             setDocumentos(docs || [])
+            setPlanos(planosData || [])
+
+            // Buscar prestações vinculadas aos planos deste projeto
+            const planoIds = (planosData || []).map((p: PlanoTrabalho) => p.id)
+            if (planoIds.length > 0) {
+                const { data: prestData } = await supabase
+                    .from('prestacoes_contas')
+                    .select('id, titulo, periodo_mes, periodo_ano, status, created_at')
+                    .in('plano_id', planoIds)
+                    .order('created_at', { ascending: false })
+                setPrestacoes(prestData || [])
+            }
+
             setLoading(false)
         }
         fetchData()
@@ -621,6 +660,129 @@ export default function ProjetoDetalhe() {
                                 onDelete={handleDelete}
                             />
                         ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Planos de Trabalho */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                        <ClipboardList className="w-4 h-4 text-[#2D9E6B]" />
+                        Planos de Trabalho ({planos.length})
+                    </h2>
+                    <Link
+                        href={`/planos-trabalho/novo?projeto_id=${id}`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#2D9E6B] text-white rounded-lg hover:bg-green-600 transition-colors"
+                    >
+                        <Plus className="w-4 h-4" /> Novo plano
+                    </Link>
+                </div>
+                {planos.length === 0 ? (
+                    <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                        <ClipboardList className="w-9 h-9 mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">Nenhum plano de trabalho vinculado.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {planos.map(plano => {
+                            const st = STATUS_CONFIG[plano.status] || STATUS_CONFIG.pendente
+                            return (
+                                <Link
+                                    key={plano.id}
+                                    href={`/planos-trabalho/${plano.id}`}
+                                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-[#2D9E6B]/50 hover:shadow-md transition-all group flex flex-col gap-3"
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="w-9 h-9 rounded-lg bg-[#2D9E6B]/10 flex items-center justify-center flex-shrink-0">
+                                            <ClipboardList className="w-4 h-4 text-[#2D9E6B]" />
+                                        </div>
+                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${st.color}`}>
+                                            {st.icon} {st.label}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#1A3C4A]">{plano.titulo}</p>
+                                        {plano.descricao && (
+                                            <p className="text-xs text-gray-400 mt-1 line-clamp-2">{plano.descricao}</p>
+                                        )}
+                                    </div>
+                                    {(plano.data_inicio || plano.data_limite) && (
+                                        <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                                            <Clock className="w-3 h-3" />
+                                            {plano.data_inicio && new Date(plano.data_inicio).toLocaleDateString('pt-BR')}
+                                            {plano.data_inicio && plano.data_limite && ' → '}
+                                            {plano.data_limite && new Date(plano.data_limite).toLocaleDateString('pt-BR')}
+                                        </p>
+                                    )}
+                                    <p className="text-[10px] text-[#2D9E6B] flex items-center gap-1 font-medium">
+                                        <ExternalLink className="w-3 h-3" /> Abrir plano
+                                    </p>
+                                </Link>
+                            )
+                        })}
+                    </div>
+                )}
+            </div>
+
+            {/* Prestações de Contas */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                        <Receipt className="w-4 h-4 text-[#1A3C4A]" />
+                        Prestações de Contas ({prestacoes.length})
+                    </h2>
+                    <Link
+                        href={`/prestacoes-contas/nova?projeto_id=${id}`}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#1A3C4A] text-white rounded-lg hover:bg-[#2E6B7A] transition-colors"
+                    >
+                        <Plus className="w-4 h-4" /> Nova prestação
+                    </Link>
+                </div>
+                {prestacoes.length === 0 ? (
+                    <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                        <Receipt className="w-9 h-9 mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">Nenhuma prestação de contas registrada.</p>
+                        {planos.length === 0 && (
+                            <p className="text-xs mt-1">Crie um plano de trabalho primeiro para vincular prestações.</p>
+                        )}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {prestacoes.map(prest => {
+                            const st = STATUS_CONFIG[prest.status] || STATUS_CONFIG.pendente
+                            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
+                            const periodo = prest.periodo_mes && prest.periodo_ano
+                                ? `${meses[(prest.periodo_mes - 1) % 12]} / ${prest.periodo_ano}`
+                                : null
+                            return (
+                                <Link
+                                    key={prest.id}
+                                    href={`/prestacoes-contas/${prest.id}`}
+                                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-[#1A3C4A]/30 hover:shadow-md transition-all group flex flex-col gap-3"
+                                >
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="w-9 h-9 rounded-lg bg-[#1A3C4A]/10 flex items-center justify-center flex-shrink-0">
+                                            <Receipt className="w-4 h-4 text-[#1A3C4A]" />
+                                        </div>
+                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${st.color}`}>
+                                            {st.icon} {st.label}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#1A3C4A]">{prest.titulo}</p>
+                                        {periodo && (
+                                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                                <Calendar className="w-3 h-3" /> {periodo}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <p className="text-[10px] text-[#1A3C4A] flex items-center gap-1 font-medium">
+                                        <ExternalLink className="w-3 h-3" /> Abrir prestação
+                                    </p>
+                                </Link>
+                            )
+                        })}
                     </div>
                 )}
             </div>
