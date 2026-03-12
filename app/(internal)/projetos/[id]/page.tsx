@@ -131,9 +131,10 @@ function DocumentoCard({ doc, projetoId, onDelete }: {
 
 type Modo = 'branco' | 'ia' | 'template' | 'importar'
 
-function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
+function NovoDocModal({ projetoId, tenantId, defaultCategoria, onClose, onCreated }: {
     projetoId: string
     tenantId: string
+    defaultCategoria?: string
     onClose: () => void
     onCreated: (doc: Documento) => void
 }) {
@@ -142,7 +143,7 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
 
     const [modo, setModo] = useState<Modo>('branco')
     const [titulo, setTitulo] = useState('')
-    const [categoria, setCategoria] = useState('outro')
+    const [categoria, setCategoria] = useState(defaultCategoria || 'outro')
     const [descricao, setDescricao] = useState('')
 
     // IA
@@ -516,7 +517,7 @@ export default function ProjetoDetalhe() {
     const [prestacoes, setPrestacoes] = useState<PrestacaoContas[]>([])
     const [loading, setLoading] = useState(true)
     const [tenantId, setTenantId] = useState('')
-    const [showModal, setShowModal] = useState(false)
+    const [modalCategoria, setModalCategoria] = useState<string | null>(null)
 
     useEffect(() => {
         const fetchData = async () => {
@@ -578,12 +579,17 @@ export default function ProjetoDetalhe() {
         )
     }
 
-    const pendentes = documentos.filter(d => d.status === 'pendente').length
-    const enviados = documentos.filter(d => d.status === 'enviado').length
-    const aprovados = documentos.filter(d => d.status === 'aprovado').length
+    // Classify docs by section
+    const PLANO_CATS = new Set(['plano_trabalho', 'Plano de Trabalho', 'relatorio_parcial', 'Relatório Parcial', 'relatorio_final', 'Relatório Final'])
+    const PREST_CATS = new Set(['prestacao_contas', 'Prestação de Contas'])
+    const docsPlano = documentos.filter(d => PLANO_CATS.has(d.categoria))
+    const docsPrestacao = documentos.filter(d => PREST_CATS.has(d.categoria))
+    const docsGeral = documentos.filter(d => !PLANO_CATS.has(d.categoria) && !PREST_CATS.has(d.categoria))
+
+    const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
 
     return (
-        <div className="max-w-5xl mx-auto space-y-6 pb-12">
+        <div className="max-w-5xl mx-auto space-y-8 pb-12">
             {/* Navegação */}
             <div className="flex items-center gap-3">
                 <Link href="/projetos" className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#1A3C4A] transition-colors">
@@ -611,189 +617,235 @@ export default function ProjetoDetalhe() {
                         </p>
                     </div>
                     <div className="flex gap-3 flex-shrink-0 text-center">
-                        <div className="px-3 py-2 bg-yellow-50 rounded-lg">
-                            <p className="text-lg font-bold text-yellow-600">{pendentes}</p>
-                            <p className="text-[10px] text-yellow-500 font-medium">Pendentes</p>
-                        </div>
                         <div className="px-3 py-2 bg-blue-50 rounded-lg">
-                            <p className="text-lg font-bold text-blue-600">{enviados}</p>
-                            <p className="text-[10px] text-blue-500 font-medium">Enviados</p>
+                            <p className="text-lg font-bold text-blue-600">{planos.length}</p>
+                            <p className="text-[10px] text-blue-500 font-medium">Planos</p>
+                        </div>
+                        <div className="px-3 py-2 bg-purple-50 rounded-lg">
+                            <p className="text-lg font-bold text-purple-600">{prestacoes.length}</p>
+                            <p className="text-[10px] text-purple-500 font-medium">Prestações</p>
                         </div>
                         <div className="px-3 py-2 bg-green-50 rounded-lg">
-                            <p className="text-lg font-bold text-green-600">{aprovados}</p>
-                            <p className="text-[10px] text-green-500 font-medium">Aprovados</p>
+                            <p className="text-lg font-bold text-green-600">{documentos.length}</p>
+                            <p className="text-[10px] text-green-500 font-medium">Documentos</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Documentos */}
-            <div>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-base font-semibold text-gray-800">
-                        Documentação ({documentos.length})
-                    </h2>
-                    <button
-                        onClick={() => setShowModal(true)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#2D9E6B] text-white rounded-lg hover:bg-green-600 transition-colors"
-                    >
-                        <Plus className="w-4 h-4" />
-                        Adicionar documento
-                    </button>
-                </div>
-
-                {documentos.length === 0 ? (
-                    <div className="text-center py-12 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                        <FileText className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">Nenhum documento cadastrado.</p>
-                        <button onClick={() => setShowModal(true)} className="mt-2 text-sm text-[#2D9E6B] hover:underline font-medium">
-                            Adicionar o primeiro documento
-                        </button>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {documentos.map(doc => (
-                            <DocumentoCard
-                                key={doc.id}
-                                doc={doc}
-                                projetoId={id}
-                                onDelete={handleDelete}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {/* Planos de Trabalho */}
-            <div>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            {/* ── Planos de Trabalho ── */}
+            <div className="rounded-2xl border border-[#2D9E6B]/20 overflow-hidden">
+                {/* Header seção */}
+                <div className="flex items-center justify-between px-6 py-4 bg-[#2D9E6B]/5 border-b border-[#2D9E6B]/20">
+                    <h2 className="text-sm font-bold text-[#1A3C4A] flex items-center gap-2">
                         <ClipboardList className="w-4 h-4 text-[#2D9E6B]" />
                         Planos de Trabalho ({planos.length})
                     </h2>
                     <Link
                         href={`/planos-trabalho/novo?projeto_id=${id}`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#2D9E6B] text-white rounded-lg hover:bg-green-600 transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#2D9E6B] text-white rounded-lg hover:bg-green-600 transition-colors"
                     >
-                        <Plus className="w-4 h-4" /> Novo plano
+                        <Plus className="w-3.5 h-3.5" /> Novo plano
                     </Link>
                 </div>
-                {planos.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                        <ClipboardList className="w-9 h-9 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">Nenhum plano de trabalho vinculado.</p>
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {planos.map(plano => {
-                            const st = STATUS_CONFIG[plano.status] || STATUS_CONFIG.pendente
-                            return (
-                                <Link
-                                    key={plano.id}
-                                    href={`/planos-trabalho/${plano.id}`}
-                                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-[#2D9E6B]/50 hover:shadow-md transition-all group flex flex-col gap-3"
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="w-9 h-9 rounded-lg bg-[#2D9E6B]/10 flex items-center justify-center flex-shrink-0">
-                                            <ClipboardList className="w-4 h-4 text-[#2D9E6B]" />
+
+                <div className="p-6 space-y-6 bg-white">
+                    {/* Plano cards */}
+                    {planos.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                            <ClipboardList className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                            <p className="text-sm">Nenhum plano de trabalho vinculado.</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {planos.map(plano => {
+                                const st = STATUS_CONFIG[plano.status] || STATUS_CONFIG.pendente
+                                return (
+                                    <Link
+                                        key={plano.id}
+                                        href={`/planos-trabalho/${plano.id}`}
+                                        className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:border-[#2D9E6B]/50 hover:shadow-sm transition-all group flex flex-col gap-3"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-[#2D9E6B]/10 flex items-center justify-center flex-shrink-0">
+                                                <ClipboardList className="w-3.5 h-3.5 text-[#2D9E6B]" />
+                                            </div>
+                                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${st.color}`}>
+                                                {st.icon} {st.label}
+                                            </span>
                                         </div>
-                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${st.color}`}>
-                                            {st.icon} {st.label}
-                                        </span>
-                                    </div>
-                                    <div>
                                         <p className="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#1A3C4A]">{plano.titulo}</p>
-                                        {plano.descricao && (
-                                            <p className="text-xs text-gray-400 mt-1 line-clamp-2">{plano.descricao}</p>
+                                        {(plano.data_inicio || plano.data_limite) && (
+                                            <p className="text-[10px] text-gray-400 flex items-center gap-1">
+                                                <Clock className="w-3 h-3" />
+                                                {plano.data_inicio && new Date(plano.data_inicio).toLocaleDateString('pt-BR')}
+                                                {plano.data_inicio && plano.data_limite && ' → '}
+                                                {plano.data_limite && new Date(plano.data_limite).toLocaleDateString('pt-BR')}
+                                            </p>
                                         )}
-                                    </div>
-                                    {(plano.data_inicio || plano.data_limite) && (
-                                        <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                                            <Clock className="w-3 h-3" />
-                                            {plano.data_inicio && new Date(plano.data_inicio).toLocaleDateString('pt-BR')}
-                                            {plano.data_inicio && plano.data_limite && ' → '}
-                                            {plano.data_limite && new Date(plano.data_limite).toLocaleDateString('pt-BR')}
+                                        <p className="text-[10px] text-[#2D9E6B] flex items-center gap-1 font-medium">
+                                            <ExternalLink className="w-3 h-3" /> Abrir plano
                                         </p>
-                                    )}
-                                    <p className="text-[10px] text-[#2D9E6B] flex items-center gap-1 font-medium">
-                                        <ExternalLink className="w-3 h-3" /> Abrir plano
-                                    </p>
-                                </Link>
-                            )
-                        })}
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    )}
+
+                    {/* Documentos do Plano */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                <FileText className="w-3.5 h-3.5" /> Documentos do Plano ({docsPlano.length})
+                            </p>
+                            <button
+                                onClick={() => setModalCategoria('Plano de Trabalho')}
+                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-[#2D9E6B] text-[#2D9E6B] rounded-lg hover:bg-[#2D9E6B] hover:text-white transition-colors"
+                            >
+                                <Plus className="w-3 h-3" /> Adicionar documento
+                            </button>
+                        </div>
+                        {docsPlano.length === 0 ? (
+                            <p className="text-xs text-gray-400 italic py-3 text-center border border-dashed border-gray-200 rounded-lg">
+                                Nenhum documento de plano adicionado.
+                            </p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {docsPlano.map(doc => (
+                                    <DocumentoCard key={doc.id} doc={doc} projetoId={id} onDelete={handleDelete} />
+                                ))}
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
             </div>
 
-            {/* Prestações de Contas */}
-            <div>
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+            {/* ── Prestações de Contas ── */}
+            <div className="rounded-2xl border border-[#1A3C4A]/20 overflow-hidden">
+                {/* Header seção */}
+                <div className="flex items-center justify-between px-6 py-4 bg-[#1A3C4A]/5 border-b border-[#1A3C4A]/20">
+                    <h2 className="text-sm font-bold text-[#1A3C4A] flex items-center gap-2">
                         <Receipt className="w-4 h-4 text-[#1A3C4A]" />
                         Prestações de Contas ({prestacoes.length})
                     </h2>
                     <Link
                         href={`/prestacoes-contas/nova?projeto_id=${id}`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-[#1A3C4A] text-white rounded-lg hover:bg-[#2E6B7A] transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#1A3C4A] text-white rounded-lg hover:bg-[#2E6B7A] transition-colors"
                     >
-                        <Plus className="w-4 h-4" /> Nova prestação
+                        <Plus className="w-3.5 h-3.5" /> Nova prestação
                     </Link>
                 </div>
-                {prestacoes.length === 0 ? (
-                    <div className="text-center py-10 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                        <Receipt className="w-9 h-9 mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">Nenhuma prestação de contas registrada.</p>
-                        {planos.length === 0 && (
-                            <p className="text-xs mt-1">Crie um plano de trabalho primeiro para vincular prestações.</p>
-                        )}
-                    </div>
-                ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {prestacoes.map(prest => {
-                            const st = STATUS_CONFIG[prest.status] || STATUS_CONFIG.pendente
-                            const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez']
-                            const periodo = prest.periodo_mes && prest.periodo_ano
-                                ? `${meses[(prest.periodo_mes - 1) % 12]} / ${prest.periodo_ano}`
-                                : null
-                            return (
-                                <Link
-                                    key={prest.id}
-                                    href={`/prestacoes-contas/${prest.id}`}
-                                    className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:border-[#1A3C4A]/30 hover:shadow-md transition-all group flex flex-col gap-3"
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="w-9 h-9 rounded-lg bg-[#1A3C4A]/10 flex items-center justify-center flex-shrink-0">
-                                            <Receipt className="w-4 h-4 text-[#1A3C4A]" />
+
+                <div className="p-6 space-y-6 bg-white">
+                    {/* Prestação cards */}
+                    {prestacoes.length === 0 ? (
+                        <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                            <Receipt className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                            <p className="text-sm">Nenhuma prestação de contas registrada.</p>
+                            {planos.length === 0 && (
+                                <p className="text-xs mt-1">Crie um plano de trabalho primeiro.</p>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {prestacoes.map(prest => {
+                                const st = STATUS_CONFIG[prest.status] || STATUS_CONFIG.pendente
+                                const periodo = prest.periodo_mes && prest.periodo_ano
+                                    ? `${meses[(prest.periodo_mes - 1) % 12]} / ${prest.periodo_ano}`
+                                    : null
+                                return (
+                                    <Link
+                                        key={prest.id}
+                                        href={`/prestacoes-contas/${prest.id}`}
+                                        className="bg-gray-50 border border-gray-200 rounded-xl p-4 hover:border-[#1A3C4A]/30 hover:shadow-sm transition-all group flex flex-col gap-3"
+                                    >
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="w-8 h-8 rounded-lg bg-[#1A3C4A]/10 flex items-center justify-center flex-shrink-0">
+                                                <Receipt className="w-3.5 h-3.5 text-[#1A3C4A]" />
+                                            </div>
+                                            <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${st.color}`}>
+                                                {st.icon} {st.label}
+                                            </span>
                                         </div>
-                                        <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${st.color}`}>
-                                            {st.icon} {st.label}
-                                        </span>
-                                    </div>
-                                    <div>
                                         <p className="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#1A3C4A]">{prest.titulo}</p>
                                         {periodo && (
-                                            <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                                            <p className="text-xs text-gray-400 flex items-center gap-1">
                                                 <Calendar className="w-3 h-3" /> {periodo}
                                             </p>
                                         )}
-                                    </div>
-                                    <p className="text-[10px] text-[#1A3C4A] flex items-center gap-1 font-medium">
-                                        <ExternalLink className="w-3 h-3" /> Abrir prestação
-                                    </p>
-                                </Link>
-                            )
-                        })}
+                                        <p className="text-[10px] text-[#1A3C4A] flex items-center gap-1 font-medium">
+                                            <ExternalLink className="w-3 h-3" /> Abrir prestação
+                                        </p>
+                                    </Link>
+                                )
+                            })}
+                        </div>
+                    )}
+
+                    {/* Documentos da Prestação */}
+                    <div>
+                        <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
+                                <FileText className="w-3.5 h-3.5" /> Documentos da Prestação ({docsPrestacao.length})
+                            </p>
+                            <button
+                                onClick={() => setModalCategoria('Prestação de Contas')}
+                                className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium border border-[#1A3C4A] text-[#1A3C4A] rounded-lg hover:bg-[#1A3C4A] hover:text-white transition-colors"
+                            >
+                                <Plus className="w-3 h-3" /> Adicionar documento
+                            </button>
+                        </div>
+                        {docsPrestacao.length === 0 ? (
+                            <p className="text-xs text-gray-400 italic py-3 text-center border border-dashed border-gray-200 rounded-lg">
+                                Nenhum documento de prestação adicionado.
+                            </p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                {docsPrestacao.map(doc => (
+                                    <DocumentoCard key={doc.id} doc={doc} projetoId={id} onDelete={handleDelete} />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* ── Outros Documentos ── */}
+            <div>
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-gray-400" />
+                        Outros Documentos ({docsGeral.length})
+                    </h2>
+                    <button
+                        onClick={() => setModalCategoria('outro')}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition-colors"
+                    >
+                        <Plus className="w-3.5 h-3.5" /> Adicionar documento
+                    </button>
+                </div>
+                {docsGeral.length === 0 ? (
+                    <div className="text-center py-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
+                        <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                        <p className="text-sm">Nenhum documento geral cadastrado.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {docsGeral.map(doc => (
+                            <DocumentoCard key={doc.id} doc={doc} projetoId={id} onDelete={handleDelete} />
+                        ))}
                     </div>
                 )}
             </div>
 
             {/* Modal */}
-            {showModal && (
+            {modalCategoria !== null && (
                 <NovoDocModal
                     projetoId={id}
                     tenantId={tenantId}
-                    onClose={() => setShowModal(false)}
-                    onCreated={doc => setDocumentos(prev => [...prev, doc])}
+                    defaultCategoria={modalCategoria}
+                    onClose={() => setModalCategoria(null)}
+                    onCreated={doc => { setDocumentos(prev => [...prev, doc]); setModalCategoria(null) }}
                 />
             )}
         </div>
