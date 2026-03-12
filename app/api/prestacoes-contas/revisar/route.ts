@@ -16,15 +16,12 @@ export async function POST(req: Request) {
 
         if (pError) throw pError
 
-        // 2. Registrar Parecer se existir
+        // 2. Registrar Parecer se existir (armazenado no campo observacao)
         if (parecer) {
             const { error: fError } = await supabase
-                .from('prestacoes_pareceres')
-                .insert({
-                    prestacao_id: prestacaoId,
-                    user_id: user.id,
-                    texto: parecer
-                })
+                .from('prestacoes_contas')
+                .update({ parecer })
+                .eq('id', prestacaoId)
 
             if (fError) throw fError
         }

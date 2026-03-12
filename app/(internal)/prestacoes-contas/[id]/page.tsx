@@ -251,7 +251,7 @@ export default function DetalhePrestacaoPage({ params }: { params: { id: string 
                     <button className="px-6 py-4 bg-white border border-gray-100 rounded-2xl text-[10px] font-black uppercase tracking-widest text-[#1A3C4A] shadow-xl shadow-black/5 hover:bg-gray-50 flex items-center gap-2 transition-all">
                         <Download className="w-4 h-4" /> Exportar PDF
                     </button>
-                    {prestacao.status === 'analise' && (
+                    {prestacao.status === 'enviado' && (
                         <div className="flex gap-2">
                             <button
                                 onClick={() => handleReview('rejeitado')}

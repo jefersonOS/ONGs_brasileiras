@@ -269,7 +269,7 @@ export default function NovaPrestacaoPage() {
 
     // ── Salvar ────────────────────────────────────────────────────────────────
 
-    const handleSave = async (status: 'rascunho' | 'analise') => {
+    const handleSave = async (status: 'rascunho' | 'enviado') => {
         if (!titulo.trim() || !periodo.trim()) {
             alert('Preencha o Título e o Período.')
             return
@@ -283,7 +283,7 @@ export default function NovaPrestacaoPage() {
                 titulo: titulo.trim(),
                 periodo,
                 status,
-                criado_por: user?.id,
+                criador_id: user?.id,
                 secoes,
                 itens: [],
             })
@@ -333,7 +333,7 @@ export default function NovaPrestacaoPage() {
                         Salvar rascunho
                     </button>
                     <button
-                        onClick={() => handleSave('analise')}
+                        onClick={() => handleSave('enviado')}
                         disabled={saving}
                         className="flex items-center gap-1.5 px-4 py-2 text-sm bg-[#2D9E6B] text-white rounded-md hover:bg-green-600 disabled:opacity-50"
                     >
@@ -582,7 +582,7 @@ export default function NovaPrestacaoPage() {
                     <button onClick={() => handleSave('rascunho')} disabled={saving} className="px-4 py-2 text-sm bg-gray-100 text-gray-700 border border-gray-300 rounded-md hover:bg-gray-200 disabled:opacity-50">
                         Salvar rascunho
                     </button>
-                    <button onClick={() => handleSave('analise')} disabled={saving} className="flex items-center gap-1.5 px-4 py-2 text-sm bg-[#2D9E6B] text-white rounded-md hover:bg-green-600 disabled:opacity-50">
+                    <button onClick={() => handleSave('enviado')} disabled={saving} className="flex items-center gap-1.5 px-4 py-2 text-sm bg-[#2D9E6B] text-white rounded-md hover:bg-green-600 disabled:opacity-50">
                         {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                         {saving ? 'Salvando...' : 'Enviar para análise'}
                     </button>
