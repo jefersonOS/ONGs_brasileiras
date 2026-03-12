@@ -381,7 +381,7 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
                                         >
                                             <p className="text-sm font-medium text-gray-700">{t.nome}</p>
                                             <p className="text-xs text-gray-400 mt-0.5">
-                                                {t.categoria ? CATEGORIA_LABEL[t.categoria] || t.categoria : 'Geral'} · {t.secoes?.length || 0} seções
+                                                {t.secoes?.length || 0} seções
                                             </p>
                                         </button>
                                     ))}
