@@ -2,7 +2,7 @@
 
 import { DataTable, Column } from '@/components/ui/DataTable'
 import Link from 'next/link'
-import { Plus, Users, FileText } from 'lucide-react'
+import { Plus, Users, FileText, Pencil } from 'lucide-react'
 
 interface Atividade extends Record<string, unknown> {
     id: string
@@ -46,6 +46,9 @@ export function AtividadesTable({ initialData }: AtividadesTableProps) {
             key: 'id',
             render: (row) => (
                 <div className="flex items-center gap-4">
+                    <Link href={`/atividades/${row.id}/editar`} className="text-gray-500 hover:text-[#1A3C4A] hover:underline flex items-center gap-1 text-sm font-medium">
+                        <Pencil className="w-4 h-4" /> Editar
+                    </Link>
                     <Link href={`/atividades/presencas/${row.id}`} className="text-[#2D9E6B] hover:underline flex items-center gap-1 text-sm font-medium">
                         <Users className="w-4 h-4" /> Presenças
                     </Link>
