@@ -12,19 +12,25 @@ export default async function AtividadePublicaPage({ params }: { params: { id: s
 
     const { data: atividade } = await supabase
         .from('atividades')
-        .select('*, inscricoes(id, cidadao_id)')
+        .select('*')
         .eq('id', params.id)
         .eq('visibilidade', 'publico')
         .single()
 
     if (!atividade) notFound()
 
+    // Buscar inscrições separadamente (entidade_id é polimórfico, sem FK direta)
+    const { data: inscricoes } = await supabase
+        .from('inscricoes')
+        .select('id, cidadao_id')
+        .eq('entidade_id', params.id)
+        .eq('entidade_tipo', 'atividade')
+
     const requiresSubscription = atividade.exige_inscricao
     const canSubscribe = atividade.status === 'publicada' || atividade.status === 'em_andamento'
 
-    // Verificamos se o usuário já está inscrito nesta atividade
-    const myEnrol = user ? (atividade.inscricoes as any[])?.find(i => i.cidadao_id === user.id) : null
-    const currentInscritos = (atividade.inscricoes as any[])?.length || 0
+    const myEnrol = user ? inscricoes?.find(i => i.cidadao_id === user.id) : null
+    const currentInscritos = inscricoes?.length || 0
     const hasVagas = !atividade.vagas || currentInscritos < atividade.vagas
 
     return (
