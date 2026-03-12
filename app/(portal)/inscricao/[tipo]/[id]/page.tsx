@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react'
+import { CheckCircle, AlertTriangle, ArrowLeft, CalendarDays, MapPin, Users, Tag } from 'lucide-react'
 
 interface CampoFormulario {
     id: string
@@ -137,7 +137,7 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                     }
                 }
             } else if (tipo === 'atividade') {
-                const { data: a } = await supabase.from('atividades').select('titulo, tipo, exige_inscricao, vagas').eq('id', id).single()
+                const { data: a } = await supabase.from('atividades').select('titulo, tipo, exige_inscricao, vagas, datas, locais, publico_alvo, descricao').eq('id', id).single()
                 setEntidade(a)
             }
 
@@ -253,10 +253,17 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                             Formulário de Inscrição
                         </span>
                         <h1 className="text-2xl md:text-3xl font-bold">{entidade?.titulo || 'Carregando...'}</h1>
-                        {turma?.data_inicio && (
+                        {tipo === 'curso' && turma?.data_inicio && (
                             <p className="text-white/60 text-sm mt-2">
                                 {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}
                                 {turma.data_fim && ` até ${new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}`}
+                            </p>
+                        )}
+                        {tipo === 'atividade' && entidade?.datas?.[0]?.data && (
+                            <p className="text-white/60 text-sm mt-2 flex items-center gap-2">
+                                <CalendarDays className="w-4 h-4" />
+                                {new Date(entidade.datas[0].data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                                {entidade.datas[0].hora_inicio && ` · ${entidade.datas[0].hora_inicio}`}
                             </p>
                         )}
                     </div>
@@ -316,8 +323,8 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                             </div>
                         )}
 
-                        {/* Resumo quando não há formulário personalizado */}
-                        {formulario.length === 0 && turma && (
+                        {/* Resumo curso */}
+                        {formulario.length === 0 && turma && tipo === 'curso' && (
                             <div className="border border-gray-100 rounded-lg p-5 bg-gray-50">
                                 <h3 className="font-semibold text-gray-800 mb-2">Resumo da Inscrição</h3>
                                 <ul className="text-sm text-gray-600 space-y-2">
@@ -326,6 +333,64 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                                     {turma?.data_inicio && <li><strong>Início:</strong> {new Date(turma.data_inicio + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
                                     {turma?.data_fim && <li><strong>Encerramento:</strong> {new Date(turma.data_fim + 'T12:00:00').toLocaleDateString('pt-BR')}</li>}
                                 </ul>
+                            </div>
+                        )}
+
+                        {/* Resumo atividade */}
+                        {tipo === 'atividade' && entidade && (
+                            <div className="rounded-2xl border border-gray-100 bg-gray-50 overflow-hidden">
+                                <div className="px-6 py-4 border-b border-gray-100">
+                                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">Resumo da Atividade</h3>
+                                </div>
+                                <div className="divide-y divide-gray-100">
+                                    {entidade.tipo && (
+                                        <div className="flex items-center gap-3 px-6 py-4">
+                                            <Tag className="w-4 h-4 text-[var(--secondary)] flex-shrink-0" />
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Tipo</p>
+                                                <p className="text-sm font-bold text-[#1A3C4A] capitalize">{entidade.tipo}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {entidade.datas?.length > 0 && (
+                                        <div className="flex items-start gap-3 px-6 py-4">
+                                            <CalendarDays className="w-4 h-4 text-[var(--secondary)] flex-shrink-0 mt-0.5" />
+                                            <div className="flex-1">
+                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">Datas</p>
+                                                <ul className="space-y-1.5">
+                                                    {entidade.datas.map((d: any, i: number) => (
+                                                        <li key={i} className="text-sm font-bold text-[#1A3C4A]">
+                                                            {new Date(d.data + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                                            {d.hora_inicio && <span className="font-normal text-gray-500"> · {d.hora_inicio}{d.hora_fim ? ` às ${d.hora_fim}` : ''}</span>}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {entidade.locais?.length > 0 && (
+                                        <div className="flex items-start gap-3 px-6 py-4">
+                                            <MapPin className="w-4 h-4 text-[var(--secondary)] flex-shrink-0 mt-0.5" />
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mb-2">Local</p>
+                                                {entidade.locais.map((l: any, i: number) => (
+                                                    <p key={i} className="text-sm font-bold text-[#1A3C4A]">
+                                                        {l.nome || l.rua || l.endereco || 'Sede da ONG'}
+                                                    </p>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {entidade.publico_alvo && (
+                                        <div className="flex items-center gap-3 px-6 py-4">
+                                            <Users className="w-4 h-4 text-[var(--secondary)] flex-shrink-0" />
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Público-alvo</p>
+                                                <p className="text-sm font-bold text-[#1A3C4A]">{entidade.publico_alvo}</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         )}
 
