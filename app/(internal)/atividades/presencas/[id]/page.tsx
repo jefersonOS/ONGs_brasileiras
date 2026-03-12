@@ -226,92 +226,92 @@ export default function PresencasPage({ params }: { params: { id: string } }) {
                         </button>
                     </div>
 
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                        <table className="w-full text-left">
-                            <thead className="bg-gray-50/50 border-b border-gray-100">
-                                <tr>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">Participante</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">CPF / WhatsApp</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">Dados do Formulário</th>
-                                    <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-50">
-                                {inscricoes.length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="px-6 py-12 text-center text-gray-400 italic text-sm">Nenhum participante encontrado.</td>
-                                    </tr>
-                                ) : (
-                                    inscricoes.filter(i => !busca || i.users?.nome?.toLowerCase().includes(busca.toLowerCase()) || i.users?.cpf?.includes(busca)).map(insc => {
-                                        const formEntries = insc.dados_formulario
-                                            ? Object.entries(insc.dados_formulario as Record<string, string>).filter(([, v]) => v)
-                                            : []
-                                        const formularioCampos: Record<string, string> = atividade?.formulario_inscricao
-                                            ? Object.fromEntries(atividade.formulario_inscricao.map((c: any) => [c.id, c.label]))
-                                            : {}
-                                        return (
-                                            <tr key={insc.id} className="hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-6 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-9 h-9 bg-teal-100 text-[#2D9E6B] rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
-                                                            {insc.users?.nome?.[0] || '?'}
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-sm font-bold text-gray-800 leading-none mb-1">{insc.users?.nome || 'Sem nome'}</p>
-                                                            <p className="text-[10px] text-gray-500 font-medium">{insc.users?.email || '—'}</p>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-6 py-4 space-y-1">
-                                                    <code className="block bg-gray-100 px-2 py-1 rounded text-[10px] text-gray-600 tracking-wider">
-                                                        {insc.users?.cpf
-                                                            ? insc.users.cpf.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')
-                                                            : '—'}
-                                                    </code>
-                                                    {insc.users?.whatsapp && (
-                                                        <p className="text-[10px] text-green-600 font-medium">{insc.users.whatsapp}</p>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {formEntries.length > 0 ? (
-                                                        <div className="space-y-0.5">
-                                                            {formEntries.map(([k, v]) => (
-                                                                <p key={k} className="text-[11px] text-gray-600">
-                                                                    <span className="font-bold text-gray-400 uppercase text-[9px]">{formularioCampos[k] || k}: </span>
-                                                                    {v}
-                                                                </p>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span className="text-[10px] text-gray-300">—</span>
-                                                    )}
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    <div className="flex justify-center">
-                                                        <button
-                                                            onClick={() => togglePresenca(insc.id)}
-                                                            className={clsx(
-                                                                "w-24 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2 border",
-                                                                presencas[insc.id]
-                                                                    ? "bg-green-500 text-white border-green-400 shadow-[0_4px_12px_rgba(34,197,94,0.3)]"
-                                                                    : "bg-white text-gray-400 border-gray-200 hover:border-red-300 hover:text-red-500 hover:bg-red-50"
-                                                            )}
-                                                        >
-                                                            {presencas[insc.id] ? (
-                                                                <><CheckCircle className="w-3 h-3" /> Presente</>
-                                                            ) : (
-                                                                <><XCircle className="w-3 h-3" /> Ausente</>
-                                                            )}
-                                                        </button>
-                                                    </div>
-                                                </td>
+                    {(() => {
+                        const camposForm: { id: string, label: string }[] = atividade?.formulario_inscricao || []
+                        const colCount = 2 + camposForm.length + 1 // participante + campos + status
+                        const filtrados = inscricoes.filter(i =>
+                            !busca ||
+                            i.users?.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+                            i.users?.cpf?.includes(busca)
+                        )
+                        return (
+                            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="bg-gray-50/50 border-b border-gray-100">
+                                        <tr>
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 whitespace-nowrap">Participante</th>
+                                            {camposForm.map(c => (
+                                                <th key={c.id} className="px-4 py-4 text-[10px] font-black uppercase text-gray-400 whitespace-nowrap">{c.label}</th>
+                                            ))}
+                                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 text-center whitespace-nowrap">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-50">
+                                        {filtrados.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={colCount} className="px-6 py-12 text-center text-gray-400 italic text-sm">Nenhum participante encontrado.</td>
                                             </tr>
-                                        )
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+                                        ) : (
+                                            filtrados.map(insc => {
+                                                const dados: Record<string, string> = insc.dados_formulario || {}
+                                                return (
+                                                    <tr key={insc.id} className="hover:bg-gray-50/50 transition-colors">
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-9 h-9 bg-teal-100 text-[#2D9E6B] rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0">
+                                                                    {insc.users?.nome?.[0] || '?'}
+                                                                </div>
+                                                                <div>
+                                                                    <p className="text-sm font-bold text-gray-800 leading-none mb-1 whitespace-nowrap">{insc.users?.nome || 'Sem nome'}</p>
+                                                                    <p className="text-[10px] text-gray-500 font-medium">{insc.users?.email || '—'}</p>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        {camposForm.map(c => {
+                                                            const labelLower = c.label.toLowerCase()
+                                                            let valor = dados[c.id] || ''
+                                                            // fallback: busca no users para CPF e WhatsApp
+                                                            if (!valor && labelLower.includes('cpf') && insc.users?.cpf) {
+                                                                const raw = insc.users.cpf.replace(/\D/g, '')
+                                                                valor = raw.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4')
+                                                            }
+                                                            if (!valor && (c.is_whatsapp || labelLower.includes('whatsapp')) && insc.users?.whatsapp) {
+                                                                valor = insc.users.whatsapp
+                                                            }
+                                                            return (
+                                                                <td key={c.id} className="px-4 py-4">
+                                                                    <span className="text-sm text-gray-700 whitespace-nowrap">{valor || <span className="text-gray-300">—</span>}</span>
+                                                                </td>
+                                                            )
+                                                        })}
+                                                        <td className="px-6 py-4">
+                                                            <div className="flex justify-center">
+                                                                <button
+                                                                    onClick={() => togglePresenca(insc.id)}
+                                                                    className={clsx(
+                                                                        "w-24 py-2 rounded-xl text-[10px] font-black uppercase transition-all flex items-center justify-center gap-2 border",
+                                                                        presencas[insc.id]
+                                                                            ? "bg-green-500 text-white border-green-400 shadow-[0_4px_12px_rgba(34,197,94,0.3)]"
+                                                                            : "bg-white text-gray-400 border-gray-200 hover:border-red-300 hover:text-red-500 hover:bg-red-50"
+                                                                    )}
+                                                                >
+                                                                    {presencas[insc.id] ? (
+                                                                        <><CheckCircle className="w-3 h-3" /> Presente</>
+                                                                    ) : (
+                                                                        <><XCircle className="w-3 h-3" /> Ausente</>
+                                                                    )}
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )
+                    })()}
                 </div>
 
                 {/* Sidebar com Opções */}
