@@ -164,6 +164,9 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
         const campoWhatsApp = formulario.find(c => c.is_whatsapp)
         const telefoneWhatsApp = campoWhatsApp ? (respostas[campoWhatsApp.id] || whatsapp || null) : whatsapp || null
 
+        const campoCPF = formulario.find(c => c.label.toLowerCase().includes('cpf'))
+        const cpf = campoCPF ? respostas[campoCPF.id] || null : null
+
         const { data: { user: currentUser } } = await supabase.auth.getUser()
 
         const res = await fetch('/api/inscricao/confirmar', {
@@ -176,7 +179,9 @@ function InscricaoForm({ params }: { params: { tipo: string, id: string } }) {
                 cidadaoId: user.id,
                 tenantId: currentUser?.user_metadata?.tenant_id,
                 dadosFormulario: respostas,
+                formulario,
                 telefoneWhatsApp,
+                cpf,
             })
         })
 

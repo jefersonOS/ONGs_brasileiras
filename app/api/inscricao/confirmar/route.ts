@@ -4,7 +4,7 @@ import { WhatsAppService } from '@/lib/whatsapp-service'
 
 export async function POST(req: Request) {
     try {
-        const { tipo, id, turmaId, cidadaoId, tenantId, dadosFormulario, telefoneWhatsApp } = await req.json()
+        const { tipo, id, turmaId, cidadaoId, tenantId, dadosFormulario, formulario, telefoneWhatsApp, cpf } = await req.json()
         const supabase = createClient()
         const adminSupabase = createAdminClient()
 
@@ -29,6 +29,24 @@ export async function POST(req: Request) {
                     .update({ tenant_id: tenantId })
                     .eq('id', u.id)
                     .is('tenant_id', null)
+            }
+
+            // Salva CPF e WhatsApp do formulário de inscrição no perfil do usuário
+            const cpfToSave = cpf || (() => {
+                if (!formulario || !dadosFormulario) return null
+                const campoCPF = formulario.find((c: any) => c.label?.toLowerCase().includes('cpf'))
+                return campoCPF ? dadosFormulario[campoCPF.id] || null : null
+            })()
+            const whatsappToSave = telefoneWhatsApp || (() => {
+                if (!formulario || !dadosFormulario) return null
+                const campoWa = formulario.find((c: any) => c.is_whatsapp)
+                return campoWa ? dadosFormulario[campoWa.id] || null : null
+            })()
+            if (cpfToSave || whatsappToSave) {
+                const updates: Record<string, string> = {}
+                if (cpfToSave) updates.cpf = cpfToSave.replace(/\D/g, '')
+                if (whatsappToSave) updates.whatsapp = whatsappToSave
+                await adminSupabase.from('users').update(updates).eq('id', cidadaoId)
             }
         }
 
