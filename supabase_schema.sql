@@ -52,6 +52,7 @@ CREATE TABLE projeto_documentos (
     'outro'
   )),
   arquivo_url text,
+  conteudo jsonb DEFAULT '[]',
   status text DEFAULT 'pendente' CHECK (status IN ('pendente', 'enviado', 'aprovado', 'rejeitado')),
   observacao text,
   created_at timestamptz DEFAULT now(),

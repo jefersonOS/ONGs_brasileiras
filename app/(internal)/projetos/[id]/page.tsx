@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
-    ArrowLeft, Upload, FileText, Download, Plus, Trash2,
-    Clock, CheckCircle, XCircle, Send, RefreshCw, Paperclip
+    ArrowLeft, FileText, Plus, Trash2,
+    Clock, CheckCircle, XCircle, Send, Paperclip, Upload, RefreshCw
 } from 'lucide-react'
 
 interface Projeto {
@@ -46,159 +46,54 @@ const STATUS_CONFIG: Record<string, { label: string, color: string, icon: React.
     rejeitado: { label: 'Rejeitado', color: 'bg-red-100 text-red-700', icon: <XCircle className="w-3 h-3" /> },
 }
 
-function DocumentoCard({ doc, projetoId, onUpdate, onDelete }: {
+function DocumentoCard({ doc, projetoId, onDelete }: {
     doc: Documento
     projetoId: string
-    onUpdate: (updated: Documento) => void
     onDelete: (id: string) => void
 }) {
-    const fileInputRef = useRef<HTMLInputElement>(null)
-    const [uploading, setUploading] = useState(false)
-    const [uploadError, setUploadError] = useState<string | null>(null)
-    const [observacao, setObservacao] = useState(doc.observacao || '')
-    const [savingObs, setSavingObs] = useState(false)
-    const supabase = createClient()
-
     const status = STATUS_CONFIG[doc.status] || STATUS_CONFIG.pendente
 
-    const handleUpload = async (file: File) => {
-        setUploading(true)
-        setUploadError(null)
-        try {
-            const form = new FormData()
-            form.append('file', file)
-            form.append('documentoId', doc.id)
-            form.append('projetoId', projetoId)
-
-            const res = await fetch('/api/projetos/documentos/upload', { method: 'POST', body: form })
-            const data = await res.json()
-            if (!res.ok) throw new Error(data.error)
-            onUpdate({ ...doc, arquivo_url: data.url, status: 'enviado' })
-        } catch (e: any) {
-            setUploadError(e.message || 'Erro ao enviar arquivo')
-        } finally {
-            setUploading(false)
-        }
-    }
-
-    const handleSaveObservacao = async () => {
-        setSavingObs(true)
-        await supabase
-            .from('projeto_documentos')
-            .update({ observacao, updated_at: new Date().toISOString() })
-            .eq('id', doc.id)
-        setSavingObs(false)
-        onUpdate({ ...doc, observacao })
-    }
-
-    const handleRemoveArquivo = async () => {
-        await supabase
-            .from('projeto_documentos')
-            .update({ arquivo_url: null, status: 'pendente', updated_at: new Date().toISOString() })
-            .eq('id', doc.id)
-        onUpdate({ ...doc, arquivo_url: null, status: 'pendente' })
-    }
-
     return (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col gap-3 hover:border-gray-300 transition-colors">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-2">
-                <div className="flex items-start gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-lg bg-[#1A3C4A]/8 flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-4 h-4 text-[#1A3C4A]" />
+        <div className="relative bg-white border border-gray-200 rounded-xl shadow-sm hover:border-[#2D9E6B]/50 hover:shadow-md transition-all group">
+            <Link href={`/projetos/${projetoId}/documentos/${doc.id}`} className="block p-5">
+                <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-[#1A3C4A]/8 flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-4 h-4 text-[#1A3C4A]" />
+                        </div>
+                        <div className="min-w-0">
+                            <p className="font-semibold text-gray-800 text-sm leading-tight group-hover:text-[#1A3C4A]">{doc.titulo}</p>
+                            <p className="text-[11px] text-gray-400 mt-0.5">{CATEGORIA_LABEL[doc.categoria] || doc.categoria}</p>
+                        </div>
                     </div>
-                    <div className="min-w-0">
-                        <p className="font-semibold text-gray-800 text-sm leading-tight">{doc.titulo}</p>
-                        <p className="text-[11px] text-gray-400 mt-0.5">{CATEGORIA_LABEL[doc.categoria] || doc.categoria}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${status.color}`}>
+                    <span className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0 ${status.color}`}>
                         {status.icon} {status.label}
                     </span>
-                    <button
-                        onClick={() => onDelete(doc.id)}
-                        className="p-1 text-gray-300 hover:text-red-400 transition-colors rounded"
-                        title="Remover documento"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
                 </div>
-            </div>
 
-            {/* Descrição */}
-            {doc.descricao && (
-                <p className="text-xs text-gray-500 leading-relaxed">{doc.descricao}</p>
-            )}
-
-            {/* Arquivo anexado */}
-            {doc.arquivo_url ? (
-                <div className="flex items-center gap-2 p-2.5 bg-green-50 border border-green-200 rounded-lg">
-                    <Paperclip className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                    <a
-                        href={doc.arquivo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-green-700 font-medium hover:underline flex-1 truncate"
-                    >
-                        {doc.arquivo_url.split('/').pop()?.split('?')[0] || 'Ver arquivo'}
-                    </a>
-                    <button onClick={handleRemoveArquivo} className="text-xs text-gray-400 hover:text-red-500 flex-shrink-0">
-                        remover
-                    </button>
-                </div>
-            ) : (
-                <div className="border-2 border-dashed border-gray-200 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-400 mb-2">Nenhum arquivo anexado</p>
-                </div>
-            )}
-
-            {uploadError && <p className="text-xs text-red-500">{uploadError}</p>}
-
-            {/* Ações de upload */}
-            <div className="flex gap-2">
-                <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#1A3C4A] text-white rounded-lg hover:bg-[#2E6B7A] disabled:opacity-50 transition-colors flex-1 justify-center"
-                >
-                    {uploading ? (
-                        <><RefreshCw className="w-3 h-3 animate-spin" /> Enviando...</>
-                    ) : (
-                        <><Upload className="w-3 h-3" /> {doc.arquivo_url ? 'Substituir' : 'Anexar arquivo'}</>
-                    )}
-                </button>
-                {doc.arquivo_url && (
-                    <a
-                        href={doc.arquivo_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                        <Download className="w-3 h-3" /> Baixar
-                    </a>
+                {doc.descricao && (
+                    <p className="text-xs text-gray-500 leading-relaxed mb-3 line-clamp-2">{doc.descricao}</p>
                 )}
-            </div>
 
-            <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(f) }}
-            />
+                {doc.arquivo_url ? (
+                    <div className="flex items-center gap-1.5 text-xs text-green-600">
+                        <Paperclip className="w-3 h-3" />
+                        <span className="truncate">{doc.arquivo_url.split('/').pop()?.split('?')[0] || 'Arquivo anexado'}</span>
+                    </div>
+                ) : (
+                    <p className="text-xs text-gray-300 italic">Sem arquivo anexado</p>
+                )}
 
-            {/* Observação */}
-            <div>
-                <textarea
-                    value={observacao}
-                    onChange={e => setObservacao(e.target.value)}
-                    onBlur={handleSaveObservacao}
-                    rows={2}
-                    placeholder="Observação (salvo automaticamente)..."
-                    className="w-full px-2.5 py-2 text-xs border border-gray-200 rounded-lg resize-none focus:outline-none focus:border-[#2D9E6B] text-gray-600 placeholder-gray-300"
-                />
-                {savingObs && <p className="text-[10px] text-gray-400">Salvando...</p>}
-            </div>
+                <p className="text-[10px] text-gray-400 mt-3">Clique para abrir o formulário</p>
+            </Link>
+
+            <button
+                onClick={e => { e.preventDefault(); onDelete(doc.id) }}
+                className="absolute top-3 right-10 p-1 text-gray-300 hover:text-red-400 transition-colors rounded opacity-0 group-hover:opacity-100"
+                title="Remover documento"
+            >
+                <Trash2 className="w-3.5 h-3.5" />
+            </button>
         </div>
     )
 }
@@ -242,9 +137,6 @@ export default function ProjetoDetalhe() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [id])
 
-    const handleUpdate = (updated: Documento) => {
-        setDocumentos(prev => prev.map(d => d.id === updated.id ? updated : d))
-    }
 
     const handleDelete = async (docId: string) => {
         await supabase.from('projeto_documentos').delete().eq('id', docId)
@@ -472,7 +364,6 @@ export default function ProjetoDetalhe() {
                                 key={doc.id}
                                 doc={doc}
                                 projetoId={id}
-                                onUpdate={handleUpdate}
                                 onDelete={handleDelete}
                             />
                         ))}
