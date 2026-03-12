@@ -13,11 +13,26 @@ export default async function AtividadesListaPublicaPage() {
 
     const { data: atividades } = await supabase
         .from('atividades')
-        .select(`*, inscricoes(id)`)
+        .select('*')
         .eq('tenant_id', tenant.id)
         .eq('visibilidade', 'publico')
         .in('status', ['publicada', 'em_andamento'])
         .order('created_at', { ascending: false })
+
+    // Busca contagem de inscrições separadamente (inscricoes usa entidade_id polimórfico, sem FK direta)
+    const atividadeIds = atividades?.map(a => a.id) || []
+    const { data: inscricoes } = atividadeIds.length > 0
+        ? await supabase
+            .from('inscricoes')
+            .select('entidade_id')
+            .in('entidade_id', atividadeIds)
+            .eq('entidade_tipo', 'atividade')
+        : { data: [] }
+
+    const inscricoesCount: Record<string, number> = {}
+    inscricoes?.forEach((i: { entidade_id: string }) => {
+        inscricoesCount[i.entidade_id] = (inscricoesCount[i.entidade_id] || 0) + 1
+    })
 
     return (
         <div className="animate-in fade-in duration-700">
@@ -42,7 +57,7 @@ export default async function AtividadesListaPublicaPage() {
                 ) : (
                     <div className="grid grid-cols-1 gap-6">
                         {atividades.map(ativ => {
-                            const inscritos = ativ.inscricoes?.length || 0
+                            const inscritos = inscricoesCount[ativ.id] || 0
                             const vagasDisp = ativ.vagas ? ativ.vagas - inscritos : null
 
                             return (
