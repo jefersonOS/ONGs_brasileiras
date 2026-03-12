@@ -33,7 +33,6 @@ interface Template {
     id: string
     nome: string
     descricao: string | null
-    categoria: string | null
     secoes: any[]
 }
 
@@ -149,8 +148,8 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
     const [salvando, setSalvando] = useState(false)
 
     useEffect(() => {
-        supabase.from('templates_documento')
-            .select('id, nome, descricao, categoria, secoes')
+        supabase.from('templates_plano')
+            .select('id, nome, descricao, secoes')
             .order('created_at', { ascending: false })
             .then(({ data }) => setTemplates(data || []))
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -197,20 +196,18 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
         setTemplateSelecionado(t)
         setConteudoGerado(t.secoes)
         if (!titulo.trim()) setTitulo(t.nome)
-        if (t.categoria) setCategoria(t.categoria)
     }
 
     const handleSalvarTemplate = async () => {
         if (!nomeTemplate.trim() || !conteudoGerado) return
         setSalvandoTemplate(true)
-        await supabase.from('templates_documento').insert({
+        await supabase.from('templates_plano').insert({
             tenant_id: tenantId,
             nome: nomeTemplate.trim(),
-            categoria,
             secoes: conteudoGerado
         })
-        const { data } = await supabase.from('templates_documento')
-            .select('id, nome, descricao, categoria, secoes')
+        const { data } = await supabase.from('templates_plano')
+            .select('id, nome, descricao, secoes')
             .order('created_at', { ascending: false })
         setTemplates(data || [])
         setNomeTemplate('')
@@ -278,15 +275,19 @@ function NovoDocModal({ projetoId, tenantId, onClose, onCreated }: {
                         </div>
                         <div>
                             <label className="block text-xs font-semibold text-gray-600 mb-1">Categoria</label>
-                            <select
+                            <input
+                                type="text"
+                                list="categorias-sugestoes"
                                 value={categoria}
                                 onChange={e => setCategoria(e.target.value)}
-                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:border-[#2D9E6B]"
-                            >
-                                {Object.entries(CATEGORIA_LABEL).map(([v, l]) => (
-                                    <option key={v} value={v}>{l}</option>
+                                placeholder="Ex: Relatório Parcial, Contrato..."
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#2D9E6B]"
+                            />
+                            <datalist id="categorias-sugestoes">
+                                {Object.entries(CATEGORIA_LABEL).map(([, l]) => (
+                                    <option key={l} value={l} />
                                 ))}
-                            </select>
+                            </datalist>
                         </div>
                         <div>
                             <label className="block text-xs font-semibold text-gray-600 mb-1">Descrição</label>

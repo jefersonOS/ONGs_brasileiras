@@ -120,6 +120,25 @@ const SECOES_PADRAO: Record<string, Secao[]> = {
     ],
 }
 
+// ─── resolve categoria → chave de SECOES_PADRAO ───────────────────────────────
+
+const LABEL_TO_KEY: Record<string, string> = {
+    'projeto básico': 'projeto_basico',
+    'plano de trabalho': 'plano_trabalho',
+    'relatório parcial': 'relatorio_parcial',
+    'relatório final': 'relatorio_final',
+    'prestação de contas': 'prestacao_contas',
+    'ata de reunião': 'ata_reuniao',
+    'contrato': 'contrato',
+    'outro': 'outro',
+}
+
+function resolveCategoria(cat: string): string {
+    if (!cat) return 'outro'
+    if (SECOES_PADRAO[cat]) return cat
+    return LABEL_TO_KEY[cat.toLowerCase()] ?? 'outro'
+}
+
 // ─── helpers de tabela ────────────────────────────────────────────────────────
 
 function getFinancialCols(colunas: string[]) {
@@ -168,7 +187,7 @@ export default function DocumentoPage() {
             if (Array.isArray(conteudoSalvo) && conteudoSalvo.length > 0) {
                 setSecoes(conteudoSalvo)
             } else {
-                setSecoes(SECOES_PADRAO[documento?.categoria] ?? SECOES_PADRAO.outro)
+                setSecoes(SECOES_PADRAO[resolveCategoria(documento?.categoria)] ?? SECOES_PADRAO.outro)
             }
 
             setLoading(false)

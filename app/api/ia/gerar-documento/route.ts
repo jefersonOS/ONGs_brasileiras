@@ -21,7 +21,10 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Ideia central é obrigatória' }, { status: 400 })
         }
 
-        const contexto = CATEGORIA_CONTEXTO[categoria] || CATEGORIA_CONTEXTO.outro
+        // Support both keys (relatorio_parcial) and labels (Relatório Parcial)
+        const contexto = CATEGORIA_CONTEXTO[categoria]
+            || CATEGORIA_CONTEXTO[categoria?.toLowerCase().replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '')]
+            || `Documento do tipo "${categoria}" para uma ONG brasileira.`
         const model = await getAIProvider()
 
         const systemPrompt = `Você é um especialista em elaboração de documentos para ONGs brasileiras (MROSC).
