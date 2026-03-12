@@ -227,7 +227,7 @@ export default function PresencasPage({ params }: { params: { id: string } }) {
                     </div>
 
                     {(() => {
-                        const camposForm: { id: string, label: string }[] = atividade?.formulario_inscricao || []
+                        const camposForm: { id: string, label: string, is_whatsapp?: boolean }[] = atividade?.formulario_inscricao || []
                         const colCount = 2 + camposForm.length + 1 // participante + campos + status
                         const filtrados = inscricoes.filter(i =>
                             !busca ||
