@@ -7,6 +7,7 @@ import {
     FileText, Users, Upload, Eye,
     CheckCircle, AlertCircle, Loader2, LayoutTemplate, Trash2
 } from 'lucide-react'
+import Link from 'next/link'
 import { CertPreview } from '@/components/internal/CertPreview'
 import { CertBlocosEditor } from '@/components/internal/CertBlocosEditor'
 import { BlocoCert } from '@/lib/pdf-service'
@@ -598,6 +599,17 @@ export default function ConfiguracoesPage() {
 
                         {activeTab === 'certificados' && (
                             <div className="animate-in fade-in duration-500">
+                                {/* Link para o editor visual completo */}
+                                <Link href="/configuracoes/certificados"
+                                    className="flex items-center justify-between p-5 mb-8 bg-[#1A3C4A] text-white rounded-[32px] shadow-xl shadow-[#1A3C4A]/20 hover:bg-[#1A3C4A]/90 transition-all group">
+                                    <div>
+                                        <p className="font-black uppercase text-sm tracking-wider">Editor Visual de Certificados</p>
+                                        <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest mt-0.5">Arraste e posicione elementos livremente no layout</p>
+                                    </div>
+                                    <div className="flex items-center gap-2 bg-[#2D9E6B] px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider group-hover:bg-[#2D9E6B]/90 transition-colors shrink-0">
+                                        <FileText className="w-4 h-4" /> Abrir Editor
+                                    </div>
+                                </Link>
                                 <div className="grid grid-cols-1 2xl:grid-cols-[1fr_500px] gap-10">
                                     <div className="space-y-6">
                                         {/* Preview mobile (oculto em telas grandes) */}

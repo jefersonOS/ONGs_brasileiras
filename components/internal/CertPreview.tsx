@@ -48,6 +48,7 @@ interface CertPreviewProps {
     exemploAluno?: string
     exemploCurso?: string
     exemploCH?: string
+    hideLabels?: boolean
 }
 
 const DEFAULT_ALUNO = 'MARIA DA SILVA SANTOS'
@@ -72,7 +73,7 @@ function RichText({ text, style }: { text: string, style: React.CSSProperties })
     )
 }
 
-export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tenantNome, scale = 0.42, exemploAluno, exemploCurso, exemploCH }: CertPreviewProps) {
+export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tenantNome, scale = 0.42, exemploAluno, exemploCurso, exemploCH, hideLabels }: CertPreviewProps) {
     const EXEMPLO_ALUNO = exemploAluno || DEFAULT_ALUNO
     const EXEMPLO_CURSO = exemploCurso || DEFAULT_CURSO
     const EXEMPLO_CH = exemploCH || '40'
@@ -130,15 +131,17 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
 
     return (
         <div className="space-y-3">
-            <div className="flex items-center justify-between">
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Preview em Tempo Real</p>
-                <div className="flex items-center gap-2">
-                    {usaBlocos && (
-                        <span className="text-[9px] font-black text-[#2D9E6B] bg-green-50 px-2 py-1 rounded-full border border-green-100">Modo Blocos</span>
-                    )}
-                    <span className="text-[9px] font-bold text-gray-300 bg-gray-100 px-2 py-1 rounded-full">Dados de exemplo</span>
+            {!hideLabels && (
+                <div className="flex items-center justify-between">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Preview em Tempo Real</p>
+                    <div className="flex items-center gap-2">
+                        {usaBlocos && (
+                            <span className="text-[9px] font-black text-[#2D9E6B] bg-green-50 px-2 py-1 rounded-full border border-green-100">Modo Blocos</span>
+                        )}
+                        <span className="text-[9px] font-bold text-gray-300 bg-gray-100 px-2 py-1 rounded-full">Dados de exemplo</span>
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div className="relative rounded-xl overflow-hidden shadow-2xl shadow-black/20 border border-gray-200"
                 style={{ width: outerW, height: outerH }}>
