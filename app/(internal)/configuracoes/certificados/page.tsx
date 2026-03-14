@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { BlocoCert } from '@/lib/pdf-service'
 import { v4 as uuidv4 } from 'uuid'
@@ -58,6 +58,7 @@ export default function CertificadosEditorPage() {
     const [blocos, setBlocos] = useState<BlocoCert[]>([])
     const [selectedId, setSelectedId] = useState<string | null>(null)
     const [copied, setCopied] = useState('')
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
 
     // Visual
     const [corPrimaria, setCorPrimaria] = useState('#1A3C4A')
@@ -212,9 +213,23 @@ export default function CertificadosEditorPage() {
     }
 
     const copyToken = (token: string) => {
-        navigator.clipboard.writeText(token)
-        setCopied(token)
-        setTimeout(() => setCopied(''), 1500)
+        const ta = textareaRef.current
+        if (selectedId && ta) {
+            const start = ta.selectionStart
+            const end = ta.selectionEnd
+            const current = ta.value
+            const next = current.slice(0, start) + token + current.slice(end)
+            updateBloco(selectedId, { texto: next })
+            // Restore cursor after React re-render
+            requestAnimationFrame(() => {
+                ta.focus()
+                ta.setSelectionRange(start + token.length, start + token.length)
+            })
+        } else {
+            navigator.clipboard.writeText(token)
+            setCopied(token)
+            setTimeout(() => setCopied(''), 1500)
+        }
     }
 
     const set = (field: string, value: any) => setCertData((prev: any) => ({ ...prev, [field]: value }))
@@ -596,7 +611,7 @@ export default function CertificadosEditorPage() {
                             </div>
                             <div className="space-y-1.5">
                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Texto</label>
-                                <textarea rows={2} value={selectedBloco.texto}
+                                <textarea ref={textareaRef} rows={2} value={selectedBloco.texto}
                                     onChange={e => updateBloco(selectedBloco.id, { texto: e.target.value })}
                                     className="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-sm font-medium resize-none font-mono focus:ring-2 focus:ring-[#2D9E6B]/20" />
                             </div>
