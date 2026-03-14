@@ -576,6 +576,10 @@ export default function CertificadosEditorPage() {
                             tenantNome={tenant?.nome || ''}
                             scale={0.85}
                             hideLabels
+                            editable
+                            selectedId={selectedId ?? undefined}
+                            onSelectBloco={setSelectedId}
+                            onUpdateBloco={updateBloco}
                         />
                     </div>
 

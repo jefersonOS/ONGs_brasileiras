@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { BlocoCert } from '@/lib/pdf-service'
 
 interface CertData {
@@ -49,6 +50,11 @@ interface CertPreviewProps {
     exemploCurso?: string
     exemploCH?: string
     hideLabels?: boolean
+    // Modo edição interativa
+    editable?: boolean
+    selectedId?: string
+    onSelectBloco?: (id: string | null) => void
+    onUpdateBloco?: (id: string, patch: Partial<BlocoCert>) => void
 }
 
 const DEFAULT_ALUNO = 'MARIA DA SILVA SANTOS'
@@ -73,7 +79,11 @@ function RichText({ text, style }: { text: string, style: React.CSSProperties })
     )
 }
 
-export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tenantNome, scale = 0.42, exemploAluno, exemploCurso, exemploCH, hideLabels }: CertPreviewProps) {
+export function CertPreview({
+    certData, blocos, corPrimaria, corSecundaria, tenantNome,
+    scale = 0.42, exemploAluno, exemploCurso, exemploCH, hideLabels,
+    editable, selectedId, onSelectBloco, onUpdateBloco,
+}: CertPreviewProps) {
     const EXEMPLO_ALUNO = exemploAluno || DEFAULT_ALUNO
     const EXEMPLO_CURSO = exemploCurso || DEFAULT_CURSO
     const EXEMPLO_CH = exemploCH || '40'
@@ -129,6 +139,59 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
             .replace(/\{\{instituicao\}\}/g, nomeInst)
         : `CONCLUIU COM ÊXITO O **CURSO DE ${EXEMPLO_CURSO.toUpperCase()}**. OFERECIDO NO **PERIODO DE ${EXEMPLO_PERIODO}**. COM **CARGA HORÁRIA DE ${EXEMPLO_CH}H**.`
 
+    // ── Drag state ─────────────────────────────────────────────────────────
+    const containerRef = useRef<HTMLDivElement>(null)
+    const dragRef = useRef<{
+        id: string
+        startMouseX: number
+        startMouseY: number
+        startBlocoX: number
+        startBlocoY: number
+        alignment: 'esquerda' | 'centro' | 'direita'
+    } | null>(null)
+    const isDragging = useRef(false)
+
+    const handleBlocoMouseDown = (e: React.MouseEvent, bloco: BlocoCert) => {
+        if (!editable) return
+        e.preventDefault()
+        e.stopPropagation()
+        onSelectBloco?.(bloco.id)
+        const rect = containerRef.current!.getBoundingClientRect()
+        dragRef.current = {
+            id: bloco.id,
+            startMouseX: e.clientX - rect.left,
+            startMouseY: e.clientY - rect.top,
+            startBlocoX: bloco.x,
+            startBlocoY: bloco.y,
+            alignment: bloco.alinhamento,
+        }
+        isDragging.current = false
+    }
+
+    const handleContainerMouseMove = (e: React.MouseEvent) => {
+        if (!dragRef.current || !containerRef.current || !onUpdateBloco) return
+        const rect = containerRef.current.getBoundingClientRect()
+        const deltaX = (e.clientX - rect.left - dragRef.current.startMouseX) / scale
+        const deltaY = (e.clientY - rect.top - dragRef.current.startMouseY) / scale
+        if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) isDragging.current = true
+        const patch: Partial<BlocoCert> = {
+            y: Math.max(0, Math.min(590, Math.round(dragRef.current.startBlocoY + deltaY))),
+        }
+        if (dragRef.current.alignment === 'esquerda') {
+            patch.x = Math.max(0, Math.min(800, Math.round(dragRef.current.startBlocoX + deltaX)))
+        } else if (dragRef.current.alignment === 'direita') {
+            patch.x = Math.max(0, Math.min(800, Math.round(dragRef.current.startBlocoX - deltaX)))
+        }
+        onUpdateBloco(dragRef.current.id, patch)
+    }
+
+    const handleContainerMouseUp = () => {
+        if (!isDragging.current && !dragRef.current) onSelectBloco?.(null)
+        dragRef.current = null
+        isDragging.current = false
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
     return (
         <div className="space-y-3">
             {!hideLabels && (
@@ -143,8 +206,14 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                 </div>
             )}
 
-            <div className="relative rounded-xl overflow-hidden shadow-2xl shadow-black/20 border border-gray-200"
-                style={{ width: outerW, height: outerH }}>
+            <div
+                ref={containerRef}
+                className="relative rounded-xl overflow-hidden shadow-2xl shadow-black/20 border border-gray-200"
+                style={{ width: outerW, height: outerH, userSelect: 'none' }}
+                onMouseMove={editable ? handleContainerMouseMove : undefined}
+                onMouseUp={editable ? handleContainerMouseUp : undefined}
+                onMouseLeave={editable ? () => { dragRef.current = null; isDragging.current = false; } : undefined}
+            >
                 <div style={{
                     width: W, height: H,
                     transform: `scale(${scale})`,
@@ -156,7 +225,7 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                     {/* Fundo */}
                     {certData.fundo_url && (
                         <img src={certData.fundo_url} alt=""
-                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
                     )}
 
                     {/* Borda */}
@@ -170,29 +239,39 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
                     {/* Logo — topo esquerdo */}
                     {certData.logo_url && (
                         <img src={certData.logo_url} alt="Logo"
-                            style={{ position: 'absolute', top: 28, left: 60, height: 60, objectFit: 'contain' }} />
+                            style={{ position: 'absolute', top: 28, left: 60, height: 60, objectFit: 'contain', pointerEvents: 'none' }} />
                     )}
 
                     {usaBlocos ? (
                         blocos!.map(bloco => {
                             const texto = resolveTokens(bloco.texto, previewTokens)
+                            const isSel = editable && selectedId === bloco.id
                             return (
-                                <div key={bloco.id} style={{
-                                    position: 'absolute',
-                                    top: bloco.y,
-                                    ...(bloco.alinhamento === 'centro'
-                                        ? { left: 0, right: 0, textAlign: 'center' as const }
-                                        : bloco.alinhamento === 'direita'
-                                        ? { right: bloco.x, textAlign: 'right' as const }
-                                        : { left: bloco.x, textAlign: 'left' as const }),
-                                    fontSize: bloco.tam,
-                                    fontWeight: bloco.negrito ? 900 : 400,
-                                    fontStyle: bloco.italico ? 'italic' : 'normal',
-                                    color: bloco.cor || textClr,
-                                    lineHeight: 1.4,
-                                    whiteSpace: 'pre-wrap',
-                                    pointerEvents: 'none',
-                                }}>
+                                <div
+                                    key={bloco.id}
+                                    onMouseDown={editable ? (e) => handleBlocoMouseDown(e, bloco) : undefined}
+                                    style={{
+                                        position: 'absolute',
+                                        top: bloco.y,
+                                        ...(bloco.alinhamento === 'centro'
+                                            ? { left: 0, right: 0, textAlign: 'center' as const }
+                                            : bloco.alinhamento === 'direita'
+                                            ? { right: bloco.x, textAlign: 'right' as const }
+                                            : { left: bloco.x, textAlign: 'left' as const }),
+                                        fontSize: bloco.tam,
+                                        fontWeight: bloco.negrito ? 900 : 400,
+                                        fontStyle: bloco.italico ? 'italic' : 'normal',
+                                        color: bloco.cor || textClr,
+                                        lineHeight: 1.4,
+                                        whiteSpace: 'pre-wrap',
+                                        pointerEvents: editable ? 'auto' : 'none',
+                                        cursor: editable ? 'grab' : 'default',
+                                        outline: isSel ? '2px dashed #2D9E6B' : 'none',
+                                        outlineOffset: 4,
+                                        padding: isSel ? '0 4px' : undefined,
+                                        boxSizing: 'border-box' as const,
+                                    }}
+                                >
                                     {texto}
                                 </div>
                             )
