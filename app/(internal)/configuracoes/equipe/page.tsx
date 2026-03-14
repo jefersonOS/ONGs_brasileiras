@@ -256,7 +256,7 @@ export default function GestaoEquipePage() {
                                     <UserPlus className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-[#1A3C4A] tracking-tighter italic">Novo Convite</h2>
+                                    <h2 className="text-2xl font-black text-[#1A3C4A] tracking-tighter">Novo Convite</h2>
                                     <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">Configure o acesso do colaborador</p>
                                 </div>
                             </div>
@@ -358,7 +358,7 @@ export default function GestaoEquipePage() {
                                     <Users className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <h2 className="text-2xl font-black text-[#1A3C4A] tracking-tighter italic">Editar Colaborador</h2>
+                                    <h2 className="text-2xl font-black text-[#1A3C4A] tracking-tighter">Editar Colaborador</h2>
                                     <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mt-1">{editingUser.email}</p>
                                 </div>
                             </div>

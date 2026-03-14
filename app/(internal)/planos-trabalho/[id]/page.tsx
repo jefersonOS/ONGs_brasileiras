@@ -169,7 +169,7 @@ export default function DetalhePlanoRevisaoPage({ params }: { params: { id: stri
                             <FileText className="w-7 h-7" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter italic leading-none">{plano.titulo}</h1>
+                            <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter leading-none">{plano.titulo}</h1>
                             <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mt-2 flex items-center gap-2">
                                 <LayoutDashboard className="w-3 h-3" /> Instituição: {plano.tenants?.nome} • <Calendar className="w-3 h-3" /> Criado em: {new Date(plano.created_at).toLocaleDateString()}
                             </p>

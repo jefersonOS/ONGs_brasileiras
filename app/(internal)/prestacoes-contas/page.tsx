@@ -36,7 +36,7 @@ export default async function PrestacoesContasPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
                 <div>
-                    <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter italic">Prestações de Contas</h1>
+                    <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter">Prestações de Contas</h1>
                     <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mt-2 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-[var(--secondary)]"></span> Transparência e Rigor Financeiro
                     </p>
@@ -74,7 +74,7 @@ export default async function PrestacoesContasPage() {
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-gray-50 uppercase text-[10px] font-black text-gray-400 tracking-widest">
-                                <th className="px-8 py-6 italic text-gray-500">Documento / Período</th>
+                                <th className="px-8 py-6 text-gray-500">Documento / Período</th>
                                 <th className="px-8 py-6">Vínculo (Plano)</th>
                                 <th className="px-8 py-6">Status</th>
                                 <th className="px-8 py-6">Criado por</th>

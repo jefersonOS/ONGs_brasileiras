@@ -123,7 +123,7 @@ function SecaoView({ secao }: { secao: Secao }) {
                         )}
                     </table>
                     {rows.filter(r => r.some(c => c)).length === 0 && (
-                        <p className="px-8 py-6 text-xs text-gray-400 italic">Nenhum item registrado.</p>
+                        <p className="px-8 py-6 text-xs text-gray-400">Nenhum item registrado.</p>
                     )}
                 </div>
             </div>
@@ -240,7 +240,7 @@ export default function DetalhePrestacaoPage({ params }: { params: { id: string 
                             <FileText className="w-7 h-7" />
                         </div>
                         <div>
-                            <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter italic leading-none">{prestacao.titulo}</h1>
+                            <h1 className="text-4xl font-black text-[#1A3C4A] tracking-tighter leading-none">{prestacao.titulo}</h1>
                             <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mt-2 flex items-center gap-2">
                                 <Calendar className="w-3 h-3" /> Período: {prestacao.periodo} • <User className="w-3 h-3" /> Por: {prestacao.users?.nome}
                             </p>
@@ -345,7 +345,7 @@ export default function DetalhePrestacaoPage({ params }: { params: { id: string 
                     {prestacao.planos_trabalho?.titulo && (
                         <div className="bg-gray-50 p-6 rounded-[32px] space-y-2">
                             <p className="text-[8px] font-black uppercase text-gray-400 tracking-widest">Plano de Trabalho</p>
-                            <p className="text-sm font-bold text-[#1A3C4A] italic">{prestacao.planos_trabalho.titulo}</p>
+                            <p className="text-sm font-bold text-[#1A3C4A]">{prestacao.planos_trabalho.titulo}</p>
                         </div>
                     )}
                 </div>
