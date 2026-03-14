@@ -293,7 +293,9 @@ export class PDFService {
             const periodo = config.periodo || ''
             const carga = String(cargaHoraria)
 
-            const orientedText = `CONCLUIU COM ÊXITO O **CURSO DE ${curso}**. OFERECIDO NO **PERIODO DE ${periodo}**. PELA ASSOCIAÇÃO AMIGOS DO BEM, EM PARCERIA COM O GOVERNO DO ESTADO ATRAVÉS DA SECRETARIA ESTADUAL DE TURISMO E EMPREENDEDORISMO, COM **CARGA HORÁRIA DE ${carga}H**.`
+            const orientedText = config.texto_pos
+                ? resolveTokens(config.texto_pos, { curso, periodo, carga_horaria: carga, nome: nomeCidadao, instituicao: config.nome_instituicao || nomeInstituicao })
+                : `CONCLUIU COM ÊXITO O **CURSO DE ${curso}**. OFERECIDO NO **PERIODO DE ${periodo}**. COM **CARGA HORÁRIA DE ${carga}H**.`
 
             await this.drawRichText(page, orientedText, 60 + posXConteudo, height - 330 + posYConteudo, width, {
                 fontNormal: fontText,

@@ -119,8 +119,13 @@ export function CertPreview({ certData, blocos, corPrimaria, corSecundaria, tena
     }
 
     // Texto principal do corpo — espelha o formato do pdf-service.ts
-    const bodyText = certData.texto_complementar
-        ? `CONCLUIU COM ÊXITO O **CURSO DE ${EXEMPLO_CURSO.toUpperCase()}**. ${certData.texto_complementar} COM **CARGA HORÁRIA DE ${EXEMPLO_CH}H**.`
+    const bodyText = certData.texto_pos
+        ? certData.texto_pos
+            .replace(/\{\{curso\}\}/g, EXEMPLO_CURSO.toUpperCase())
+            .replace(/\{\{periodo\}\}/g, EXEMPLO_PERIODO)
+            .replace(/\{\{carga_horaria\}\}/g, EXEMPLO_CH)
+            .replace(/\{\{nome\}\}/g, EXEMPLO_ALUNO)
+            .replace(/\{\{instituicao\}\}/g, nomeInst)
         : `CONCLUIU COM ÊXITO O **CURSO DE ${EXEMPLO_CURSO.toUpperCase()}**. OFERECIDO NO **PERIODO DE ${EXEMPLO_PERIODO}**. COM **CARGA HORÁRIA DE ${EXEMPLO_CH}H**.`
 
     return (
