@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Download, CheckCircle, XCircle, Filter, Users, Award } from 'lucide-react'
+import { Download, CheckCircle, XCircle, Filter, Users, Award, RefreshCw } from 'lucide-react'
 import { clsx } from 'clsx'
 import Link from 'next/link'
 
@@ -14,61 +14,115 @@ export default function ComprovantesPage({ params }: { params: { id: string } })
     const [inscritos, setInscritos] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [emitindo, setEmitindo] = useState(false)
+    const [downloadingId, setDownloadingId] = useState<string | null>(null)
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setLoading(true)
-            // 1. Atividade
-            const { data: ativ } = await supabase.from('atividades').select('*').eq('id', atividadeId).single()
-            setAtividade(ativ)
+    const fetchData = async () => {
+        setLoading(true)
+        const { data: ativ } = await supabase.from('atividades').select('*').eq('id', atividadeId).single()
+        setAtividade(ativ)
 
-            // 2. Inscritos e suas presenças
-            const { data: inscData } = await supabase
-                .from('inscricoes')
-                .select(`
-                    id,
-                    users!cidadao_id ( id, nome, cpf ),
-                    presencas ( id, presente )
-                `)
-                .eq('entidade_id', atividadeId)
-                .eq('status', 'confirmada')
+        const { data: inscData } = await supabase
+            .from('inscricoes')
+            .select(`
+                id,
+                users!cidadao_id ( id, nome, cpf, whatsapp ),
+                presencas ( id, presente ),
+                certificados ( id, status, codigo_validacao, url_pdf, tipo )
+            `)
+            .eq('entidade_id', atividadeId)
+            .eq('status', 'confirmada')
 
-            if (inscData) {
-                // Cálculo de presença
-                const totalEncontros = ativ?.datas?.length || 0
-                const processed = inscData.map(i => {
-                    const presencasConfirmadas = i.presencas?.filter((p: any) => p.presente).length || 0
-                    const percentual = totalEncontros > 0 ? (presencasConfirmadas / totalEncontros) * 100 : 0
-                    return {
-                        ...i,
-                        percentual,
-                        apto: percentual >= (ativ?.presenca_minima || 0)
-                    }
-                })
-                setInscritos(processed)
-            }
-            setLoading(false)
+        if (inscData) {
+            const totalEncontros = ativ?.datas?.length || 0
+            const processed = inscData.map((i: any) => {
+                const presencasConfirmadas = i.presencas?.filter((p: any) => p.presente).length || 0
+                const percentual = totalEncontros > 0 ? (presencasConfirmadas / totalEncontros) * 100 : 0
+                const comprovante = i.certificados?.find((c: any) => c.tipo === 'comprovante' && c.status === 'valido') || null
+                return {
+                    ...i,
+                    percentual,
+                    apto: percentual >= (ativ?.presenca_minima || 0),
+                    comprovante,
+                }
+            })
+            setInscritos(processed)
         }
-        fetchData()
-    }, [atividadeId, supabase])
+        setLoading(false)
+    }
+
+    useEffect(() => { fetchData() }, [atividadeId])
 
     const handleEmitirEmLote = async () => {
-        const aptos = inscritos.filter(i => i.apto)
+        const aptos = inscritos.filter(i => i.apto && !i.comprovante)
         if (aptos.length === 0) {
-            alert("Nenhum participante apto para emissão.")
+            alert('Nenhum participante apto sem comprovante para emissão.')
             return
         }
-
         if (!confirm(`Deseja emitir comprovantes para os ${aptos.length} participantes aptos?`)) return
 
         setEmitindo(true)
-        // Mock de processo em background
-        await new Promise(r => setTimeout(r, 2000))
-        alert(`${aptos.length} comprovantes gerados com sucesso e disponíveis para download individual ou envio por e-mail.`)
-        setEmitindo(false)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            const res = await fetch(`/api/atividades/${atividadeId}/emitir-comprovantes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    inscritosIds: aptos.map(i => i.id),
+                    tenantId: user?.user_metadata?.tenant_id,
+                }),
+            })
+            if (!res.ok) throw new Error('Erro na API')
+            const result = await res.json()
+            alert(`${result.count} comprovante(s) emitido(s) com sucesso!`)
+            await fetchData()
+        } catch (err) {
+            console.error(err)
+            alert('Erro durante a emissão em lote.')
+        } finally {
+            setEmitindo(false)
+        }
+    }
+
+    const handleDownloadIndividual = async (insc: any) => {
+        if (insc.comprovante?.url_pdf) {
+            window.open(insc.comprovante.url_pdf, '_blank')
+            return
+        }
+        setDownloadingId(insc.id)
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            const res = await fetch(`/api/atividades/${atividadeId}/emitir-comprovantes`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    inscritosIds: [insc.id],
+                    tenantId: user?.user_metadata?.tenant_id,
+                }),
+            })
+            if (!res.ok) throw new Error('Erro na API')
+            // Recarregar para pegar a URL do comprovante recém-gerado
+            const { data: updatedInsc } = await supabase
+                .from('inscricoes')
+                .select('certificados ( url_pdf, tipo, status )')
+                .eq('id', insc.id)
+                .single()
+            const novoComp = (updatedInsc as any)?.certificados?.find(
+                (c: any) => c.tipo === 'comprovante' && c.status === 'valido'
+            )
+            if (novoComp?.url_pdf) window.open(novoComp.url_pdf, '_blank')
+            await fetchData()
+        } catch (err) {
+            console.error(err)
+            alert('Erro ao gerar comprovante individual.')
+        } finally {
+            setDownloadingId(null)
+        }
     }
 
     if (loading) return <div className="p-8 text-center text-gray-500">Carregando dados de presença...</div>
+
+    const totalAptos = inscritos.filter(i => i.apto).length
+    const jaEmitidos = inscritos.filter(i => i.comprovante).length
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto pb-20">
@@ -86,36 +140,31 @@ export default function ComprovantesPage({ params }: { params: { id: string } })
                 </div>
                 <button
                     onClick={handleEmitirEmLote}
-                    disabled={emitindo}
+                    disabled={emitindo || totalAptos === jaEmitidos}
                     className="bg-[#2D9E6B] hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm shadow-lg shadow-green-900/10 flex items-center gap-2 transition-all disabled:opacity-50"
                 >
-                    <Award className="w-4 h-4" /> {emitindo ? 'Processando...' : 'Emitir para Aptos'}
+                    {emitindo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Award className="w-4 h-4" />}
+                    {emitindo ? 'Processando...' : `Emitir para Aptos (${totalAptos - jaEmitidos})`}
                 </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                        <Users className="w-6 h-6" />
-                    </div>
+                    <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Users className="w-6 h-6" /></div>
                     <div>
                         <p className="text-2xl font-black text-[#1A3C4A]">{inscritos.length}</p>
                         <p className="text-[10px] font-bold text-gray-400 uppercase">Inscritos</p>
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-green-50 text-[#2D9E6B] rounded-xl">
-                        <CheckCircle className="w-6 h-6" />
-                    </div>
+                    <div className="p-3 bg-green-50 text-[#2D9E6B] rounded-xl"><CheckCircle className="w-6 h-6" /></div>
                     <div>
-                        <p className="text-2xl font-black text-[#1A3C4A]">{inscritos.filter(i => i.apto).length}</p>
+                        <p className="text-2xl font-black text-[#1A3C4A]">{totalAptos}</p>
                         <p className="text-[10px] font-bold text-gray-400 uppercase">Aptos</p>
                     </div>
                 </div>
                 <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex items-center gap-4">
-                    <div className="p-3 bg-red-50 text-red-600 rounded-xl">
-                        <XCircle className="w-6 h-6" />
-                    </div>
+                    <div className="p-3 bg-red-50 text-red-600 rounded-xl"><XCircle className="w-6 h-6" /></div>
                     <div>
                         <p className="text-2xl font-black text-[#1A3C4A]">{inscritos.filter(i => !i.apto).length}</p>
                         <p className="text-[10px] font-bold text-gray-400 uppercase">Inaptos</p>
@@ -130,6 +179,7 @@ export default function ComprovantesPage({ params }: { params: { id: string } })
                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400">Participante</th>
                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 text-center">Presença</th>
                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 text-center">Status</th>
+                            <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 text-center">Comprovante</th>
                             <th className="px-6 py-4 text-[10px] font-black uppercase text-gray-400 text-right">Ação</th>
                         </tr>
                     </thead>
@@ -153,13 +203,23 @@ export default function ComprovantesPage({ params }: { params: { id: string } })
                                         {insc.apto ? 'Apto' : 'Inapto'}
                                     </span>
                                 </td>
+                                <td className="px-6 py-4 text-center">
+                                    {insc.comprovante ? (
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-100 text-blue-600">Emitido</span>
+                                    ) : (
+                                        <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase bg-gray-100 text-gray-400">Pendente</span>
+                                    )}
+                                </td>
                                 <td className="px-6 py-4 text-right">
                                     <button
-                                        disabled={!insc.apto}
+                                        onClick={() => handleDownloadIndividual(insc)}
+                                        disabled={!insc.apto || downloadingId === insc.id}
                                         className="text-[#2D9E6B] hover:text-green-700 disabled:opacity-20 transition-all p-2 hover:bg-teal-50 rounded-lg"
-                                        title="Baixar comprovante individual"
+                                        title={insc.comprovante ? 'Baixar comprovante' : 'Gerar e baixar comprovante'}
                                     >
-                                        <Download className="w-4 h-4" />
+                                        {downloadingId === insc.id
+                                            ? <RefreshCw className="w-4 h-4 animate-spin" />
+                                            : <Download className="w-4 h-4" />}
                                     </button>
                                 </td>
                             </tr>

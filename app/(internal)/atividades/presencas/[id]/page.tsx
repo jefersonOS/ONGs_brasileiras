@@ -353,8 +353,29 @@ export default function PresencasPage({ params }: { params: { id: string } }) {
                         <Save className="w-5 h-5" /> {loading ? 'Salvando...' : 'Salvar Presenças'}
                     </button>
 
-                    <button className="w-full bg-white text-gray-600 border border-gray-200 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
-                        <Download className="w-4 h-4" /> Exportar Lista PDF
+                    <button
+                        onClick={() => {
+                            const linhas = inscricoes.map(i => [
+                                i.users?.nome || '',
+                                i.users?.email || '',
+                                i.users?.cpf || '',
+                                presencas[i.id] ? 'Presente' : 'Ausente',
+                            ])
+                            const csv = [
+                                ['Nome', 'Email', 'CPF', 'Presença'].join(';'),
+                                ...linhas.map(l => l.join(';')),
+                            ].join('\n')
+                            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' })
+                            const url = URL.createObjectURL(blob)
+                            const a = document.createElement('a')
+                            a.href = url
+                            a.download = `presencas-${encontroSelecionado || 'lista'}.csv`
+                            a.click()
+                            URL.revokeObjectURL(url)
+                        }}
+                        className="w-full bg-white text-gray-600 border border-gray-200 py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-gray-50 transition-all"
+                    >
+                        <Download className="w-4 h-4" /> Exportar Lista CSV
                     </button>
                 </div>
             </div>
@@ -397,13 +418,35 @@ export default function PresencasPage({ params }: { params: { id: string } }) {
                             <button onClick={() => setShowWalkInForm(false)} className="flex-1 py-3 text-sm font-bold text-gray-400 hover:text-gray-600">Cancelar</button>
                             <button
                                 onClick={async () => {
-                                    // mock de criação rápida e inserção (seria similar ao handleWalkInSearch mas criando o user primeiro)
-                                    alert('Funcionalidade de criação rápida de usuário será habilitada com o backend de usuários.');
-                                    setShowWalkInForm(false);
+                                    if (!walkInName.trim()) return
+                                    setBuscandoWalkIn(true)
+                                    try {
+                                        const res = await fetch(`/api/atividades/${atividadeId}/walkin`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({ nome: walkInName, cpf: walkInCPF }),
+                                        })
+                                        const data = await res.json()
+                                        if (!res.ok) throw new Error(data.error || 'Erro ao criar participante')
+                                        setInscricoes(prev => [
+                                            ...prev.filter(i => i.id !== data.inscricao_id),
+                                            { id: data.inscricao_id, users: { id: data.user_id, nome: data.nome, cpf: walkInCPF } }
+                                        ])
+                                        setPresencas(prev => ({ ...prev, [data.inscricao_id]: true }))
+                                        setShowWalkInForm(false)
+                                        setWalkInName('')
+                                        setWalkInCPF('')
+                                        setBusca('')
+                                    } catch (e: any) {
+                                        alert('Erro: ' + e.message)
+                                    } finally {
+                                        setBuscandoWalkIn(false)
+                                    }
                                 }}
-                                className="flex-2 bg-[#2D9E6B] text-white px-8 py-3 rounded-xl font-bold text-sm"
+                                disabled={buscandoWalkIn}
+                                className="flex-2 bg-[#2D9E6B] text-white px-8 py-3 rounded-xl font-bold text-sm disabled:opacity-60"
                             >
-                                Salvar e Presentear
+                                {buscandoWalkIn ? 'Salvando...' : 'Salvar e Presentear'}
                             </button>
                         </div>
                     </div>
