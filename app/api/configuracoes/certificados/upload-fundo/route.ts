@@ -1,6 +1,13 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 
+const FILE_PATHS: Record<string, string> = {
+    fundo: 'fundos/fundo-cert',
+    assinatura: 'assinaturas/responsavel',
+    assinatura_mediador: 'assinaturas/mediador',
+    logo: 'logos/logo-cert',
+}
+
 export async function POST(req: Request) {
     try {
         const supabase = createClient()
@@ -9,6 +16,10 @@ export async function POST(req: Request) {
 
         const tenantId = user.user_metadata?.tenant_id
         if (!tenantId) return Response.json({ error: 'Tenant não encontrado' }, { status: 400 })
+
+        const { searchParams } = new URL(req.url)
+        const type = searchParams.get('type') || 'fundo'
+        const basePath = FILE_PATHS[type] ?? FILE_PATHS.fundo
 
         const formData = await req.formData()
         const file = formData.get('file') as File | null
@@ -19,7 +30,7 @@ export async function POST(req: Request) {
             return Response.json({ error: 'Formato inválido. Use PNG ou JPG.' }, { status: 400 })
         }
 
-        const fileName = `${tenantId}/fundos/fundo-cert.${ext}`
+        const fileName = `${tenantId}/${basePath}.${ext}`
         const buffer = await file.arrayBuffer()
 
         const admin = createAdminClient()
@@ -31,15 +42,9 @@ export async function POST(req: Request) {
 
         const { data: { publicUrl } } = admin.storage.from('certificados').getPublicUrl(fileName)
 
-        // Salva URL no tenant
-        const { data: tenant } = await supabase.from('tenants').select('config_portal').eq('id', tenantId).single()
-        await admin.from('tenants').update({
-            config_portal: { ...(tenant?.config_portal || {}), cert_fundo_url: publicUrl }
-        }).eq('id', tenantId)
-
         return Response.json({ url: publicUrl })
     } catch (error: any) {
-        console.error('Upload fundo cert erro:', error)
+        console.error('Upload cert erro:', error)
         return Response.json({ error: error.message }, { status: 500 })
     }
 }

@@ -39,10 +39,10 @@ const DEFAULT_BLOCOS: BlocoCert[] = [
 const inputCls = 'w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-xs font-bold focus:ring-2 focus:ring-[#2D9E6B]/20 transition-all'
 const UPLOAD_API = '/api/configuracoes/certificados/upload-fundo'
 
-async function uploadFile(file: File): Promise<string | null> {
+async function uploadFile(file: File, type = 'fundo'): Promise<string | null> {
     const fd = new FormData()
     fd.append('file', file)
-    const res = await fetch(UPLOAD_API, { method: 'POST', body: fd })
+    const res = await fetch(`${UPLOAD_API}?type=${type}`, { method: 'POST', body: fd })
     const data = await res.json()
     return data.url || null
 }
@@ -455,7 +455,7 @@ export default function CertificadosEditorPage() {
                                         <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
                                             const file = e.target.files?.[0]; if (!file) return
                                             setUploadingAssinatura(true)
-                                            const url = await uploadFile(file)
+                                            const url = await uploadFile(file, 'assinatura')
                                             if (url) set('assinatura_url', url)
                                             setUploadingAssinatura(false); e.target.value = ''
                                         }} />
@@ -489,7 +489,7 @@ export default function CertificadosEditorPage() {
                                         <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
                                             const file = e.target.files?.[0]; if (!file) return
                                             setUploadingMediador(true)
-                                            const url = await uploadFile(file)
+                                            const url = await uploadFile(file, 'assinatura_mediador')
                                             if (url) set('assinatura_mediador_url', url)
                                             setUploadingMediador(false); e.target.value = ''
                                         }} />
@@ -530,7 +530,7 @@ export default function CertificadosEditorPage() {
                                     <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={async (e) => {
                                         const file = e.target.files?.[0]; if (!file) return
                                         setUploadingLogo(true)
-                                        const url = await uploadFile(file)
+                                        const url = await uploadFile(file, 'logo')
                                         if (url) set('logo_url', url)
                                         setUploadingLogo(false); e.target.value = ''
                                     }} />
