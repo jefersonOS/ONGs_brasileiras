@@ -70,7 +70,9 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
             periodo: turma.data_inicio && turma.data_fim
                 ? `${new Date(turma.data_inicio).toLocaleDateString('pt-BR')} a ${new Date(turma.data_fim).toLocaleDateString('pt-BR')}`
                 : undefined,
-            tipo_turma: turma.tipo || undefined,
+            tipo_turma: turma.tipo
+                ? turma.tipo.charAt(0).toUpperCase() + turma.tipo.slice(1)
+                : undefined,
         }
         const nomeInstituicao = tenant?.nome || 'Organização'
 
