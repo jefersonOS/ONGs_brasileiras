@@ -138,7 +138,9 @@ function resolveTokens(texto: string, vals: Record<string, string>): string {
 }
 
 function toTitleCase(str: string): string {
-    return str.replace(/\b\w/g, c => c.toUpperCase())
+    // Lowercase tudo primeiro, depois capitaliza apenas o primeiro char após espaço/início
+    // Não usa \b para evitar falsos positivos com caracteres acentuados do português
+    return str.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase())
 }
 
 export class PDFService {
