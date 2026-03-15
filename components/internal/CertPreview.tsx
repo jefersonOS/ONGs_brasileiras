@@ -114,6 +114,9 @@ export function CertPreview({
     const offXMed = certData.off_x_mediador || 0
     const offXResp = certData.off_x_responsavel || 0
     const offYResp = certData.off_y_responsavel || 0
+    const offYMed = certData.off_y_mediador ?? offYResp
+    const sigHResp = certData.sig_h_responsavel || 40
+    const sigHMed = certData.sig_h_mediador || 40
 
     const outerW = Math.round(W * scale)
     const outerH = Math.round(H * scale)
@@ -391,15 +394,15 @@ export function CertPreview({
                                 <img src={certData.assinatura_mediador_url} alt="Assinatura mediador"
                                     style={{
                                         position: 'absolute', top: 448, left: 80, width: 200,
-                                        height: 36, objectFit: 'contain',
-                                        transform: `translate(${offXMed}px, ${-offYResp}px)`,
+                                        height: sigHMed, objectFit: 'contain',
+                                        transform: `translate(${offXMed}px, ${-offYMed}px)`,
                                         pointerEvents: 'none',
                                     }} />
                             )}
                             <div style={{
                                 position: 'absolute', top: 490, left: 80, width: 200,
                                 textAlign: 'center',
-                                transform: `translate(${offXMed}px, ${-offYResp}px)`,
+                                transform: `translate(${offXMed}px, ${-offYMed}px)`,
                             }}>
                                 <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
                                     <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{certData.nome_mediador}</div>
@@ -415,7 +418,7 @@ export function CertPreview({
                             <img src={certData.assinatura_url} alt="Assinatura"
                                 style={{
                                     position: 'absolute', top: 448, right: 80, width: 200,
-                                    height: 36, objectFit: 'contain',
+                                    height: sigHResp, objectFit: 'contain',
                                     transform: `translate(${-offXResp}px, ${-offYResp}px)`,
                                     pointerEvents: 'none',
                                 }} />

@@ -82,6 +82,7 @@ export default function CertificadosEditorPage() {
         pos_y_conteudo: 0, pos_y_rodape: 0, pos_x_conteudo: 0, pos_x_rodape: 0,
         nome_mediador: '', cargo_mediador: '', assinatura_mediador_url: '',
         off_x_mediador: 0, off_y_mediador: 0, off_x_responsavel: 0, off_y_responsavel: 0,
+        sig_h_responsavel: 40, sig_h_mediador: 40,
     })
 
     const fetchData = useCallback(async () => {
@@ -133,6 +134,8 @@ export default function CertificadosEditorPage() {
                 off_y_mediador: cfg.cert_off_y_mediador ?? 0,
                 off_x_responsavel: cfg.cert_off_x_responsavel ?? 0,
                 off_y_responsavel: cfg.cert_off_y_responsavel ?? 0,
+                sig_h_responsavel: cfg.cert_sig_h_responsavel ?? 40,
+                sig_h_mediador: cfg.cert_sig_h_mediador ?? 40,
             })
         }
         setLoading(false)
@@ -178,6 +181,8 @@ export default function CertificadosEditorPage() {
             cert_off_y_mediador: certData.off_y_mediador,
             cert_off_x_responsavel: certData.off_x_responsavel,
             cert_off_y_responsavel: certData.off_y_responsavel,
+            cert_sig_h_responsavel: certData.sig_h_responsavel,
+            cert_sig_h_mediador: certData.sig_h_mediador,
         }
         await supabase.from('tenants').update({ config_portal: newConfig }).eq('id', tenant.id)
         setTenant((t: any) => ({ ...t, config_portal: newConfig }))
@@ -468,11 +473,29 @@ export default function CertificadosEditorPage() {
                                     )}
                                     <div>
                                         <div className="flex justify-between mb-0.5">
-                                            <span className="text-[10px] font-bold text-gray-500">Ajuste Horizontal</span>
+                                            <span className="text-[10px] font-bold text-gray-500">Tamanho</span>
+                                            <span className="text-[10px] font-black text-[#2D9E6B]">{certData.sig_h_responsavel}px</span>
+                                        </div>
+                                        <input type="range" min={10} max={120} value={certData.sig_h_responsavel}
+                                            onChange={e => set('sig_h_responsavel', Number(e.target.value))}
+                                            className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between mb-0.5">
+                                            <span className="text-[10px] font-bold text-gray-500">Horizontal</span>
                                             <span className="text-[10px] font-black text-[#2D9E6B]">{certData.off_x_responsavel > 0 ? '+' : ''}{certData.off_x_responsavel}</span>
                                         </div>
                                         <input type="range" min={-300} max={300} value={certData.off_x_responsavel}
                                             onChange={e => set('off_x_responsavel', Number(e.target.value))}
+                                            className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between mb-0.5">
+                                            <span className="text-[10px] font-bold text-gray-500">Vertical</span>
+                                            <span className="text-[10px] font-black text-[#2D9E6B]">{certData.off_y_responsavel > 0 ? '+' : ''}{certData.off_y_responsavel}</span>
+                                        </div>
+                                        <input type="range" min={-300} max={300} value={certData.off_y_responsavel}
+                                            onChange={e => set('off_y_responsavel', Number(e.target.value))}
                                             className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
                                     </div>
                                 </div>
@@ -502,7 +525,16 @@ export default function CertificadosEditorPage() {
                                     )}
                                     <div>
                                         <div className="flex justify-between mb-0.5">
-                                            <span className="text-[10px] font-bold text-gray-500">Ajuste Horizontal</span>
+                                            <span className="text-[10px] font-bold text-gray-500">Tamanho</span>
+                                            <span className="text-[10px] font-black text-[#2D9E6B]">{certData.sig_h_mediador}px</span>
+                                        </div>
+                                        <input type="range" min={10} max={120} value={certData.sig_h_mediador}
+                                            onChange={e => set('sig_h_mediador', Number(e.target.value))}
+                                            className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
+                                    </div>
+                                    <div>
+                                        <div className="flex justify-between mb-0.5">
+                                            <span className="text-[10px] font-bold text-gray-500">Horizontal</span>
                                             <span className="text-[10px] font-black text-[#2D9E6B]">{certData.off_x_mediador > 0 ? '+' : ''}{certData.off_x_mediador}</span>
                                         </div>
                                         <input type="range" min={-300} max={300} value={certData.off_x_mediador}
@@ -511,11 +543,11 @@ export default function CertificadosEditorPage() {
                                     </div>
                                     <div>
                                         <div className="flex justify-between mb-0.5">
-                                            <span className="text-[10px] font-bold text-gray-500">Ajuste Vertical (ambos)</span>
-                                            <span className="text-[10px] font-black text-[#2D9E6B]">{certData.off_y_responsavel > 0 ? '+' : ''}{certData.off_y_responsavel}</span>
+                                            <span className="text-[10px] font-bold text-gray-500">Vertical</span>
+                                            <span className="text-[10px] font-black text-[#2D9E6B]">{certData.off_y_mediador > 0 ? '+' : ''}{certData.off_y_mediador}</span>
                                         </div>
-                                        <input type="range" min={-300} max={300} value={certData.off_y_responsavel}
-                                            onChange={e => set('off_y_responsavel', Number(e.target.value))}
+                                        <input type="range" min={-300} max={300} value={certData.off_y_mediador}
+                                            onChange={e => set('off_y_mediador', Number(e.target.value))}
                                             className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#2D9E6B]" />
                                     </div>
                                 </div>

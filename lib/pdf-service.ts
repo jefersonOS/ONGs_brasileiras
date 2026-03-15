@@ -237,6 +237,9 @@ export class PDFService {
         const offXMed = config.off_x_mediador || 0
         const offXResp = config.off_x_responsavel || 0
         const offYResp = config.off_y_responsavel || 0
+        const offYMed = config.off_y_mediador ?? offYResp
+        const sigHResp = config.sig_h_responsavel || 40
+        const sigHMed = config.sig_h_mediador || 40
 
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
@@ -422,14 +425,14 @@ export class PDFService {
         // Mediador
         if (hasMediador) {
             const medX = 80 + offXMed
-            const medY = offYResp
+            const medY = offYMed
             const medBlockW = 200
             if (config.assinatura_mediador_url) {
                 try {
                     const mRes = await fetch(config.assinatura_mediador_url)
                     const mBytes = await mRes.arrayBuffer()
                     const mImg = config.assinatura_mediador_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(mBytes) : await pdfDoc.embedPng(mBytes)
-                    const mH = 40, mW = mImg.width * (mH / mImg.height)
+                    const mH = sigHMed, mW = mImg.width * (mH / mImg.height)
                     page.drawImage(mImg, { x: medX + (medBlockW - mW) / 2, y: 90 + medY, width: mW, height: mH })
                 } catch { }
             }
@@ -452,7 +455,7 @@ export class PDFService {
                 const sigRes = await fetch(config.assinatura_url)
                 const sigBytes = await sigRes.arrayBuffer()
                 const sigImg = config.assinatura_url.toLowerCase().match(/\.(jpg|jpeg)/) ? await pdfDoc.embedJpg(sigBytes) : await pdfDoc.embedPng(sigBytes)
-                const sigH = 40, sigW = sigImg.width * (sigH / sigImg.height)
+                const sigH = sigHResp, sigW = sigImg.width * (sigH / sigImg.height)
                 page.drawImage(sigImg, { x: respX + (200 - sigW) / 2, y: 90 + respY, width: sigW, height: sigH })
             } catch { }
         }
