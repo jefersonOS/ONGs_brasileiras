@@ -13,7 +13,37 @@ export const FONTES_CERT: { value: FonteCert, label: string, cssFamily: string }
     { value: 'alexbrush', label: 'Alex Brush', cssFamily: '"Alex Brush", cursive' },
 ]
 
-const FONT_URLS: Record<FonteCert, string> = {
+// CSS2 API URLs — resolve para o TTF atual sem depender de versão hardcoded
+const FONT_CSS_URLS: Record<FonteCert, string> = {
+    helvetica:  '',
+    times:      '',
+    playfair:   'https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap',
+    cinzel:     'https://fonts.googleapis.com/css2?family=Cinzel&display=swap',
+    greatvibes: 'https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap',
+    dancing:    'https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap',
+    alexbrush:  'https://fonts.googleapis.com/css2?family=Alex+Brush&display=swap',
+}
+
+async function resolveFontUrl(fonte: FonteCert): Promise<string> {
+    const cssUrl = FONT_CSS_URLS[fonte]
+    if (!cssUrl) return ''
+    try {
+        // Simula User-Agent de browser para receber links TTF/WOFF2
+        const css = await fetch(cssUrl, {
+            cache: 'no-store',
+            headers: { 'User-Agent': 'Mozilla/5.0 (compatible; pdf-service)' }
+        }).then(r => r.text())
+        // Extrai primeira URL de fonte do CSS
+        const match = css.match(/src:\s*url\(([^)]+\.(?:ttf|woff2|woff))\)/)
+        return match ? match[1] : ''
+    } catch (err) {
+        console.error('[pdf-service] resolveFontUrl error:', fonte, err)
+        return ''
+    }
+}
+
+// Fallback com URLs diretas estáticas (caso a API do Google Fonts falhe)
+const FONT_URLS_FALLBACK: Record<FonteCert, string> = {
     helvetica:  '',
     times:      '',
     playfair:   'https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKeiukDQ.ttf',
@@ -286,16 +316,19 @@ export class PDFService {
                 }
                 // Custom TTF font
                 if (!fontCache.has(fonte)) {
-                    const url = FONT_URLS[fonte]
-                    if (url) {
-                        try {
-                            const res = await fetch(url)
-                            const bytes = await res.arrayBuffer()
-                            fontCache.set(fonte, await pdfDoc.embedFont(bytes))
-                        } catch {
-                            fontCache.set(fonte, fontText)
-                        }
-                    } else {
+                    try {
+                        // Tenta resolver URL dinâmica via CSS API, cai no fallback estático
+                        let url = await resolveFontUrl(fonte)
+                        if (!url) url = FONT_URLS_FALLBACK[fonte]
+                        if (!url) throw new Error(`No URL for font: ${fonte}`)
+                        console.log('[pdf-service] Loading font:', fonte, url)
+                        const res = await fetch(url, { cache: 'no-store' })
+                        if (!res.ok) throw new Error(`Font fetch failed: ${res.status} ${url}`)
+                        const bytes = await res.arrayBuffer()
+                        fontCache.set(fonte, await pdfDoc.embedFont(bytes))
+                        console.log('[pdf-service] Font loaded OK:', fonte)
+                    } catch (err) {
+                        console.error('[pdf-service] Custom font load error:', fonte, err)
                         fontCache.set(fonte, fontText)
                     }
                 }
