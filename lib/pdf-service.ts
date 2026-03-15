@@ -1,7 +1,7 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
 import fontkit from '@pdf-lib/fontkit'
 
-export type FonteCert = 'helvetica' | 'times' | 'playfair' | 'cinzel' | 'greatvibes' | 'dancing'
+export type FonteCert = 'helvetica' | 'times' | 'playfair' | 'cinzel' | 'greatvibes' | 'dancing' | 'alexbrush'
 
 export const FONTES_CERT: { value: FonteCert, label: string, cssFamily: string }[] = [
     { value: 'helvetica', label: 'Helvetica', cssFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
@@ -10,6 +10,7 @@ export const FONTES_CERT: { value: FonteCert, label: string, cssFamily: string }
     { value: 'cinzel',    label: 'Cinzel', cssFamily: '"Cinzel", Georgia, serif' },
     { value: 'greatvibes',label: 'Great Vibes', cssFamily: '"Great Vibes", cursive' },
     { value: 'dancing',   label: 'Dancing Script', cssFamily: '"Dancing Script", cursive' },
+    { value: 'alexbrush', label: 'Alex Brush', cssFamily: '"Alex Brush", cursive' },
 ]
 
 const FONT_URLS: Record<FonteCert, string> = {
@@ -19,6 +20,7 @@ const FONT_URLS: Record<FonteCert, string> = {
     cinzel:     'https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-jHgTYo.ttf',
     greatvibes: 'https://fonts.gstatic.com/s/greatvibes/v21/RWmMoKWR9v4ksMfaWd_JN-XC.ttf',
     dancing:    'https://fonts.gstatic.com/s/dancingscript/v29/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7B1i0HTQ.ttf',
+    alexbrush:  'https://fonts.gstatic.com/s/alexbrush/v22/SZc83FzrJKuqFbwMKk6EhUXz6w.ttf',
 }
 
 export interface BlocoCert {

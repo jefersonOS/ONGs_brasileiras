@@ -142,7 +142,7 @@ export function CertPreview({
 
     // Load Google Fonts for custom font preview
     useEffect(() => {
-        const href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cinzel:wght@400;700&family=Great+Vibes&family=Dancing+Script:wght@400;700&display=swap'
+        const href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cinzel:wght@400;700&family=Great+Vibes&family=Dancing+Script:wght@400;700&family=Alex+Brush&display=swap'
         if (!document.querySelector(`link[href="${href}"]`)) {
             const link = document.createElement('link')
             link.rel = 'stylesheet'
