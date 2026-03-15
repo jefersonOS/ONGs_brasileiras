@@ -127,6 +127,7 @@ export function CertPreview({
         instituicao: nomeInst,
         codigo: EXEMPLO_CODIGO,
         periodo: EXEMPLO_PERIODO,
+        tipo_turma: 'Curso',
     }
 
     // Texto principal do corpo — espelha o formato do pdf-service.ts

@@ -60,6 +60,8 @@ interface CertConfig {
     blocos?: BlocoCert[]
     // Período (para token {{periodo}})
     periodo?: string
+    // Tipo da turma (para token {{tipo_turma}})
+    tipo_turma?: string
 }
 
 function hexToRgb(hex: string) {
@@ -236,6 +238,7 @@ export class PDFService {
                 instituicao: config.nome_instituicao || nomeInstituicao,
                 codigo: codigoValidacao,
                 periodo: config.periodo || '',
+                tipo_turma: config.tipo_turma || '',
             }
             for (const bloco of config.blocos) {
                 const resolvedText = resolveTokens(bloco.texto, tokenVals)

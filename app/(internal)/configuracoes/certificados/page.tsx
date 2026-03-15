@@ -20,6 +20,7 @@ const VARIAVEIS = [
     { token: '{{codigo}}', label: '{{CODIGO}}' },
     { token: '{{periodo}}', label: '{{PERIODO}}' },
     { token: '{{instituicao}}', label: '{{INSTITUICAO}}' },
+    { token: '{{tipo_turma}}', label: '{{TIPO_TURMA}}' },
 ]
 
 const DEFAULT_BLOCOS: BlocoCert[] = [
