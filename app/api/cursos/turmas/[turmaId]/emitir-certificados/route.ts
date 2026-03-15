@@ -72,7 +72,7 @@ export async function POST(req: Request, { params }: { params: { turmaId: string
                 : undefined,
             tipo_turma: turma.tipo
                 ? turma.tipo.charAt(0).toUpperCase() + turma.tipo.slice(1)
-                : undefined,
+                : 'Curso',
         }
         const nomeInstituicao = tenant?.nome || 'Organização'
 

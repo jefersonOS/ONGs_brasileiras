@@ -300,7 +300,7 @@ export class PDFService {
                 instituicao: config.nome_instituicao || nomeInstituicao,
                 codigo: codigoValidacao,
                 periodo: config.periodo || '',
-                tipo_turma: config.tipo_turma || '',
+                tipo_turma: config.tipo_turma || 'Curso',
             }
 
             // Font cache to avoid re-fetching/re-embedding the same font
