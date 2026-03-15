@@ -1,0 +1,1 @@
+ALTER TABLE turmas ADD COLUMN IF NOT EXISTS tipo text DEFAULT 'curso';

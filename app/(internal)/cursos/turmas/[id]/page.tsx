@@ -2,8 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Plus, Trash2, Calendar, Users, FileText, ChevronDown, ChevronUp, GripVertical, Phone, ToggleLeft, ToggleRight, ArrowLeft, Pencil } from 'lucide-react'
+import { Plus, Trash2, Calendar, Users, FileText, ChevronDown, ChevronUp, GripVertical, Phone, ToggleLeft, ToggleRight, ArrowLeft, Pencil, Tag } from 'lucide-react'
 import Link from 'next/link'
+
+const TIPOS_TURMA = [
+    { value: 'curso', label: 'Curso' },
+    { value: 'oficina', label: 'Oficina' },
+    { value: 'workshop', label: 'Workshop' },
+    { value: 'palestra', label: 'Palestra' },
+    { value: 'seminario', label: 'Seminário' },
+    { value: 'treinamento', label: 'Treinamento' },
+    { value: 'capacitacao', label: 'Capacitação' },
+    { value: 'outro', label: 'Outro' },
+]
 
 type TipoCampo = 'texto' | 'email' | 'telefone' | 'numero' | 'selecao' | 'textarea'
 
@@ -183,9 +194,10 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
     const supabase = createClient()
 
     const [curso, setCurso] = useState<{ titulo: string } | null>(null)
-    const [turmas, setTurmas] = useState<{ id: string, status: string, vagas: number, data_inicio: string, data_fim: string, data_limite_inscricao: string, formulario_inscricao: CampoFormulario[] | null }[]>([])
+    const [turmas, setTurmas] = useState<{ id: string, status: string, vagas: number, tipo: string, data_inicio: string, data_fim: string, data_limite_inscricao: string, formulario_inscricao: CampoFormulario[] | null }[]>([])
 
     const [mostrarForm, setMostrarForm] = useState(false)
+    const [tipoTurma, setTipoTurma] = useState('curso')
     const [vagas, setVagas] = useState(30)
     const [dataInicio, setDataInicio] = useState('')
     const [dataFim, setDataFim] = useState('')
@@ -214,6 +226,7 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
         const { data: { user } } = await supabase.auth.getUser()
 
         const payload = {
+            tipo: tipoTurma,
             vagas,
             data_inicio: dataInicio || null,
             data_fim: dataFim || null,
@@ -243,6 +256,7 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
         if (!error) {
             setMostrarForm(false)
             setEditingTurmaId(null)
+            setTipoTurma('curso')
             setVagas(30)
             setDataInicio('')
             setDataFim('')
@@ -255,6 +269,7 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
 
     const handleEdit = (turma: any) => {
         setEditingTurmaId(turma.id)
+        setTipoTurma(turma.tipo || 'curso')
         setVagas(turma.vagas)
         setDataInicio(turma.data_inicio || '')
         setDataFim(turma.data_fim || '')
@@ -292,6 +307,23 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                     <h3 className="text-lg font-semibold text-gray-800 border-b border-gray-100 pb-2">
                         {editingTurmaId ? 'Editar Turma' : 'Cadastrar Nova Turma'}
                     </h3>
+
+                    {/* Tipo */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Turma *</label>
+                        <div className="flex flex-wrap gap-2">
+                            {TIPOS_TURMA.map(t => (
+                                <button
+                                    key={t.value}
+                                    type="button"
+                                    onClick={() => setTipoTurma(t.value)}
+                                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${tipoTurma === t.value ? 'bg-[#1A3C4A] text-white border-[#1A3C4A]' : 'bg-white text-gray-600 border-gray-300 hover:border-[#1A3C4A]'}`}
+                                >
+                                    {t.label}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
                     {/* Vagas */}
                     <div>
@@ -341,7 +373,15 @@ export default function TurmasPage({ params }: { params: { id: string } }) {
                 {turmas?.map(turma => (
                     <div key={turma.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
                         <div className="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                            <span className="font-semibold text-gray-700">Turma #{turma.id.split('-')[0]}</span>
+                            <div className="flex items-center gap-2">
+                                <span className="font-semibold text-gray-700">Turma #{turma.id.split('-')[0]}</span>
+                                {turma.tipo && (
+                                    <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#1A3C4A]/10 text-[#1A3C4A]">
+                                        <Tag className="w-2.5 h-2.5" />
+                                        {TIPOS_TURMA.find(t => t.value === turma.tipo)?.label ?? turma.tipo}
+                                    </span>
+                                )}
+                            </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => handleEdit(turma)}
