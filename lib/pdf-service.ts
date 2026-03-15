@@ -137,6 +137,10 @@ function resolveTokens(texto: string, vals: Record<string, string>): string {
     return texto.replace(/\{\{(\w+)\}\}/g, (_, k) => vals[k] ?? '')
 }
 
+function toTitleCase(str: string): string {
+    return str.replace(/\b\w/g, c => c.toUpperCase())
+}
+
 export class PDFService {
     static async drawRichText(
         page: any,
@@ -337,7 +341,7 @@ export class PDFService {
 
             for (const bloco of config.blocos) {
                 const raw = resolveTokens(bloco.texto, tokenVals)
-                const resolvedText = bloco.maiuscula !== false ? raw.toUpperCase() : raw
+                const resolvedText = bloco.maiuscula !== false ? raw.toUpperCase() : toTitleCase(raw)
                 const font = await getFont(bloco.fonte, bloco.negrito, bloco.italico)
                 const color = bloco.cor ? hexToRgb(bloco.cor) : textColor
                 const lines = resolvedText.split('\n')
