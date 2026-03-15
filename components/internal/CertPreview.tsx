@@ -272,7 +272,7 @@ export function CertPreview({
                                             : { left: bloco.x, textAlign: 'left' as const }),
                                         fontSize: bloco.tam,
                                         fontFamily: bloco.fonte ? FONTES_CERT.find(f => f.value === bloco.fonte)?.cssFamily : undefined,
-                                        textTransform: bloco.maiuscula !== false ? 'uppercase' : 'capitalize',
+                                        textTransform: bloco.maiuscula === null ? 'none' : bloco.maiuscula === false ? 'capitalize' : 'uppercase',
                                         fontWeight: bloco.negrito ? 900 : 400,
                                         fontStyle: bloco.italico ? 'italic' : 'normal',
                                         color: bloco.cor || textClr,

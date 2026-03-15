@@ -64,7 +64,7 @@ export interface BlocoCert {
     cor: string     // hex, ex: '#1A3C4A'
     alinhamento: 'esquerda' | 'centro' | 'direita'
     fonte?: FonteCert
-    maiuscula?: boolean  // true ou undefined = MAIÚSCULO; false = capitalização original
+    maiuscula?: boolean | null  // true/undefined = MAIÚSCULO; false = Título; null = como digitado
 }
 
 interface CertConfig {
@@ -343,7 +343,9 @@ export class PDFService {
 
             for (const bloco of config.blocos) {
                 const raw = resolveTokens(bloco.texto, tokenVals)
-                const resolvedText = bloco.maiuscula !== false ? raw.toUpperCase() : toTitleCase(raw)
+                const resolvedText = bloco.maiuscula === null ? raw
+                    : bloco.maiuscula === false ? toTitleCase(raw)
+                    : raw.toUpperCase()
                 const font = await getFont(bloco.fonte, bloco.negrito, bloco.italico)
                 const color = bloco.cor ? hexToRgb(bloco.cor) : textColor
                 const lines = resolvedText.split('\n')

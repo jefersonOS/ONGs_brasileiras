@@ -612,13 +612,19 @@ export default function CertificadosEditorPage() {
                                 <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
                                     <button type="button"
                                         onClick={() => updateBloco(selectedBloco.id, { maiuscula: true })}
-                                        className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all tracking-widest ${selectedBloco.maiuscula !== false ? 'bg-white shadow text-[#1A3C4A]' : 'text-gray-400'}`}>
+                                        className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all tracking-widest ${selectedBloco.maiuscula !== false && selectedBloco.maiuscula !== null ? 'bg-white shadow text-[#1A3C4A]' : 'text-gray-400'}`}>
                                         AA
                                     </button>
                                     <button type="button"
                                         onClick={() => updateBloco(selectedBloco.id, { maiuscula: false })}
                                         className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all ${selectedBloco.maiuscula === false ? 'bg-white shadow text-[#1A3C4A]' : 'text-gray-400'}`}>
                                         Aa
+                                    </button>
+                                    <button type="button"
+                                        onClick={() => updateBloco(selectedBloco.id, { maiuscula: null })}
+                                        className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all ${selectedBloco.maiuscula === null ? 'bg-white shadow text-[#1A3C4A]' : 'text-gray-400'}`}
+                                        title="Como digitado — edite o texto manualmente com a capitalização desejada">
+                                        ab
                                     </button>
                                 </div>
                                 <label className="flex items-center gap-2 cursor-pointer">
