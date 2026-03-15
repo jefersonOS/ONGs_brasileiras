@@ -273,8 +273,8 @@ export class PDFService {
                 if (fonte === 'times') {
                     const key = `times-${negrito}-${italico}`
                     if (!fontCache.has(key)) {
-                        const sf = negrito && italico ? StandardFonts.TimesBoldItalic
-                            : negrito ? StandardFonts.TimesBold
+                        const sf = negrito && italico ? StandardFonts.TimesRomanBoldItalic
+                            : negrito ? StandardFonts.TimesRomanBold
                             : italico ? StandardFonts.TimesRomanItalic
                             : StandardFonts.TimesRoman
                         fontCache.set(key, await pdfDoc.embedFont(sf))
