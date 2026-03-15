@@ -57,7 +57,7 @@ interface CertPreviewProps {
     onUpdateBloco?: (id: string, patch: Partial<BlocoCert>) => void
 }
 
-const DEFAULT_ALUNO = 'MARIA DA SILVA SANTOS'
+const DEFAULT_ALUNO = 'Maria da Silva Santos'
 const DEFAULT_CURSO = 'Capacitação em Gestão de Projetos'
 const EXEMPLO_CODIGO = 'ABC12X45'
 const EXEMPLO_PERIODO = '01/03/2025 a 30/04/2025'
