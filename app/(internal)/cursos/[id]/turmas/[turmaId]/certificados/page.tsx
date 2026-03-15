@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Award, CheckCircle2, AlertCircle, FileText, Send, Download, RefreshCw, ArrowLeft, Eye } from 'lucide-react'
+import { Award, CheckCircle2, AlertCircle, FileText, Send, Download, RefreshCw, ArrowLeft, Eye, Archive } from 'lucide-react'
 import Link from 'next/link'
 import { clsx } from 'clsx'
+import JSZip from 'jszip'
 
 export default function CourseCertificatesPage({ params }: { params: { id: string, turmaId: string } }) {
     const { id: cursoId, turmaId } = params
@@ -58,6 +59,40 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
         }
         fetchData()
     }, [cursoId, turmaId, supabase])
+
+    const [downloading, setDownloading] = useState(false)
+
+    const handleDownloadAll = async () => {
+        const comCertificado = participantes.filter(p => p.certificado?.url_pdf)
+        if (comCertificado.length === 0) return alert('Nenhum certificado emitido para baixar.')
+
+        setDownloading(true)
+        try {
+            const zip = new JSZip()
+            await Promise.all(
+                comCertificado.map(async (p) => {
+                    const res = await fetch(p.certificado.url_pdf)
+                    if (!res.ok) throw new Error(`Erro ao baixar certificado de ${p.users.nome}`)
+                    const buffer = await res.arrayBuffer()
+                    const nome = p.users.nome.replace(/[^a-zA-Z0-9À-ú ]/g, '').trim()
+                    const codigo = p.certificado.codigo_validacao
+                    zip.file(`${nome} - ${codigo}.pdf`, buffer)
+                })
+            )
+            const blob = await zip.generateAsync({ type: 'blob' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `certificados-${curso?.titulo || 'turma'}.zip`
+            a.click()
+            URL.revokeObjectURL(url)
+        } catch (err) {
+            console.error(err)
+            alert('Erro ao gerar o ZIP. Tente novamente.')
+        } finally {
+            setDownloading(false)
+        }
+    }
 
     const handleReissueAll = async () => {
         const aptos = participantes.filter(p => p.apto && p.certificado)
@@ -140,6 +175,16 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                     <p className="text-gray-500 font-medium">Turma: {curso?.titulo} • Requisito: {curso?.presenca_minima || 75}% de presença</p>
                 </div>
                 <div className="flex gap-3 flex-wrap">
+                {jaEmitidos > 0 && (
+                    <button
+                        onClick={handleDownloadAll}
+                        disabled={downloading}
+                        className="bg-white border border-gray-300 text-gray-600 px-5 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:border-[#1A3C4A] hover:text-[#1A3C4A] transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {downloading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Archive className="w-4 h-4" />}
+                        Baixar Todos (ZIP)
+                    </button>
+                )}
                 {jaEmitidos > 0 && (
                     <button
                         onClick={handleReissueAll}
