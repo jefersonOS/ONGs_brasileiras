@@ -356,17 +356,19 @@ export function CertPreview({
                         </>
                     )}
 
-                    {/* Data de emissão */}
-                    <div style={{
-                        position: 'absolute',
-                        bottom: certData.nome_mediador ? 18 + posYRodape : 55 + posYRodape,
-                        left: 0, right: 0, textAlign: 'center',
-                        fontSize: certData.nome_mediador ? 10 : 13,
-                        color: textClr,
-                        transform: `translateX(${posXRodape}px)`,
-                    }}>
-                        Emitido em {new Date().toLocaleDateString('pt-BR')}
-                    </div>
+                    {/* Data de emissão — só no modo legado */}
+                    {!usaBlocos && (
+                        <div style={{
+                            position: 'absolute',
+                            bottom: certData.nome_mediador ? 18 + posYRodape : 55 + posYRodape,
+                            left: 0, right: 0, textAlign: 'center',
+                            fontSize: certData.nome_mediador ? 10 : 13,
+                            color: textClr,
+                            transform: `translateX(${posXRodape}px)`,
+                        }}>
+                            Emitido em {new Date().toLocaleDateString('pt-BR')}
+                        </div>
+                    )}
 
                     {/* Assinatura mediador */}
                     {certData.nome_mediador && (
@@ -402,8 +404,8 @@ export function CertPreview({
                         </div>
                     </div>
 
-                    {/* Código de autenticação */}
-                    {certData.mostrar_codigo && (
+                    {/* Código de autenticação — só no modo legado */}
+                    {!usaBlocos && certData.mostrar_codigo && (
                         <div style={{ position: 'absolute', bottom: 18, left: 0, right: 0, textAlign: 'center' }}>
                             <div style={{ fontSize: 9, color: '#aaa' }}>Código de Autenticação: {EXEMPLO_CODIGO}</div>
                             <div style={{ fontSize: 9, color: '#aaa' }}>Verificável em: {siteVal}/validar/{EXEMPLO_CODIGO}</div>
