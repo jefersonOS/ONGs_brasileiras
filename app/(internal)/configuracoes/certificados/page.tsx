@@ -6,9 +6,9 @@ import { BlocoCert } from '@/lib/pdf-service'
 import { v4 as uuidv4 } from 'uuid'
 import Link from 'next/link'
 import {
-    ArrowLeft, Eye, RotateCcw, Save,
+    ArrowLeft, RotateCcw, Save,
     Type, ImageIcon, Minus, Square, Trash2,
-    CheckCircle, Loader2, Upload, LayoutTemplate, Sliders
+    CheckCircle, Loader2, Upload
 } from 'lucide-react'
 import { CertPreview } from '@/components/internal/CertPreview'
 
@@ -52,7 +52,6 @@ export default function CertificadosEditorPage() {
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const [tenant, setTenant] = useState<any>(null)
-    const [sideTab, setSideTab] = useState<'elementos' | 'config'>('elementos')
 
     // Blocos
     const [blocos, setBlocos] = useState<BlocoCert[]>([])
@@ -270,21 +269,7 @@ export default function CertificadosEditorPage() {
             <div className="flex flex-1 overflow-hidden">
                 {/* Left Sidebar */}
                 <div className="w-64 bg-white border-r border-gray-100 flex flex-col shrink-0">
-                    {/* Tab switcher */}
-                    <div className="flex border-b border-gray-100 shrink-0">
-                        <button onClick={() => setSideTab('elementos')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${sideTab === 'elementos' ? 'text-[#1A3C4A] border-b-2 border-[#1A3C4A]' : 'text-gray-400 hover:text-gray-600'}`}>
-                            <LayoutTemplate className="w-3.5 h-3.5" /> Elementos
-                        </button>
-                        <button onClick={() => setSideTab('config')}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-[10px] font-black uppercase tracking-widest transition-all ${sideTab === 'config' ? 'text-[#1A3C4A] border-b-2 border-[#1A3C4A]' : 'text-gray-400 hover:text-gray-600'}`}>
-                            <Sliders className="w-3.5 h-3.5" /> Config
-                        </button>
-                    </div>
-
-                    {/* Elementos Tab */}
-                    {sideTab === 'elementos' && (
-                        <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-5">
                             {/* FUNDO */}
                             <section>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Fundo</p>
@@ -335,7 +320,7 @@ export default function CertificadosEditorPage() {
                                         </button>
                                     ))}
                                 </div>
-                                <p className="text-[9px] text-gray-400 mt-1.5">Clique para copiar e cole no texto</p>
+                                <p className="text-[9px] text-gray-400 mt-1.5">Clique para inserir no bloco selecionado</p>
                             </section>
 
                             {/* ELEMENTOS */}
@@ -357,13 +342,7 @@ export default function CertificadosEditorPage() {
                                     ))}
                                 </div>
                             </section>
-                        </div>
-                    )}
-
-                    {/* Configurações Tab */}
-                    {sideTab === 'config' && (
-                        <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                            {/* TEXTOS */}
+                        {/* TEXTOS */}
                             <section>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Textos</p>
                                 <div className="space-y-2">
@@ -576,8 +555,7 @@ export default function CertificadosEditorPage() {
                                     </div>
                                 )}
                             </section>
-                        </div>
-                    )}
+                    </div>
                 </div>
 
                 {/* Preview Area */}
