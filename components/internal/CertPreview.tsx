@@ -1,7 +1,7 @@
 'use client'
 
-import { useRef } from 'react'
-import { BlocoCert } from '@/lib/pdf-service'
+import { useRef, useEffect } from 'react'
+import { BlocoCert, FONTES_CERT } from '@/lib/pdf-service'
 
 interface CertData {
     titulo: string
@@ -140,6 +140,17 @@ export function CertPreview({
             .replace(/\{\{instituicao\}\}/g, nomeInst)
         : `CONCLUIU COM ÊXITO O **CURSO DE ${EXEMPLO_CURSO.toUpperCase()}**. OFERECIDO NO **PERIODO DE ${EXEMPLO_PERIODO}**. COM **CARGA HORÁRIA DE ${EXEMPLO_CH}H**.`
 
+    // Load Google Fonts for custom font preview
+    useEffect(() => {
+        const href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cinzel:wght@400;700&family=Great+Vibes&family=Dancing+Script:wght@400;700&display=swap'
+        if (!document.querySelector(`link[href="${href}"]`)) {
+            const link = document.createElement('link')
+            link.rel = 'stylesheet'
+            link.href = href
+            document.head.appendChild(link)
+        }
+    }, [])
+
     // ── Drag state ─────────────────────────────────────────────────────────
     const containerRef = useRef<HTMLDivElement>(null)
     const dragRef = useRef<{
@@ -260,6 +271,7 @@ export function CertPreview({
                                             ? { right: bloco.x, textAlign: 'right' as const }
                                             : { left: bloco.x, textAlign: 'left' as const }),
                                         fontSize: bloco.tam,
+                                        fontFamily: bloco.fonte ? FONTES_CERT.find(f => f.value === bloco.fonte)?.cssFamily : undefined,
                                         fontWeight: bloco.negrito ? 900 : 400,
                                         fontStyle: bloco.italico ? 'italic' : 'normal',
                                         color: bloco.cor || textClr,

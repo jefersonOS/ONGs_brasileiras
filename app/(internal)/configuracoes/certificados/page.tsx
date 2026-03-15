@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { BlocoCert } from '@/lib/pdf-service'
+import { BlocoCert, FONTES_CERT, FonteCert } from '@/lib/pdf-service'
 import { v4 as uuidv4 } from 'uuid'
 import Link from 'next/link'
 import {
@@ -638,6 +638,18 @@ export default function CertificadosEditorPage() {
                                             {a === 'esquerda' ? '←' : a === 'centro' ? '↔' : '→'}
                                         </button>
                                     ))}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label className="text-[11px] font-black text-gray-600 shrink-0">Fonte</label>
+                                    <select
+                                        value={selectedBloco.fonte || 'helvetica'}
+                                        onChange={e => updateBloco(selectedBloco.id, { fonte: e.target.value as FonteCert })}
+                                        className="flex-1 px-2 py-1.5 bg-gray-50 rounded-lg text-[11px] font-medium border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#2D9E6B]/20"
+                                    >
+                                        {FONTES_CERT.map(f => (
+                                            <option key={f.value} value={f.value}>{f.label}</option>
+                                        ))}
+                                    </select>
                                 </div>
                             </div>
                         </div>

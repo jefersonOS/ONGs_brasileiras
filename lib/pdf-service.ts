@@ -1,4 +1,25 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
+import fontkit from '@pdf-lib/fontkit'
+
+export type FonteCert = 'helvetica' | 'times' | 'playfair' | 'cinzel' | 'greatvibes' | 'dancing'
+
+export const FONTES_CERT: { value: FonteCert, label: string, cssFamily: string }[] = [
+    { value: 'helvetica', label: 'Helvetica', cssFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+    { value: 'times',     label: 'Times Roman', cssFamily: 'Georgia, "Times New Roman", serif' },
+    { value: 'playfair',  label: 'Playfair Display', cssFamily: '"Playfair Display", Georgia, serif' },
+    { value: 'cinzel',    label: 'Cinzel', cssFamily: '"Cinzel", Georgia, serif' },
+    { value: 'greatvibes',label: 'Great Vibes', cssFamily: '"Great Vibes", cursive' },
+    { value: 'dancing',   label: 'Dancing Script', cssFamily: '"Dancing Script", cursive' },
+]
+
+const FONT_URLS: Record<FonteCert, string> = {
+    helvetica:  '',
+    times:      '',
+    playfair:   'https://fonts.gstatic.com/s/playfairdisplay/v40/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKeiukDQ.ttf',
+    cinzel:     'https://fonts.gstatic.com/s/cinzel/v26/8vIU7ww63mVu7gtR-kwKxNvkNOjw-jHgTYo.ttf',
+    greatvibes: 'https://fonts.gstatic.com/s/greatvibes/v21/RWmMoKWR9v4ksMfaWd_JN-XC.ttf',
+    dancing:    'https://fonts.gstatic.com/s/dancingscript/v29/If2cXTr6YS-zF4S-kcSWSVi_sxjsohD9F50Ruu7B1i0HTQ.ttf',
+}
 
 export interface BlocoCert {
     id: string
@@ -10,6 +31,7 @@ export interface BlocoCert {
     italico: boolean
     cor: string     // hex, ex: '#1A3C4A'
     alinhamento: 'esquerda' | 'centro' | 'direita'
+    fonte?: FonteCert
 }
 
 interface CertConfig {
@@ -179,6 +201,7 @@ export class PDFService {
 
         // Criar um novo documento PDF
         const pdfDoc = await PDFDocument.create()
+        pdfDoc.registerFontkit(fontkit)
 
         // Adicionar uma página no formato paisagem (A4)
         const page = pdfDoc.addPage([841.89, 595.28])
@@ -240,9 +263,45 @@ export class PDFService {
                 periodo: config.periodo || '',
                 tipo_turma: config.tipo_turma || '',
             }
+
+            // Font cache to avoid re-fetching/re-embedding the same font
+            const fontCache = new Map<string, any>()
+            const getFont = async (fonte?: FonteCert, negrito?: boolean, italico?: boolean) => {
+                if (!fonte || fonte === 'helvetica') {
+                    return negrito && italico ? fontBoldItalic : negrito ? fontTitle : italico ? fontItalic : fontText
+                }
+                if (fonte === 'times') {
+                    const key = `times-${negrito}-${italico}`
+                    if (!fontCache.has(key)) {
+                        const sf = negrito && italico ? StandardFonts.TimesBoldItalic
+                            : negrito ? StandardFonts.TimesBold
+                            : italico ? StandardFonts.TimesRomanItalic
+                            : StandardFonts.TimesRoman
+                        fontCache.set(key, await pdfDoc.embedFont(sf))
+                    }
+                    return fontCache.get(key)
+                }
+                // Custom TTF font
+                if (!fontCache.has(fonte)) {
+                    const url = FONT_URLS[fonte]
+                    if (url) {
+                        try {
+                            const res = await fetch(url)
+                            const bytes = await res.arrayBuffer()
+                            fontCache.set(fonte, await pdfDoc.embedFont(bytes))
+                        } catch {
+                            fontCache.set(fonte, fontText)
+                        }
+                    } else {
+                        fontCache.set(fonte, fontText)
+                    }
+                }
+                return fontCache.get(fonte)
+            }
+
             for (const bloco of config.blocos) {
                 const resolvedText = resolveTokens(bloco.texto, tokenVals)
-                const font = bloco.negrito && bloco.italico ? fontBoldItalic : bloco.negrito ? fontTitle : bloco.italico ? fontItalic : fontText
+                const font = await getFont(bloco.fonte, bloco.negrito, bloco.italico)
                 const color = bloco.cor ? hexToRgb(bloco.cor) : textColor
                 const lines = resolvedText.split('\n')
                 const lineHeight = bloco.tam * 1.4
