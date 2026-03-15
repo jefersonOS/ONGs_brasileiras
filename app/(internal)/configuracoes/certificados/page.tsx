@@ -309,21 +309,7 @@ export default function CertificadosEditorPage() {
                                 </div>
                             </section>
 
-                            {/* VARIÁVEIS */}
-                            <section>
-                                <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Variáveis</p>
-                                <div className="space-y-1">
-                                    {VARIAVEIS.map(v => (
-                                        <button key={v.token} onClick={() => copyToken(v.token)} title="Clique para copiar"
-                                            className={`w-full text-left px-3 py-1.5 rounded-lg text-[11px] font-mono font-bold transition-colors ${copied === v.token ? 'bg-green-50 text-[#2D9E6B]' : 'bg-[#1A3C4A]/5 hover:bg-[#1A3C4A]/10 text-[#1A3C4A]'}`}>
-                                            {v.label}
-                                        </button>
-                                    ))}
-                                </div>
-                                <p className="text-[9px] text-gray-400 mt-1.5">Clique para inserir no bloco selecionado</p>
-                            </section>
-
-                            {/* ELEMENTOS */}
+                            {/* ELEMENTOS + VARIÁVEIS */}
                             <section>
                                 <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Elementos ({blocos.length})</p>
                                 <div className="space-y-0.5">
@@ -341,6 +327,16 @@ export default function CertificadosEditorPage() {
                                         </div>
                                     ))}
                                 </div>
+                                <div className="mt-3 flex flex-wrap gap-1">
+                                    {VARIAVEIS.map(v => (
+                                        <button key={v.token} onClick={() => copyToken(v.token)}
+                                            title={selectedId ? 'Inserir no bloco selecionado' : 'Copiar'}
+                                            className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-colors ${copied === v.token ? 'bg-green-50 text-[#2D9E6B]' : 'bg-[#1A3C4A]/5 hover:bg-[#1A3C4A]/10 text-[#1A3C4A]'}`}>
+                                            {v.token}
+                                        </button>
+                                    ))}
+                                </div>
+                                <p className="text-[9px] text-gray-400 mt-1">{selectedId ? 'Clique para inserir no bloco selecionado' : 'Selecione um bloco para inserir'}</p>
                             </section>
                         {/* TEXTOS */}
                             <section>
