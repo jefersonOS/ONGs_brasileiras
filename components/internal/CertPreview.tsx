@@ -372,37 +372,51 @@ export function CertPreview({
 
                     {/* Assinatura mediador */}
                     {certData.nome_mediador && (
-                        <div style={{
-                            position: 'absolute', bottom: 55,
-                            left: 80, textAlign: 'center', minWidth: 200,
-                            transform: `translate(${offXMed}px, ${-offYResp}px)`,
-                        }}>
+                        <>
                             {certData.assinatura_mediador_url && (
                                 <img src={certData.assinatura_mediador_url} alt="Assinatura mediador"
-                                    style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }} />
+                                    style={{
+                                        position: 'absolute', top: 448, left: 80, width: 200,
+                                        height: 36, objectFit: 'contain',
+                                        transform: `translate(${offXMed}px, ${-offYResp}px)`,
+                                        pointerEvents: 'none',
+                                    }} />
                             )}
-                            <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
-                                <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{certData.nome_mediador}</div>
-                                {certData.cargo_mediador && <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_mediador}</div>}
+                            <div style={{
+                                position: 'absolute', top: 490, left: 80, width: 200,
+                                textAlign: 'center',
+                                transform: `translate(${offXMed}px, ${-offYResp}px)`,
+                            }}>
+                                <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
+                                    <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{certData.nome_mediador}</div>
+                                    {certData.cargo_mediador && <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_mediador}</div>}
+                                </div>
                             </div>
-                        </div>
+                        </>
                     )}
 
                     {/* Assinatura responsável */}
-                    <div style={{
-                        position: 'absolute', bottom: 55,
-                        right: 80, textAlign: 'center', minWidth: 200,
-                        transform: `translate(${-offXResp}px, ${-offYResp}px)`,
-                    }}>
+                    <>
                         {certData.assinatura_url && (
                             <img src={certData.assinatura_url} alt="Assinatura"
-                                style={{ height: 36, objectFit: 'contain', display: 'block', margin: '0 auto 4px' }} />
+                                style={{
+                                    position: 'absolute', top: 448, right: 80, width: 200,
+                                    height: 36, objectFit: 'contain',
+                                    transform: `translate(${-offXResp}px, ${-offYResp}px)`,
+                                    pointerEvents: 'none',
+                                }} />
                         )}
-                        <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
-                            <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{responsavel}</div>
-                            {certData.cargo_responsavel && <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_responsavel}</div>}
+                        <div style={{
+                            position: 'absolute', top: 490, right: 80, width: 200,
+                            textAlign: 'center',
+                            transform: `translate(${-offXResp}px, ${-offYResp}px)`,
+                        }}>
+                            <div style={{ borderTop: `1px solid ${primary}`, paddingTop: 6 }}>
+                                <div style={{ fontSize: 11, fontStyle: 'italic', color: textClr }}>{responsavel}</div>
+                                {certData.cargo_responsavel && <div style={{ fontSize: 9, color: '#999', marginTop: 2 }}>{certData.cargo_responsavel}</div>}
+                            </div>
                         </div>
-                    </div>
+                    </>
 
                     {/* Código de autenticação — só no modo legado */}
                     {!usaBlocos && certData.mostrar_codigo && (
