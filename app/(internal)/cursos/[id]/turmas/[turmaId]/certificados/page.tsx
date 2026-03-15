@@ -59,6 +59,38 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
         fetchData()
     }, [cursoId, turmaId, supabase])
 
+    const handleReissueAll = async () => {
+        const aptos = participantes.filter(p => p.apto && p.certificado)
+        if (aptos.length === 0) return alert('Nenhum certificado existente para regerar.')
+        if (!confirm(`Regerar certificados para ${aptos.length} aluno(s)? Os PDFs serão substituídos.`)) return
+
+        setIssuing(true)
+        try {
+            // Deletar certs existentes para que a rota de emissão os regenere
+            const certIds = aptos.map(p => p.certificado.id)
+            await supabase.from('certificados').delete().in('id', certIds)
+
+            const { data: { user } } = await supabase.auth.getUser()
+            const res = await fetch(`/api/cursos/turmas/${turmaId}/emitir-certificados`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    inscritosIds: aptos.map(p => p.id),
+                    tenantId: user?.user_metadata?.tenant_id
+                })
+            })
+
+            if (!res.ok) throw new Error('Erro na API')
+            alert('Certificados regerados com sucesso!')
+            window.location.reload()
+        } catch (err) {
+            console.error(err)
+            alert('Erro ao regerar certificados.')
+        } finally {
+            setIssuing(false)
+        }
+    }
+
     const handleIssueBatch = async () => {
         const aptosSemCertificado = participantes.filter(p => p.apto && !p.certificado)
         if (aptosSemCertificado.length === 0) return alert('Nenhum aluno apto para emissão no momento.')
@@ -107,6 +139,17 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                     </h1>
                     <p className="text-gray-500 font-medium">Turma: {curso?.titulo} • Requisito: {curso?.presenca_minima || 75}% de presença</p>
                 </div>
+                <div className="flex gap-3 flex-wrap">
+                {jaEmitidos > 0 && (
+                    <button
+                        onClick={handleReissueAll}
+                        disabled={issuing}
+                        className="bg-white border border-gray-300 text-gray-600 px-5 py-3 rounded-2xl font-black uppercase text-xs tracking-widest hover:border-[#2D9E6B] hover:text-[#2D9E6B] transition-all flex items-center gap-2 disabled:opacity-50"
+                    >
+                        {issuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                        Regerar PDFs ({jaEmitidos})
+                    </button>
+                )}
                 <button
                     onClick={handleIssueBatch}
                     disabled={issuing || totalAptos === jaEmitidos}
@@ -115,6 +158,7 @@ export default function CourseCertificatesPage({ params }: { params: { id: strin
                     {issuing ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     Emitir Certificados em Lote ({totalAptos - jaEmitidos})
                 </button>
+                </div>
             </div>
 
             {/* Resumo Stats */}
