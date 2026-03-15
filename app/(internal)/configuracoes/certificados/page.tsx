@@ -327,16 +327,6 @@ export default function CertificadosEditorPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-3 flex flex-wrap gap-1">
-                                    {VARIAVEIS.map(v => (
-                                        <button key={v.token} onClick={() => copyToken(v.token)}
-                                            title={selectedId ? 'Inserir no bloco selecionado' : 'Copiar'}
-                                            className={`px-2 py-1 rounded-md text-[10px] font-mono font-bold transition-colors ${copied === v.token ? 'bg-green-50 text-[#2D9E6B]' : 'bg-[#1A3C4A]/5 hover:bg-[#1A3C4A]/10 text-[#1A3C4A]'}`}>
-                                            {v.token}
-                                        </button>
-                                    ))}
-                                </div>
-                                <p className="text-[9px] text-gray-400 mt-1">{selectedId ? 'Clique para inserir no bloco selecionado' : 'Selecione um bloco para inserir'}</p>
                             </section>
                         {/* TEXTOS */}
                             <section>
@@ -588,6 +578,14 @@ export default function CertificadosEditorPage() {
                                 <textarea ref={textareaRef} rows={2} value={selectedBloco.texto}
                                     onChange={e => updateBloco(selectedBloco.id, { texto: e.target.value })}
                                     className="w-full px-3 py-2 bg-gray-50 border-none rounded-xl text-sm font-medium resize-none font-mono focus:ring-2 focus:ring-[#2D9E6B]/20" />
+                                <div className="flex flex-wrap gap-1 pt-1">
+                                    {VARIAVEIS.map(v => (
+                                        <button key={v.token} onClick={() => copyToken(v.token)} type="button"
+                                            className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#1A3C4A]/5 hover:bg-[#1A3C4A]/15 text-[#1A3C4A] transition-colors">
+                                            {v.token}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                             <div className="grid grid-cols-3 gap-3">
                                 <div className="space-y-1">
