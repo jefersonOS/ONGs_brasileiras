@@ -120,7 +120,7 @@ export function CertPreview({
     const usaBlocos = blocos && blocos.length > 0
 
     const previewTokens: Record<string, string> = {
-        nome: EXEMPLO_ALUNO.toUpperCase(),
+        nome: EXEMPLO_ALUNO,
         curso: EXEMPLO_CURSO,
         carga_horaria: EXEMPLO_CH,
         data_emissao: new Date().toLocaleDateString('pt-BR'),
@@ -272,6 +272,7 @@ export function CertPreview({
                                             : { left: bloco.x, textAlign: 'left' as const }),
                                         fontSize: bloco.tam,
                                         fontFamily: bloco.fonte ? FONTES_CERT.find(f => f.value === bloco.fonte)?.cssFamily : undefined,
+                                        textTransform: bloco.maiuscula !== false ? 'uppercase' : 'none',
                                         fontWeight: bloco.negrito ? 900 : 400,
                                         fontStyle: bloco.italico ? 'italic' : 'normal',
                                         color: bloco.cor || textClr,

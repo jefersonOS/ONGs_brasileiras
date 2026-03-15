@@ -34,6 +34,7 @@ export interface BlocoCert {
     cor: string     // hex, ex: '#1A3C4A'
     alinhamento: 'esquerda' | 'centro' | 'direita'
     fonte?: FonteCert
+    maiuscula?: boolean  // true ou undefined = MAIÚSCULO; false = capitalização original
 }
 
 interface CertConfig {
@@ -256,7 +257,7 @@ export class PDFService {
         // Blocos de texto posicionáveis ou layout padrão
         if (config.blocos && config.blocos.length > 0) {
             const tokenVals: Record<string, string> = {
-                nome: nomeCidadao.toUpperCase(),
+                nome: nomeCidadao,
                 curso: tituloEntidade,
                 carga_horaria: String(cargaHoraria),
                 data_emissao: dataEmissao.toLocaleDateString('pt-BR'),
@@ -302,7 +303,8 @@ export class PDFService {
             }
 
             for (const bloco of config.blocos) {
-                const resolvedText = resolveTokens(bloco.texto, tokenVals)
+                const raw = resolveTokens(bloco.texto, tokenVals)
+                const resolvedText = bloco.maiuscula !== false ? raw.toUpperCase() : raw
                 const font = await getFont(bloco.fonte, bloco.negrito, bloco.italico)
                 const color = bloco.cor ? hexToRgb(bloco.cor) : textColor
                 const lines = resolvedText.split('\n')

@@ -609,6 +609,18 @@ export default function CertificadosEditorPage() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-4 flex-wrap">
+                                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+                                    <button type="button"
+                                        onClick={() => updateBloco(selectedBloco.id, { maiuscula: true })}
+                                        className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all tracking-widest ${selectedBloco.maiuscula !== false ? 'bg-white shadow text-[#1A3C4A]' : 'text-gray-400'}`}>
+                                        AA
+                                    </button>
+                                    <button type="button"
+                                        onClick={() => updateBloco(selectedBloco.id, { maiuscula: false })}
+                                        className={`px-3 py-1.5 rounded-lg text-[11px] font-black transition-all ${selectedBloco.maiuscula === false ? 'bg-white shadow text-[#1A3C4A]' : 'text-gray-400'}`}>
+                                        Aa
+                                    </button>
+                                </div>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input type="checkbox" checked={selectedBloco.negrito}
                                         onChange={e => updateBloco(selectedBloco.id, { negrito: e.target.checked })}
